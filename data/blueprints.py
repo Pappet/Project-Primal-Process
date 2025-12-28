@@ -1,26 +1,21 @@
 """
 data/blueprints.py
-Definiert 'Baupläne', die Anforderungen an Tags stellen, statt an feste Items.
+Baupläne für das Experimentier-System.
 """
-from dataclasses import dataclass
-from typing import List, Dict
+from engine.components import ToolBlueprint
 
-@dataclass
-class ToolBlueprint:
-    id: str
-    name: str
-    # Welche 'Slots' hat das Werkzeug und welche Tags müssen die Items darin haben?
-    slots: Dict[str, str]  # Slot-Name : Benötigter Tag
-    base_efficiency: float
-
-# Beispiel für eine Axt
-AXE_BLUEPRINT = ToolBlueprint(
-    id="primitive_axe",
-    name="Axt",
-    slots={
-        "head": "HARD",      # Braucht etwas Hartes (Stein, Metall)
-        "handle": "RIGID",   # Braucht einen Griff (Holz, Knochen, Schilf)
-        "binding": "FIBER"   # Braucht eine Schnur (Darm, Bast, Schilf)
-    },
-    base_efficiency=1.0
-)
+def get_all_blueprints():
+    return [
+        ToolBlueprint(
+            id="axe",
+            result_name="Axt",
+            slots={"head": "HARD", "handle": "RIGID", "binding": "FIBER"},
+            base_efficiency=1.0
+        ),
+        ToolBlueprint(
+            id="knife",
+            result_name="Messer",
+            slots={"blade": "SHARP", "handle": "RIGID"},
+            base_efficiency=0.8
+        )
+    ]

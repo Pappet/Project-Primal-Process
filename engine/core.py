@@ -1,181 +1,105 @@
 """
 engine/core.py
-Das Herzstück der Simulation. Verwaltet den Game-Loop, 
-die Welt-Interaktionen und das systemische Experimentier-System.
+Haupt-Logik inklusive Abnutzung von Werkzeugen.
 """
-
 import random
 import itertools
-from typing import List, Dict, Any, Optional
-
-# Importe aus unseren anderen Modulen
-from engine.components import Player, Item
+from typing import List, Dict, Any
+from engine.components import Player, Item, ToolBlueprint
 from data.locations import get_all_locations
-from data.items import create_item, TEMPLATE_DB
-
-@dataclass
-class Blueprint:
-    """Definiert eine funktionale Anforderung für ein Werkzeug."""
-    id: str
-    result_name: str
-    # Slots definieren: "Welcher Tag wird für diesen Teil benötigt?"
-    # Beispiel: {"head": "HARD", "handle": "RIGID", "binding": "FIBER"}
-    slots: Dict[str, str]
-    base_efficiency: float
+from data.items import create_item
+from data.blueprints import get_all_blueprints
 
 class GameEngine:
     def __init__(self):
         self.player = Player("Survivor")
         self.locations = {loc.id: loc for loc in get_all_locations()}
-        
-        # Statische Daten laden
-        self.blueprints = self._initialize_blueprints()
-        
-        # Start-Zustand
+        self.blueprints = get_all_blueprints()
         self.current_location_id = "forest_edge"
         self.tick_counter = 0
-        
-        # Start-Ausrüstung für Tests (kann später entfernt werden)
-        # self.player.inventory.add(create_item("stone_axe"))
-
-    def _initialize_blueprints(self) -> List[Blueprint]:
-        """Definiert die 'physikalischen Baupläne' der Welt."""
-        return [
-            Blueprint(
-                id="axe",
-                result_name="Axt",
-                slots={"head": "HARD", "handle": "RIGID", "binding": "FIBER"},
-                base_efficiency=1.0
-            ),
-            Blueprint(
-                id="knife",
-                result_name="Messer",
-                slots={"blade": "SHARP", "handle": "RIGID"},
-                base_efficiency=0.8
-            )
-        ]
 
     @property
     def current_location(self):
         return self.locations[self.current_location_id]
 
-    # --- WELT INTERAKTIONEN ---
-
-    def travel(self, target_id: str) -> str:
-        """Wechselt den Ort und berechnet den Zeitverbrauch."""
-        if target_id not in self.locations:
-            return f"Ort '{target_id}' existiert nicht."
-        
-        self.current_location_id = target_id
-        self._advance_time(ticks=3) # Reisen dauert 30 Minuten
-        return f"Du bist nun am Ort: {self.locations[target_id].name}."
-
     def gather(self) -> List[str]:
-        """Sammelt Ressourcen basierend auf Wahrscheinlichkeiten und Tools."""
+        """Sammeln mit Werkzeug-Abnutzung."""
         loc = self.current_location
         logs = []
-        self._advance_time(ticks=1)
+        self._advance_time(1)
 
         for node in loc.nodes:
-            # Check: Wahrnehmung
             if self.player.stats["perception"] < node.req_perception:
                 continue
             
-            # Check: Werkzeug (Sucht im Inventar nach dem benötigten Tag)
+            used_tool = None
             if node.req_tool_tag:
-                if not self.player.inventory.find_item_by_tag(node.req_tool_tag):
-                    continue
+                used_tool = self.player.inventory.find_item_by_tag(node.req_tool_tag)
+                if not used_tool: continue
 
-            # Check: Würfelwurf
             if random.random() <= node.chance:
                 qty = random.randint(node.min_qty, node.max_qty)
-                new_item = create_item(node.result_template_id, quantity=qty)
+                item = create_item(node.result_template_id, qty)
                 
-                if self.player.inventory.add(new_item):
-                    logs.append(f"Gefunden: {qty}x {new_item.name}")
+                if self.player.inventory.add(item):
+                    logs.append(f"Gefunden: {qty}x {item.name}")
+                    # Werkzeug-Abnutzung berechnen
+                    if used_tool:
+                        # Abnutzung basiert auf der Durability des Werkzeug-Materials
+                        wear = 0.05 / used_tool.get_attr("durability", 0.5)
+                        used_tool.condition -= round(wear, 2)
+                        if used_tool.condition <= 0:
+                            self.player.inventory.items.remove(used_tool)
+                            logs.append(f"!!! DEIN WERKZEUG ({used_tool.name}) IST ZERBROCHEN !!!")
                 else:
-                    logs.append(f"Inventar voll! Konnte {new_item.name} nicht tragen.")
+                    logs.append(f"Inventar voll für {item.name}.")
         
-        return logs if logs else ["Nichts Nützliches gefunden."]
-
-    # --- DAS SYSTEMISCHE EXPERIMENTIER-SYSTEM ---
+        return logs if logs else ["Nichts gefunden."]
 
     def execute_experiment(self, selected_items: List[Item]) -> Dict[str, Any]:
-        """
-        Prüft, ob eine Kombination von Items ein neues Werkzeug ergibt.
-        Nutzt Permutationen, um Items den Slots zuzuordnen.
-        """
-        if not selected_items:
-            return {"success": False, "message": "Keine Items ausgewählt."}
-
-        # Wir prüfen jeden Bauplan
+        """Systemic Crafting Check."""
         for bp in self.blueprints:
-            # Anzahl der Items muss exakt mit Slot-Anzahl übereinstimmen
-            if len(selected_items) != len(bp.slots):
-                continue
+            if len(selected_items) != len(bp.slots): continue
 
-            # Wir testen alle Kombinationen (Permutationen) der Items gegen die Slots
-            slot_keys = list(bp.slots.keys())
-            for permutation in itertools.permutations(selected_items):
-                match = True
+            for p in itertools.permutations(selected_items):
                 mapping = {}
+                match = True
+                slot_keys = list(bp.slots.keys())
+                for i, slot in enumerate(slot_keys):
+                    if bp.slots[slot] not in p[i].tags:
+                        match = False; break
+                    mapping[slot] = p[i]
                 
-                for idx, slot_key in enumerate(slot_keys):
-                    required_tag = bp.slots[slot_key]
-                    if required_tag not in permutation[idx].tags:
-                        match = False
-                        break
-                    mapping[slot_key] = permutation[idx]
+                if match: return self._create_tool(bp, mapping)
+        return {"success": False, "message": "Keine Kombination möglich."}
 
-                if match:
-                    # Erfolg! Wir haben eine gültige Kombination gefunden
-                    return self._create_dynamic_tool(bp, mapping)
-
-        return {"success": False, "message": "Diese Kombination ergibt keinen Sinn."}
-
-    def _create_dynamic_tool(self, bp: Blueprint, components: Dict[str, Item]) -> Dict[str, Any]:
-        """Berechnet die Attribute des neuen Items aus seinen Komponenten."""
+    def _create_tool(self, bp: ToolBlueprint, comp: Dict[str, Item]) -> Dict[str, Any]:
+        # Haltbarkeit = Schwächstes Glied
+        durability_attr = min(c.get_attr("durability", 0.5) for c in comp.values())
+        # Power = Kopf-Schärfe
+        main = comp.get("head") or comp.get("blade")
+        power = main.get_attr("sharpness", 0.1) * bp.base_efficiency
         
-        # 1. Haltbarkeit (Schwächstes Glied bestimmt das Ergebnis)
-        # Wir greifen auf die 'durability' in den Attributen zu
-        durability = min(c.attributes.get("durability", 0.5) for c in components.values())
-        
-        # 2. Effizienz (Der Kopf/Klinge bestimmt die Stärke)
-        # Wir nehmen an, der Slot 'head' oder 'blade' ist primär
-        main_part = components.get("head") or components.get("blade")
-        power = main_part.attributes.get("sharpness", 0.1) * bp.base_efficiency
-
-        # 3. Das neue Item Objekt bauen
-        # Name dynamisch generieren
-        new_name = f"{main_part.name}-{bp.result_name} ({components.get('handle').name})"
-        
+        name = f"{main.name}-{bp.result_name} ({comp.get('handle').name})"
         new_tool = Item(
-            name=new_name,
-            base_weight=sum(c.base_weight for c in components.values()),
-            tags={"DURABILITY": durability},
-            attributes={"durability": durability, "power": power}
+            name=name, base_weight=sum(c.base_weight for c in comp.values()),
+            tags={"DURABILITY": durability_attr},
+            attributes={"durability": durability_attr, "power": power},
+            condition=1.0
         )
-        
-        # Den spezifischen Tool-Tag hinzufügen (z.B. CHOPPING für Äxte)
         if bp.id == "axe": new_tool.tags["CHOPPING"] = power
         if bp.id == "knife": new_tool.tags["CUTTING"] = power
 
-        # 4. Ressourcen verbrauchen und Zeit voranschreiten
-        # TODO: Inventar-Methode schreiben, die selektierte Instanzen löscht
-        for comp in components.values():
-            self.player.inventory.items.remove(comp)
-
+        for c in comp.values(): self.player.inventory.items.remove(c)
         self.player.inventory.add(new_tool)
-        self._advance_time(ticks=5) # Crafting dauert 50 Min
-
-        return {
-            "success": True, 
-            "message": f"Du hast ein neues Werkzeug erschaffen: {new_name}!"
-        }
+        return {"success": True, "message": f"Erschaffen: {name} (Qualität: {durability_attr})"}
 
     def _advance_time(self, ticks: int):
-        """Berechnet den Einfluss der Zeit auf den biologischen Spieler."""
         self.tick_counter += ticks
-        # Einfacher Energieverbrauch pro Tick
         self.player.energy -= (2.0 * ticks)
-        # TODO: Hier Thermodynamik aus player.py integrieren
+
+    def travel(self, tid: str):
+        if tid not in self.locations: return "Ziel unbekannt."
+        self.current_location_id = tid
+        self._advance_time(3)
+        return f"Gereist nach {self.locations[tid].name}."
