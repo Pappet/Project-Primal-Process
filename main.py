@@ -8,32 +8,71 @@ def main():
     game = GameEngine()
     while True:
         os.system('cls' if os.name == 'nt' else 'clear')
+        p = game.player
         loc = game.current_location
-        print(f"--- {loc.name} | Tick: {game.tick_counter} | Energie: {int(game.player.energy)} ---")
-        print(f"{loc.description}\n")
-        print("[g]ather, [e]xperiment, [i]nventory, [t]ravel, [q]uit")
-        
-        cmd = input("> ").lower()
+        amb_temp = game._get_ambient_temp()
+
+        print(f"--- {loc.name} | Wetter: {game.current_weather} ---")
+        print(f"Umgebung: {amb_temp:.1f}°C | Körper: {p.body_temp:.1f}°C")
+        print(f"HP: {int(p.hp)}/100 | ENERGIE: {int(p.energy)}/1000 | Survival: {p.stats['survival']:.1f}")
+        print("-" * 50)
+        print("[g]ather, [e]xperiment, [f]eed, [k]nowledge, [i]nventory, [t]ravel, [q]uit")
+
+        if p.hp <= 0:
+            print("\n!!! DU BIST VERHUNGERT. GAME OVER !!!")
+            break
+            
+        cmd = input("> ").lower().strip()
         if cmd == 'q': break
+        
         if cmd == 'g':
             for line in game.gather(): print(f"  {line}")
             input("\nWeiter...")
-        if cmd == 'i':
-            for i, it in enumerate(game.player.inventory.items):
-                print(f"[{i}] {it.name} | Zustand: {int(it.condition*100)}% | Tags: {list(it.tags.keys())}")
+            
+        elif cmd == 'f':
+            print("\nWas möchtest du essen?")
+            for i, it in enumerate(p.inventory.items):
+                if "EDIBLE" in it.tags:
+                    print(f"[{i}] {it.name} (+{it.tags['EDIBLE']} Energie)")
+            try:
+                idx = int(input("Index > "))
+                print(game.eat(idx))
+            except: print("Ungültig.")
             input("\nWeiter...")
-        if cmd == 'e':
-            # Vereinfachte Auswahl für das Experiment
+
+        elif cmd == 'i':
+            print("\n--- INVENTAR ---")
+            for i, it in enumerate(p.inventory.items):
+                print(f"[{i}] {it.quantity}x {it.name} ({int(it.condition*100)}%) | Tags: {list(it.tags.keys())}")
+            input("\nWeiter...")
+
+        elif cmd == 'e':
             idx_str = input("IDs (z.B. 0,1,2) > ")
             try:
-                sel = [game.player.inventory.items[int(i)] for i in idx_str.split(",")]
+                sel = [p.inventory.items[int(i)] for i in idx_str.split(",")]
                 res = game.execute_experiment(sel)
-                print(res["message"])
+                print(f"\n{res['message']}")
             except: print("Fehler bei Auswahl.")
             input("\nWeiter...")
-        if cmd == 't':
-            dest = input("Ziel (forest_edge, river_bank) > ")
-            print(game.travel(dest))
+
+        elif cmd == 'k':
+            print("\n--- BEKANNTE BAUPLÄNE ---")
+            for bid in p.known_blueprints:
+                bp = game.blueprints[bid]
+                print(f"- {bp.result_name} ({list(bp.slots.values())})")
             input("\nWeiter...")
+
+        elif cmd == 't':
+            print("\n--- VERFÜGBARE ORTE ---")
+            # Wir iterieren über alle Location-Objekte im Dictionary
+            for loc_id, loc_obj in game.locations.items():
+                # Wir zeigen den Namen und in Klammern die ID an, die man tippen muss
+                print(f"- {loc_obj.name} (ID: {loc_id})")
+            
+            dest = input("\nWohin möchtest du reisen? (ID eingeben) > ").strip()
+            # Die travel-Methode verarbeitet die ID und berechnet die Zeit
+            result_msg = game.travel(dest)
+            print(f"\n{result_msg}")
+            input("\nWeiter mit Enter...")
 
 if __name__ == "__main__": main()

@@ -1,45 +1,36 @@
 """
 engine/components.py
-Kern-Entitäten der Simulation.
+Erweiterte Entitäten mit Thermodynamik-Attributen.
 """
 from dataclasses import dataclass, field
-from typing import List, Dict, Optional, Any
+from typing import List, Dict, Optional, Any, Set
 
 @dataclass
 class Item:
-    """Repräsentiert eine Instanz eines Gegenstands."""
     name: str
     base_weight: float
     tags: Dict[str, Any] = field(default_factory=dict)
     quantity: int = 1
-    
-    # Zustand (1.0 = Neu, 0.0 = Kaputt)
-    condition: float = 1.0
-    
-    # Material-Attribute (z.B. {"durability": 0.8, "sharpness": 0.5})
+    condition: float = 1.0 
     attributes: Dict[str, float] = field(default_factory=dict)
 
     @property
     def total_weight(self):
         return self.base_weight * self.quantity
 
-    def has_tag(self, tag_key: str) -> bool:
-        return tag_key in self.tags
-
     def get_attr(self, key: str, default: float = 0.0) -> float:
         return self.attributes.get(key, default)
 
 @dataclass
 class ToolBlueprint:
-    """Anforderungsprofil für ein experimentelles Werkzeug."""
     id: str
     result_name: str
-    slots: Dict[str, str] # Slot-Name : Benötigter Tag
+    slots: Dict[str, str]
     base_efficiency: float
+    min_survival_req: float = 0.0
 
 @dataclass
 class Inventory:
-    """Verwaltet Items und deren Stapelung."""
     capacity_kg: float = 20.0
     items: List[Item] = field(default_factory=list)
 
@@ -50,13 +41,10 @@ class Inventory:
     def add(self, new_item: Item) -> bool:
         if self.current_weight + new_item.total_weight > self.capacity_kg:
             return False
-            
         for existing in self.items:
-            # Stapeln nur, wenn Name UND Zustand gleich sind
             if existing.name == new_item.name and existing.condition == new_item.condition:
                 existing.quantity += new_item.quantity
                 return True
-        
         self.items.append(new_item)
         return True
 
@@ -66,26 +54,21 @@ class Inventory:
                 return item
         return None
 
-    def remove_resources(self, requirements: Dict[str, int]) -> bool:
-        """Entfernt Mengen von Items (für Crafting)."""
-        for item_name, qty in requirements.items():
-            to_remove = qty
-            for i in range(len(self.items) - 1, -1, -1):
-                item = self.items[i]
-                if item.name == item_name:
-                    if item.quantity <= to_remove:
-                        to_remove -= item.quantity
-                        self.items.pop(i)
-                    else:
-                        item.quantity -= to_remove
-                        to_remove = 0
-                if to_remove <= 0: break
-        return True
+    def get_total_insulation(self) -> float:
+        """Summiert die Isolationswerte aller getragenen/vorhandenen Kleidung."""
+        return sum(it.get_attr("insulation", 0.0) for it in self.items if "CLOTHING" in it.tags)
 
 class Player:
     def __init__(self, name: str):
         self.name = name
         self.inventory = Inventory()
-        self.stats = {"perception": 1.0, "strength": 1.0}
-        self.energy = 1000.0
+        self.stats = {"perception": 1.0, "strength": 1.0, "survival": 1.0}
+        
+        # Vitalwerte
+        self.max_energy = 1000.0
+        self.energy = 800.0
+        self.max_hp = 100.0
         self.hp = 100.0
+        self.body_temp = 37.0  # Celsius
+        
+        self.known_blueprints: Set[str] = set()
