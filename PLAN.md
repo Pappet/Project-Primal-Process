@@ -9,30 +9,38 @@ Kein Overengineering — funktionierende Mechanik > perfekte Architektur. Playte
 
 ---
 
-## Phase 0: Foundation & Research (KW 30-31, 2026)
+## Phase 0: Foundation & Research (KW 30-33, 2026)
 
-### [x] M0.1 — Repo-Analyse & Plan (heute)
+> Marker: `[ ]` = offen, `[~]` = in Arbeit, `[x]` = erledigt
+
+### [x] M0.1 — Repo-Analyse & Plan
 Status: Done. ANALYSIS.md + PLAN.md erstellt.
 
-### [ ] M0.2 — Research: Ähnliche Spiele analysieren
-Ziel: Mechaniken aus 5-6 Referenzspielen extrahieren.
-Referenzen:
+### [ ] M0.2 — Research: 6 Referenzspiele analysieren (2 pro Session)
+Output: `research/*.md` + `research/INDEX.md` mit Takeaways.
 - **UnReal World**: Deep Survival, realistische Körpersimulation, Jahreszeiten
 - **Cataclysm: Dark Days Ahead**: Crafting-Tiefe, Komponenten-System
 - **Ancestors: The Humankind Odyssey**: Primaten-Evolution, neuronales Entdeckungssystem
 - **Neo Scavenger**: Survival-Flow, Condition-System, Crafting-als-Info
 - **Don't Starve**: Technologie-Progression, Discovery durch Strukturen
 - **Vintage Story**: Primitive Tech-Progression, Knapping-Mechanik, Töpferei
-Output: RESEARCH.md mit extrahierten Mechaniken + Bewertung.
+
+### [ ] M0.2b — pytest-Grundgerüst + Smoke-Tests
+- `tests/`-Ordner mit pytest-Setup
+- Smoke-Tests für Crafting-Kern (Blueprint-Matching, Item-Tags)
+- `python -m pytest` muss laufen
+- Wichtig VOR M0.3 (Refactor ohne Tests = gefährlich)
 
 ### [ ] M0.3 — Datenmodell refactorn
 - JSON/YAML-basierte Daten statt hartkodierte Python-Dicts
 - Item-Templates, Blueprints, Locations, Processes aus Dateien laden
 - Validierung beim Laden
+- Tests müssen grün bleiben
 
 ### [ ] M0.4 — Save/Load-System
 - JSON-Serialisierung des GameState
 - Save-Slots, Autosave
+- Roundtrip-Test: save → load → state identisch
 
 ---
 
@@ -138,11 +146,15 @@ Outputs landen in ~/projects/primal-process/ und im Discord #general.
 |-------|-------|
 | `PLAN.md` | Roadmap, Milestones, Fortschritt |
 | `ANALYSIS.md` | Codebase-Analyse, Architektur |
-| `RESEARCH.md` | Referenzspiel-Analysen |
-| `JOURNAL.md` | Chronologisches Session-Tagebuch |
+| `RESEARCH.md` | Forschungs-Zusammenfassung (nach Phase 0) |
+| `research/*.md` | Einzelne Spiel-Analysen |
+| `research/INDEX.md` | Destillierte Takeaways pro Spiel |
+| `JOURNAL.md` | Chronologisches Session-Tagebuch (letzte 4 Wochen) |
+| `archive/` | Archivierte alte Journal-Einträge |
 | `BACKLOG.md` | Bugs, Ideen, Tech Debt — jede Session schreibt rein, Review triagiert |
 
 ---
 
-## Nächster Schritt (M0.2 Research)
-Di 29.07.2026: Erste Research-Session — UnReal World + CDDA analysieren.
+## Nächste Schritte
+- **Mo 27.07. 14:00** — Dev: M0.2b (pytest-Grundgerüst)
+- **Di 28.07. 10:00** — Research: UnReal World + CDDA

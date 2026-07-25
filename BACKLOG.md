@@ -2,7 +2,9 @@
 
 > Jede Session (Research, Dev, Review) schreibt hier rein, was ihr auffällt.
 > Der Sunday Review räumt auf: promoten, verschieben, verwerfen.
-> Format: `- [Status] (Quelle, Datum) Eintrag`
+> Format: `- [DATUM] (Quelle-Session) Beschreibung — einzeilig, konkret`
+> Quelle-Session: Research, Dev, oder Review
+> Keine Romane — das Ziel ist schnelle Triage am Sonntag.
 
 ---
 
