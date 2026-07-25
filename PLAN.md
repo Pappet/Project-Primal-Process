@@ -133,6 +133,15 @@ Implementieren: Prozesse als Aktionen (trocknen, kochen, brennen, fermentieren)
 
 Outputs landen in ~/projects/primal-process/ und im Discord #general.
 
+**Dokumente:**
+| Datei | Zweck |
+|-------|-------|
+| `PLAN.md` | Roadmap, Milestones, Fortschritt |
+| `ANALYSIS.md` | Codebase-Analyse, Architektur |
+| `RESEARCH.md` | Referenzspiel-Analysen |
+| `JOURNAL.md` | Chronologisches Session-Tagebuch |
+| `BACKLOG.md` | Bugs, Ideen, Tech Debt — jede Session schreibt rein, Review triagiert |
+
 ---
 
 ## Nächster Schritt (M0.2 Research)
