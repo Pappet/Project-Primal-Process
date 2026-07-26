@@ -15,15 +15,34 @@
 - 3 Cron-Jobs eingerichtet: Research (Di+Do), Dev (Mo+Mi+Fr), Review (So)
 - Repo: ~/projects/primal-process/, Remote: Pappet/Project-Primal-Process
 
-## 2026-07-26 — [Setup] Session-State, Tests, Doc-Struktur
+## 2026-07-26 — [Review] Weekly #1
 
-**Claude-Review umgesetzt:**
-1. Session-State: Dev-Prompt hat jetzt Crash-Recovery (git status, `[~]` Marker, WIP-Commits)
-2. Test-Fundament: M0.2b (pytest + Smoke-Tests) vor M0.3 eingeschoben
-3. Kalender: Phase 0 KW 30-33, 2 Spiele/Research-Session
-4. Task-Granularität: Sub-Task-Regel im Dev-Prompt
-5. Review-Guardrails: Phasen-Schutz, "Fragen an Peter"-Sektion
-6. Doc-Wachstum: research/-Ordner + INDEX.md, JOURNAL-Archivierung, Triaged-Cleanup
-7. Backlog-Format: Datum+Quelle+Einzeiler-Konvention
+### Erreicht
+- Repo geklont, analysiert, 4-Phasen-Plan erstellt
+- Projekt-Dokumentation: PLAN.md, ANALYSIS.md, JOURNAL.md, BACKLOG.md
+- Cron-Job-Struktur definiert: 3 Jobs (Research Di+Do, Dev Mo+Mi+Fr, Review So)
+- Claude-Review-Feedback eingearbeitet (Session-State, Tests M0.2b, Review-Guardrails)
+- M0.1 abgeschlossen ✓
 
-Alle 3 Cron-Jobs aktualisiert.
+### Backlog-Triage
+- Backlog ist leer — Projekt ist brandneu, keine Einträge
+- Einträge bereinigt: 0 archived, 0 deleted
+
+### Blockiert/Probleme
+- Nichts blockiert. Projektstart verlief sauber.
+
+### Entscheidungen
+- M0.2b (pytest) vor M0.3 (Datenmodell-Refactor) priorisiert — Claude hatte recht, Refactor ohne Tests = gefährlich
+- Research: 2 Spiele pro Session statt 3 — Task-Granularität beachten
+- research/INDEX.md als leeres Template angelegt, erste Session Di 28.07.
+
+### Nächste Woche
+- **Mo 27.07.** Dev: M0.2b pytest-Grundgerüst + Smoke-Tests
+- **Di 28.07.** Research: UnReal World + CDDA analysieren
+- **Mi 29.07.** Dev: Nächster Task (M0.2b fortsetzen oder M0.3 beginnen)
+- **Do 30.07.** Research: Ancestors + Neo Scavenger
+- **Fr 31.07.** Dev: Nächster Task
+
+### Notizen
+- Phase 0 läuft bis KW 33 (Mitte August). Genug Puffer für 6 Spiele + Test-Setup + Refactor + Save/Load.
+- Keine ❓ an Peter nötig — alles im Plan.
