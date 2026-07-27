@@ -5,6 +5,26 @@
 
 ---
 
+## 2026-07-27 — [Dev] M0.2b: pytest-Grundgerüst + Smoke-Tests
+
+### Änderungen
+- `tests/`-Ordner mit `conftest.py`, `__init__.py` angelegt
+- `test_components.py` — 20 Tests: Item, Inventory, ToolBlueprint, Player
+- `test_crafting.py` — 11 Tests: Blueprint, try_combine (Permutation, Multi-Tag, Mismatch), create_dynamic_item
+- `test_data.py` — 13 Tests: create_item für alle 8 Templates, Edge Cases, Tag-Isolation
+- `test_engine.py` — 21 Tests: execute_experiment (Axt/Messer), Eat, Travel, Weather, Thermodynamik
+- 65/65 Tests grün, `python -m pytest` läuft in 0.31s
+
+### Notizen
+- `create_dynamic_item` in `crafting.py` ist hardcoded auf `components["head"]` — crasht bei generischen Blueprints ohne "head"-Slot. Tests dokumentieren das Verhalten, Refactor in M0.3.
+- `_update_weather` triggert auch bei tick_counter=0 (0 % 12 == 0), also initialer Wetter-Random schon beim Start.
+- `_get_ambient_temp` berechnet bei tick_counter=0 Nacht (hour=0 < 6) → night_mod=-10, daher 5°C statt 15°C.
+
+### Nächster Schritt
+- M0.3 — Datenmodell refactorn (JSON-Loader). Jetzt mit Test-Safety-Net.
+
+---
+
 ## 2026-07-26 — [Setup] Projektübernahme & Initialisierung
 
 - Repo von GitHub geklont, analysiert (~400 Zeilen, 8 Items, 2 Blueprints, 3 Orte)

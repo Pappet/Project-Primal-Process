@@ -25,7 +25,7 @@ Mechaniken, Features, Verbesserungen — nicht akut, aber wertvoll.
 ## 🔵 Technical Debt
 Code-Qualität, Architektur, Refactoring-Bedarf.
 
-<!-- Session-Einträge hier drunter -->
+- [2026-07-27] (Dev) `engine/crafting.py:create_dynamic_item` hardcoded auf `components["head"]` — crasht bei Blueprints ohne "head"-Slot. M0.3 beheben.
 
 ---
 
