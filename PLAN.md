@@ -25,7 +25,7 @@ Output: `research/*.md` + `research/INDEX.md` mit Takeaways.
 - **Don't Starve**: Technologie-Progression, Discovery durch Strukturen
 - **Vintage Story**: Primitive Tech-Progression, Knapping-Mechanik, Töpferei
 
-### [ ] M0.2b — pytest-Grundgerüst + Smoke-Tests
+### [x] M0.2b — pytest-Grundgerüst + Smoke-Tests
 - `tests/`-Ordner mit pytest-Setup
 - Smoke-Tests für Crafting-Kern (Blueprint-Matching, Item-Tags)
 - `python -m pytest` muss laufen
