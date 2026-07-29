@@ -16,10 +16,10 @@ Kein Overengineering — funktionierende Mechanik > perfekte Architektur. Playte
 ### [x] M0.1 — Repo-Analyse & Plan
 Status: Done. ANALYSIS.md + PLAN.md erstellt.
 
-### [ ] M0.2 — Research: 6 Referenzspiele analysieren (2 pro Session)
+### [~] M0.2 — Research: 6 Referenzspiele analysieren (2 pro Session)
 Output: `research/*.md` + `research/INDEX.md` mit Takeaways.
-- **UnReal World**: Deep Survival, realistische Körpersimulation, Jahreszeiten
-- **Cataclysm: Dark Days Ahead**: Crafting-Tiefe, Komponenten-System
+- **[x] UnReal World**: Deep Survival, realistische Körpersimulation, Jahreszeiten
+- **[x] Cataclysm: Dark Days Ahead**: Crafting-Tiefe, Komponenten-System
 - **Ancestors: The Humankind Odyssey**: Primaten-Evolution, neuronales Entdeckungssystem
 - **Neo Scavenger**: Survival-Flow, Condition-System, Crafting-als-Info
 - **Don't Starve**: Technologie-Progression, Discovery durch Strukturen
