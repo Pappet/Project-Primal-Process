@@ -155,6 +155,29 @@ Outputs landen in ~/projects/primal-process/ und im Discord #general.
 
 ---
 
+## Sprint Tasks (KW 31)
+>
+> Vom Review priorisiert. Dev arbeitet diese Liste von oben nach unten ab.
+> `[ ]` offen, `[~]` in Arbeit, `[x]` erledigt, `[?]` blockiert/unklar
+
+### [ ] TASK-M03 — Datenmodell-Refactor: JSON-Loader
+- Typ: Refactor
+- Geschätzt: 2-3 Sessions
+- Details:
+  - `data/items.py`: Item-Templates aus JSON-Datei laden statt hartkodierte Dicts
+  - `data/blueprints.py`: Blueprints aus JSON laden
+  - `data/locations.py`: Locations aus JSON laden
+  - JSON-Schema-Validierung beim Laden (pydantic oder manuell)
+  - `engine/crafting.py:create_dynamic_item`: Fix für hardcoded `components["head"]` (aus BACKLOG-Bug)
+- Akzeptanz:
+  - Alle bestehenden 65 Tests grün (`python -m pytest`)
+  - Neue Tests für JSON-Loader (fehlende Datei, invalides JSON, fehlende Felder)
+  - Items/Blueprints/Locations verhalten sich identisch zu vorher
+  - Keine hartkodierten Dicts mehr in `data/`
+
+---
 ## Nächste Schritte
-- **Mo 27.07. 14:00** — Dev: M0.2b (pytest-Grundgerüst)
-- **Di 28.07. 10:00** — Research: UnReal World + CDDA
+- **Mi 29.07. 14:00** — Dev: TASK-M03 (JSON-Loader, Session 1)
+- **Do 30.07. 10:00** — Research: Ancestors + Neo Scavenger
+- **Fr 31.07. 14:00** — Dev: TASK-M03 (Session 2)
+- **So 02.08. 18:00** — Review: Weekly Triage + Sprint Planning
