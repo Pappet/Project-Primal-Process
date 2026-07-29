@@ -1,0 +1,16 @@
+[
+  {
+    "id": "axe",
+    "result_name": "Axt",
+    "slots": {"head": "HARD", "handle": "RIGID", "binding": "FIBER"},
+    "base_efficiency": 1.0,
+    "min_survival_req": 0.0
+  },
+  {
+    "id": "knife",
+    "result_name": "Messer",
+    "slots": {"blade": "SHARP", "handle": "RIGID"},
+    "base_efficiency": 0.8,
+    "min_survival_req": 0.0
+  }
+]

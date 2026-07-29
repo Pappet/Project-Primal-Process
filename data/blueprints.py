@@ -1,21 +1,19 @@
 """
 data/blueprints.py
-Baupläne für das Experimentier-System.
+Baupläne für das Experimentier-System — geladen aus blueprints.json.
 """
 from engine.components import ToolBlueprint
+from data.loader import load_blueprints
+
 
 def get_all_blueprints():
     return [
         ToolBlueprint(
-            id="axe",
-            result_name="Axt",
-            slots={"head": "HARD", "handle": "RIGID", "binding": "FIBER"},
-            base_efficiency=1.0
-        ),
-        ToolBlueprint(
-            id="knife",
-            result_name="Messer",
-            slots={"blade": "SHARP", "handle": "RIGID"},
-            base_efficiency=0.8
+            id=bp.id,
+            result_name=bp.result_name,
+            slots=bp.slots,
+            base_efficiency=bp.base_efficiency,
+            min_survival_req=bp.min_survival_req,
         )
+        for bp in load_blueprints()
     ]

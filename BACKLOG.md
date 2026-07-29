@@ -32,6 +32,8 @@ Mechaniken, Features, Verbesserungen — nicht akut, aber wertvoll.
 Code-Qualität, Architektur, Refactoring-Bedarf.
 
 - [2026-07-27] (Dev) `engine/crafting.py:create_dynamic_item` hardcoded auf `components["head"]` — crasht bei Blueprints ohne "head"-Slot. M0.3 beheben.
+- [2026-07-29] (Dev) `data/processes.py` hat noch hartkodierte ProcessDefs — sollte analog zu items/blueprints/locations JSON-Loader bekommen
+- [2026-07-29] (Dev) `engine/core.py:_create_tool` hat `comp.get("head") or comp.get("blade")` — Fallback vorhanden aber inkonsistent mit fix in crafting.py. Sollte gleiche dynamische Slot-Erkennung verwenden
 
 ---
 

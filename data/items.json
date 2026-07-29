@@ -1,0 +1,46 @@
+{
+  "stick": {
+    "name": "Eichenast",
+    "weight": 0.5,
+    "tags": {"RIGID": true},
+    "attributes": {"durability": 0.8}
+  },
+  "flint_shard": {
+    "name": "Feuersteinsplitter",
+    "weight": 0.4,
+    "tags": {"HARD": true, "SHARP": true},
+    "attributes": {"sharpness": 0.9, "durability": 0.4}
+  },
+  "plant_fiber": {
+    "name": "Pflanzenfaser",
+    "weight": 0.05,
+    "tags": {"FIBER": true},
+    "attributes": {"durability": 0.5}
+  },
+  "reeds": {
+    "name": "Schilfrohr",
+    "weight": 0.1,
+    "tags": {"RIGID": true, "FIBER": true},
+    "attributes": {"durability": 0.1}
+  },
+  "berries": {
+    "name": "Waldbeeren",
+    "weight": 0.1,
+    "tags": {"EDIBLE": 50}
+  },
+  "mushroom": {
+    "name": "Wildpilz",
+    "weight": 0.1,
+    "tags": {"EDIBLE": 30}
+  },
+  "raw_meat": {
+    "name": "Rohes Fleisch",
+    "weight": 0.5,
+    "tags": {"EDIBLE": 150}
+  },
+  "cooked_meat": {
+    "name": "Gebratenes Fleisch",
+    "weight": 0.4,
+    "tags": {"EDIBLE": 400}
+  }
+}

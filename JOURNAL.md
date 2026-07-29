@@ -5,6 +5,32 @@
 
 ---
 
+## 2026-07-29 — [Dev] TASK-M03: JSON-Loader Refactor (Session 1/3)
+
+### Erreicht
+- **JSON-Daten erstellt:** `data/items.json`, `data/blueprints.json`, `data/locations.json` — alle 1:1 aus den alten hartkodierten Dicts extrahiert
+- **Loader-Modul:** `data/loader.py` mit pydantic-Validierung (ItemTemplate, BlueprintData, LocationData, ResourceNodeData)
+- **data/items.py refactored:** `TEMPLATE_DB` jetzt aus `load_items()` statt hartkodiert — `create_item()` nutzt pydantic-Model-Attributzugriff
+- **data/blueprints.py refactored:** `get_all_blueprints()` aus `load_blueprints()`
+- **data/locations.py refactored:** `get_all_locations()` aus `load_locations()` — ResourceNode/LocationDef-Dataclasses bleiben als API erhalten
+- **Bugfix:** `engine/crafting.py:create_dynamic_item` — hardcoded `components["head"]`/`components["handle"]` entfernt. Dynamische Suche nach sharpness und Name-Building
+- **Neue Tests:** `tests/test_loader.py` — 18 Tests (Load, Validation, Roundtrip): fehlende Datei, invalides JSON, fehlende Pflichtfelder, falsche Typen
+
+### Ergebnis
+- **83/83 Tests grün** (65 bestehend + 18 neu), `python -m pytest` in 0.39s
+- Alle Items, Blueprints, Locations verhalten sich identisch zur alten Version
+- Keine hartkodierten Dicts mehr in `data/items.py`, `data/blueprints.py`, `data/locations.py`
+
+### Notizen
+- `data/processes.py` hat noch hartkodierte ProcessDefs — nicht im Task-Scope, aber konsistent wäre ein `processes.json` → BACKLOG
+- `engine/core.py:_create_tool` hat `comp.get("head") or comp.get("blade")` — hat Fallback aber inkonsistent mit fix in crafting.py → BACKLOG
+- pydantic 2.13.4 verfügbar, Validierung funktioniert sauber
+
+### Nächster Schritt
+- TASK-M03 ist vollständig (alle Akzeptanzkriterien erfüllt). Review entscheidet ob Session 2/3 nötig.
+
+---
+
 ## 2026-07-28 — [Research] UnReal World + Cataclysm: Dark Days Ahead
 
 ### UnReal World — Erkenntnisse

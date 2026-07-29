@@ -160,7 +160,7 @@ Outputs landen in ~/projects/primal-process/ und im Discord #general.
 > Vom Review priorisiert. Dev arbeitet diese Liste von oben nach unten ab.
 > `[ ]` offen, `[~]` in Arbeit, `[x]` erledigt, `[?]` blockiert/unklar
 
-### [ ] TASK-M03 — Datenmodell-Refactor: JSON-Loader
+### [x] TASK-M03 — Datenmodell-Refactor: JSON-Loader
 - Typ: Refactor
 - Geschätzt: 2-3 Sessions
 - Details:
