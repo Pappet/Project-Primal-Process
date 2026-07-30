@@ -17,6 +17,16 @@
 - **Proficiency-System:** Spezifische Fertigkeiten (`prof_carving`) separat von generellen Skills, gelernt durch Wiederholung, reduzieren Fehlschlag-Rate
 - **Known-Blueprints-Set:** Rezepte werden nicht geschenkt, sondern durch Experimentieren/Finden entdeckt — `known_blueprints: set` auf dem Player
 
+### Ancestors: The Humankind Odyssey (2026-07-30)
+- **Neuronales Entdeckungssystem:** Fähigkeiten werden durch Handlungen entdeckt und verstärkt, nicht durch Punkte gekauft — verstärkte Neuronen vererben sich auf nächste Generation
+- **Angst/Dopamin-Pacing:** Unbekannte Biome lösen Fear aus, erfolgreiche Aktionen bauen Dopamin auf — natürliches Pacing ohne künstliche Gates
+- **Sensorische Discovery-UI:** Keine Minimap, keine Marker — Intelligenz und Sinne ersetzen das HUD, Objekte müssen erst identifiziert werden
+
+### Neo Scavenger (2026-07-30)
+- **Substitutions-Crafting:** Rezepte definieren Kategorien (CONTAINER, SHARP), nicht Item-IDs — beweist dass Tag-basiertes Crafting im Survival-Genre funktioniert
+- **Condition-Web:** Nicht HP/Energy, sondern Multi-Condition-Metabolismus (Hunger, Durst, Fatigue, Hypothermie, Krankheit, Schmerz) mit Kaskaden-Interaktionen
+- **Permadeath + Spieler-Progression:** Kein XP, kein Leveling — Fortschritt ist ausschließlich Spieler-Wissen, der beste Beweis für PPPs Discovery-Philosophie
+
 ---
 
 ## Querverweise
@@ -30,7 +40,13 @@
 | Proficiency/Sub-Skills | CDDA | M3.1 Tech-Stufen |
 | Known Blueprints | CDDA | M3.1 Discovery-System |
 | Komponenten-Konstruktion | CDDA | M2.2 Persistente Welt |
+| Neuronale Entdeckung | Ancestors | M3.1 Discovery-System |
+| Angst/Dopamin-Pacing | Ancestors | M2.1 Weltkarte |
+| Sensorische Discovery-UI | Ancestors | M3.3 UI/UX |
+| Tag-Substitution-Crafting | Neo Scavenger | M1.2 Item-Content, Kernsystem |
+| Condition-Web | Neo Scavenger | M2.4 Gesundheitssystem |
+| Spieler-Progression (kein XP) | Neo Scavenger | M3.1 Discovery, Kernphilosophie |
 
 ---
 
-*Stand: 2026-07-28 — 2/6 Spiele analysiert. Nächste Session: Ancestors + Neo Scavenger.*
+*Stand: 2026-07-30 — 4/6 Spiele analysiert. Nächste Session: Don't Starve + Vintage Story.*

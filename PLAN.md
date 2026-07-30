@@ -20,8 +20,8 @@ Status: Done. ANALYSIS.md + PLAN.md erstellt.
 Output: `research/*.md` + `research/INDEX.md` mit Takeaways.
 - **[x] UnReal World**: Deep Survival, realistische Körpersimulation, Jahreszeiten
 - **[x] Cataclysm: Dark Days Ahead**: Crafting-Tiefe, Komponenten-System
-- **Ancestors: The Humankind Odyssey**: Primaten-Evolution, neuronales Entdeckungssystem
-- **Neo Scavenger**: Survival-Flow, Condition-System, Crafting-als-Info
+- **[x] Ancestors: The Humankind Odyssey**: Primaten-Evolution, neuronales Entdeckungssystem
+- **[x] Neo Scavenger**: Survival-Flow, Condition-System, Crafting-als-Info
 - **Don't Starve**: Technologie-Progression, Discovery durch Strukturen
 - **Vintage Story**: Primitive Tech-Progression, Knapping-Mechanik, Töpferei
 
@@ -177,7 +177,7 @@ Outputs landen in ~/projects/primal-process/ und im Discord #general.
 
 ---
 ## Nächste Schritte
-- **Mi 29.07. 14:00** — Dev: TASK-M03 (JSON-Loader, Session 1)
-- **Do 30.07. 10:00** — Research: Ancestors + Neo Scavenger
-- **Fr 31.07. 14:00** — Dev: TASK-M03 (Session 2)
+- **Do 30.07. 10:00** — Research: Ancestors + Neo Scavenger ✓
+- **Fr 31.07. 14:00** — Dev: TASK-M03 (Session 2, falls nötig) oder nächster Task
 - **So 02.08. 18:00** — Review: Weekly Triage + Sprint Planning
+- **Di 04.08. 10:00** — Research: Don't Starve + Vintage Story
