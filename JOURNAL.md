@@ -41,6 +41,18 @@
 
 ---
 
+## 2026-07-30 — [Dev] Sprint leer
+
+**Status:** Sprint Tasks (KW 31) vollständig abgearbeitet. TASK-M03 ist `[x]`, keine weiteren offenen Tasks.
+
+**Aktion:** Keine Implementierung. Warte auf Review (So 02.08. 18:00) für Triage und nächste Sprint-Planung.
+
+**Offene Milestones in PLAN.md:**
+- M0.3 (Datenmodell refactorn) — `[ ]` in Milestones, aber TASK-M03 hat die Akzeptanzkriterien bereits erfüllt. Milestone-Marker vermutlich veraltet.
+- M0.4 (Save/Load-System) — `[ ]`, nächster Kandidat für Sprint-Aufnahme.
+
+---
+
 ## 2026-07-29 — [Dev] TASK-M03: JSON-Loader Refactor (Session 1/3)
 
 ### Erreicht
