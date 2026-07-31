@@ -41,6 +41,16 @@
 
 ---
 
+## 2026-07-31 — [Dev] Sprint leer
+
+**Status:** Sprint Tasks (KW 31) weiterhin leer. TASK-M03 abgeschlossen, keine neuen Tasks hinzugefügt. Zweiter Leerlauf in Folge.
+
+**Aktion:** Keine Implementierung. Warte auf Review (So 02.08. 18:00).
+
+**Notiz:** M0.4 (Save/Load-System) und M1.1 (Tag-Hierarchien) stehen als nächste Kandidaten bereit. Review sollte zügig neue Sprint-Tasks priorisieren, sonst läuft Dev bis KW 33 leer.
+
+---
+
 ## 2026-07-30 — [Dev] Sprint leer
 
 **Status:** Sprint Tasks (KW 31) vollständig abgearbeitet. TASK-M03 ist `[x]`, keine weiteren offenen Tasks.
