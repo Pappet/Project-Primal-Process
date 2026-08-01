@@ -170,35 +170,30 @@ Outputs landen in ~/projects/primal-process/ und im Discord #general.
 
 ### [ ] TASK-B01 — 🔴 FIBER-Quelle in Locations (Crafting unspielbar)
 - Typ: Bug
-- Geschätzt: 1 Session
 - Details: `plant_fiber` (FIBER) und/oder `reeds` (RIGID+FIBER) sind in keiner Location — Axt/Messer strukturell uncraftbar. Zu mindestens einem Location-Node (z.B. forest_edge) mit niedriger Drop-Chance hinzufügen.
 - Akzeptanz: Neue Session findet per gather() ein FIBER-Item und kann das Axt-Crafting erfolgreich ausführen
 - Milestone: M1.2
 
 ### [ ] TASK-B02 — 🔴 pebble-Template fehlt in items.json
 - Typ: Bug
-- Geschätzt: 1 Session
 - Details: `mountain_peak`-Node referenziert `"pebble"`, Template existiert nicht → Spieler sammelt nutzlose "Unbekannt"-Items. pebble-Template mit STONE/PROJECTILE-Tags anlegen (und sinnvoll in Location binden).
 - Akzeptanz: `create_item("pebble")` liefert ein Item mit Tags statt `Item("Unbekannt", 0.1)`
 - Milestone: M1.2
 
 ### [ ] TASK-B03 — 🔴 Perception-Gates entschärfen (Items erreichbar)
 - Typ: Bug
-- Geschätzt: 1 Session
 - Details: Start perception=1.0; flint_shard 1.5, berries 2.0, mushroom 2.0 — unerreichbar, kein Erhöhungsweg. Entweder Startwert auf 2.0 ODER Node-Anforderungen senken (flint_shard 1.5→1.0, berries 2.0→1.0, mushroom 2.0→1.0). Anforderung entscheidet.
 - Akzeptanz: Ohne Skill-Grind sind berries/mushroom/flint per gather() sammelbar
 - Milestone: M2.1/M3.2
 
 ### [ ] TASK-B04 — 🔴 Condition=0-Items vom Crafting ausschliessen
 - Typ: Bug
-- Geschätzt: 1 Session
 - Details: `execute_experiment` iteriert über `selected_items` ohne Condition-Check → kaputte Items craftbar, Ergebnis condition=1.0 (Exploit). Condition=0-Items vor dem Crafting filtern (analog `find_item_by_tag`).
 - Akzeptanz: Crafting mit condition=0-Item schlägt fehl und gibt verständliches Feedback
 - Milestone: M0.3/M1.3
 
 ### [ ] TASK-B05 — 🔴 Nachtstart beheben (Spiel startet tagsüber)
 - Typ: Bug
-- Geschätzt: 1 Session
 - Details: tick_counter=0 → hour=0 → night_mod=-10 → Starttemp 5°C, Hypothermie fast sofort. tick_counter initial auf 36 setzen (6 Uhr morgens).
 - Akzeptanz: Neue Session startet mit Tageszeit 6 Uhr und normaler Starttemperatur
 - Milestone: M2.4
@@ -207,7 +202,6 @@ Outputs landen in ~/projects/primal-process/ und im Discord #general.
 
 ### [ ] TASK-R01 — processes.py auf JSON-Loader umstellen
 - Typ: Refactor
-- Geschätzt: 1 Session
 - Details: `data/processes.py` hat noch hartkodierte ProcessDefs. Analog zu items/blueprints/locations einen JSON-Loader bauen und `processes.json` anlegen.
 - Akzeptanz: Keine hartkodierten ProcessDefs mehr in `data/`; bestehende Tests grün
 - Milestone: M0.3
