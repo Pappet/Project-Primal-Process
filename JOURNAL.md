@@ -5,15 +5,16 @@
 
 ---
 
-## 2026-08-01 — [Meta] Review-Cap auf 6 Tasks korrigiert
+## 2026-08-01 — [Meta] Review-Cap auf 6 Tasks korrigiert — danach als Zahl entfernt
 
-**Kontext:** Sprint-Cap „max 4 Tasks" stammte aus dem alten Dev-Schedule (Mo/Mi/Fr = 3 Sessions + 1 Puffer). Dev läuft jetzt Mo–Sa = 6 Sessions. Review-Testlauf hatte 9 Tasks in KW 32 gelegt (5 Bugs + 4 weitere) → überplant.
+**Kontext:** Sprint-Cap „max 4 Tasks" stammte aus dem alten Dev-Schedule (Mo/Mi/Fr = 3 Sessions + 1 Puffer). Dev läuft jetzt Mo–Sa = 6 Sessions. Weiter verschärft: Dev bündelt jetzt Minifixes → konsumiert mehrere Tasks pro Session.
 
-**Änderungen:**
-- Review-Prompt: Cap auf **6 Tasks/Woche** (Dev Mo–Sa volle Auslastung), 🔴 Bugs zuerst, nie bündeln/kappen. KW-Angabe in der Task-Sektion dynamisiert.
-- Review-Delivery von `origin` auf `discord:#general` umgestellt (konsistent zu Research/Dev/QA).
-- KW 32 auf 6 Tasks getrimmt: TASK-B01…B05 + TASK-R01. R02 → Tech Debt (KW 33), F01+F02 → Ideas (KW 33).
-- Review-Prompt liest jetzt den `qa/`-Ordner als Pflicht-Input.
+**Finale Struktur (nach Iteration mit Peter):**
+- **Kein fixes Tasks-Cap mehr.** Review füllt den Sprint mit allen offenen 🔴 Bugs + top-priorisierten Refactors/Features, so viele wie sinnvoll und klar definiert — Kriterium ist Qualität, nicht eine Zahl. Nicht abgearbeitete Tasks rollen in die Folgewoche.
+- **Dev bündelt Minifixes** (mehrere kleine Tasks/Session), Refactors/Features einzeln. Kein 1-Task-pro-Session-Zwang mehr.
+- **Review übernimmt offene Tasks** aus der bisherigen Sprint-Sektion in die neue KW (kein Verlust beim KW-Wechsel).
+- Review-Prompt liest den `qa/`-Ordner als Pflicht-Input. Delivery auf `discord:#general` (konsistent zu Research/Dev/QA).
+- „Geschätzt"-Zeilen aus dem Task-Format entfernt — der Review muss nicht mehr schätzen.
 
 **Triage-Testlauf (`187199c`):** Flow funktioniert — QA-Report → 5 Bug-Tasks, PLAN.md aktualisiert, committed + gepusht.
 

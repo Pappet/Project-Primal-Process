@@ -207,7 +207,7 @@ Outputs landen in ~/projects/primal-process/ und im Discord #general.
 - Milestone: M0.3
 
 ---
-> **Hinweis (KW 32):** R02, F01, F02 zurück ins BACKLOG — Sprint-Cap ist 6 Tasks/Woche, Dev lädt 6 Sessions aus. R02 (Tech Debt), F01+F02 (Features) kommen in KW 33 dran, Bugs zuerst.
+> **Hinweis (KW 32):** Sprint-Cap wurde als Zahl entfernt — der Review füllt jetzt nach Qualität statt nach fester Obergrenze. R02 (Tech Debt) + F01/F02 (Features) werden vom Review in KW 33 aufgenommen. Nicht abgearbeitete Tasks rollen in die Folgewoche.
 
 ## Nächste Schritte
 - **Mo 03.08. 14:00** — Dev: Sprint KW 32 starten — 🔴 Bugs zuerst (TASK-B01 ff.)
