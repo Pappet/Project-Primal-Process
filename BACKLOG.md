@@ -12,6 +12,11 @@
 Dinge die kaputt sind und gefixt werden müssen.
 
 <!-- Session-Einträge hier drunter -->
+- [2026-08-01] (QA) 🔴 plant_fiber und reeds in keiner Location — kein FIBER/RIGID-FIBER droppbar, beide Blueprints uncraftbar → M1.2 Content
+- [2026-08-01] (QA) 🔴 pebble-Template fehlt in items.json — mountain_peak-Node referenziert nicht existierendes Template, Spieler sammelt "Unbekannt" → M1.2 Content
+- [2026-08-01] (QA) 🔴 Perception-Startwert (1.0) zu niedrig — flint_shard (1.5), berries (2.0), mushroom (2.0) alle unerreichbar → M2.1/M3.2 Balancing
+- [2026-08-01] (QA) 🔴 Condition=0 Items craftbar — kaputte Items ergeben Werkzeug mit condition=1.0, Exploit → M0.3/M1.3
+- [2026-08-01] (QA) 🔴 Spieler startet bei Nacht (tick_counter=0 → hour=0 → night_mod=-10) — effektive Starttemp 5°C statt 15°C, Hypothermie fast instant → M2.4
 
 ---
 
