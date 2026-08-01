@@ -5,6 +5,20 @@
 
 ---
 
+## 2026-08-01 — [Meta] Review-Cap auf 6 Tasks korrigiert
+
+**Kontext:** Sprint-Cap „max 4 Tasks" stammte aus dem alten Dev-Schedule (Mo/Mi/Fr = 3 Sessions + 1 Puffer). Dev läuft jetzt Mo–Sa = 6 Sessions. Review-Testlauf hatte 9 Tasks in KW 32 gelegt (5 Bugs + 4 weitere) → überplant.
+
+**Änderungen:**
+- Review-Prompt: Cap auf **6 Tasks/Woche** (Dev Mo–Sa volle Auslastung), 🔴 Bugs zuerst, nie bündeln/kappen. KW-Angabe in der Task-Sektion dynamisiert.
+- Review-Delivery von `origin` auf `discord:#general` umgestellt (konsistent zu Research/Dev/QA).
+- KW 32 auf 6 Tasks getrimmt: TASK-B01…B05 + TASK-R01. R02 → Tech Debt (KW 33), F01+F02 → Ideas (KW 33).
+- Review-Prompt liest jetzt den `qa/`-Ordner als Pflicht-Input.
+
+**Triage-Testlauf (`187199c`):** Flow funktioniert — QA-Report → 5 Bug-Tasks, PLAN.md aktualisiert, committed + gepusht.
+
+---
+
 ## 2026-08-01 — [Review] Weekly Triage + Sprint-Planung (KW 32)
 
 **Kontext:** KW 31 lief zu grossen Teilen leer (3× "Sprint leer") — Dev wartete auf Triage. Der QA-Playtest #1 (heute) liefert endlich konkrete Arbeit: 5 🔴 Bugs, Spiel faktisch unspielbar.

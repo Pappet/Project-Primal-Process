@@ -31,6 +31,8 @@ Mechaniken, Features, Verbesserungen — nicht akut, aber wertvoll.
 - [2026-07-30] (Research) Biom-Vertrautheit (Fear/Dopamin): Unbekannte Biome lösen Debuff aus, erfolgreiche Aktionen bauen Familiarity auf. Kein Rush zu Endgame möglich. — M2.1 → **später (Phase 2)**
 - [2026-07-30] (Research) Death-as-Legacy: Entdeckte Blueprints überleben Charakter-Tod. Inventar/Position geht verloren, Wissen bleibt. — M0.4 → **nächste Woche (M0.4)**
 - [2026-07-30] (Research) Starting Scenarios: Spielstart mit permanenten Traits („Forest Child", „Coastal Wanderer"). Modifizieren Skill-Lernraten und Start-Bedingungen. — M3.2 → **später (Phase 3)**
+- [2026-08-01] (QA) Crafting-Fehlschlag-Feedback: `"Nichts passiert."` uninformativ → konkreter Grund nennen (fehlende Tags, falsche Kombination, fehlendes Werkzeug). — M3.3 → **KW 33 (TASK-F01)**
+- [2026-08-01] (QA) Energie-Balance: Drain aggressiv (10/gather), Start 800, keine Regeneration → Start 1000 + passive/Schlaf-Regeneration. Hypothermie-Warnung nur 1× pro Zustandsänderung. — M2.4 → **KW 33 (TASK-F02)**
 
 ---
 
@@ -39,7 +41,7 @@ Code-Qualität, Architektur, Refactoring-Bedarf.
 
 - [2026-07-27] (Dev) ~~`engine/crafting.py:create_dynamic_item` hardcoded auf `components["head"]`~~ — **✅ erledigt** in TASK-M03 (2026-07-29)
 - [2026-07-29] (Dev) `data/processes.py` hat noch hartkodierte ProcessDefs — sollte analog zu items/blueprints/locations JSON-Loader bekommen → **Sprint KW 32 (TASK-R01)**
-- [2026-07-29] (Dev) `engine/core.py:_create_tool` hat `comp.get("head") or comp.get("blade")` — Fallback vorhanden aber inkonsistent mit fix in crafting.py. Sollte gleiche dynamische Slot-Erkennung verwenden → **Sprint KW 32 (TASK-R02)**
+- [2026-07-29] (Dev) `engine/core.py:_create_tool` hat `comp.get("head") or comp.get("blade")` — Fallback vorhanden aber inkonsistent mit fix in crafting.py. Sollte gleiche dynamische Slot-Erkennung verwenden → **nächste Woche (KW 33, TASK-R02)**
 
 ---
 

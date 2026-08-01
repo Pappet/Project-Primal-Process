@@ -212,28 +212,8 @@ Outputs landen in ~/projects/primal-process/ und im Discord #general.
 - Akzeptanz: Keine hartkodierten ProcessDefs mehr in `data/`; bestehende Tests grün
 - Milestone: M0.3
 
-### [ ] TASK-R02 — _create_tool Slot-Erkennung angleichen
-- Typ: Refactor
-- Geschätzt: 1 Session
-- Details: `engine/core.py:_create_tool` nutzt `comp.get("head") or comp.get("blade")` — inkonsistent mit dem Fix in crafting.py. Gleiche dynamische Komponenten-Slot-Erkennung übernehmen.
-- Akzeptanz: Beide Code-Pfade nutzen dieselbe dynamische Slot-Suche
-- Milestone: M0.3
-
-### [ ] TASK-F01 — Crafting-Fehlschlag-Feedback verbessern
-- Typ: Feature
-- Geschätzt: 1 Session
-- Details: `"Nichts passiert."` ist uninformativ. Unterschiedliche Fehler benennen: fehlende Tags, falsche Kombination, fehlendes Werkzeug, Skill-Anforderung.
-- Akzeptanz: Fehlschlag nennt den konkreten Grund (z.B. "Dir fehlt ein scharfes Werkzeug")
-- Milestone: M3.3
-
-### [ ] TASK-F02 — Energie-Balance (Regeneration + Startwert)
-- Typ: Feature
-- Geschätzt: 1 Session
-- Details: Energie-Drain aggressiv (10/gather), Start 800, keine Regeneration. QA: Start auf 1000, passive/Schlaf-Regeneration. Zusätzlich Hypothermie-Warnung nur 1× pro Zustandsänderung (nicht jeder Tick).
-- Akzeptanz: Mittlerer Durchlauf (20+ Aktionen) ohne Energie-Frust; Warn-Nachricht nicht mehr gespammt
-- Milestone: M2.4
-
 ---
+> **Hinweis (KW 32):** R02, F01, F02 zurück ins BACKLOG — Sprint-Cap ist 6 Tasks/Woche, Dev lädt 6 Sessions aus. R02 (Tech Debt), F01+F02 (Features) kommen in KW 33 dran, Bugs zuerst.
 
 ## Nächste Schritte
 - **Mo 03.08. 14:00** — Dev: Sprint KW 32 starten — 🔴 Bugs zuerst (TASK-B01 ff.)
