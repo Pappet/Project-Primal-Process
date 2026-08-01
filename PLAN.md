@@ -16,7 +16,7 @@ Kein Overengineering — funktionierende Mechanik > perfekte Architektur. Playte
 ### [x] M0.1 — Repo-Analyse & Plan
 Status: Done. ANALYSIS.md + PLAN.md erstellt.
 
-### [~] M0.2 — Research: 6 Referenzspiele analysieren (2 pro Session)
+### [~] M0.2 — Research: Referenzspiele analysieren (2 pro Session)
 Output: `research/*.md` + `research/INDEX.md` mit Takeaways.
 - **[x] UnReal World**: Deep Survival, realistische Körpersimulation, Jahreszeiten
 - **[x] Cataclysm: Dark Days Ahead**: Crafting-Tiefe, Komponenten-System
@@ -25,13 +25,20 @@ Output: `research/*.md` + `research/INDEX.md` mit Takeaways.
 - **Don't Starve**: Technologie-Progression, Discovery durch Strukturen
 - **Vintage Story**: Primitive Tech-Progression, Knapping-Mechanik, Töpferei
 
+*Erweitert am 01.08 (Review): nur noch 2 offen → 5 neue Kandidaten ergänzt.*
+- **Valheim**: Boss-gated Biom-Progression + gestuftes primitives Crafting — Vorlage für Tech-Gating ohne Tech-Tree (M3.1)
+- **The Long Dark**: Kälte-/Condition-Survival mit Temperatur-Druck — Referenz für M2.4 Gesundheit & Start-Balance
+- **Green Hell**: Body-Part-Schaden, Krankheiten, Erkundungs-UI ohne Minimap — M2.4/M3.3
+- **Project Zomboid**: Tiefes Condition-/Crafting-/Konstruktions-System, persistente Welt — M2.2/M2.4
+- **Dwarf Fortress**: Material-Komplexität, Crafting-Bäume, generierte Welt — M3.1/M4
+
 ### [x] M0.2b — pytest-Grundgerüst + Smoke-Tests
 - `tests/`-Ordner mit pytest-Setup
 - Smoke-Tests für Crafting-Kern (Blueprint-Matching, Item-Tags)
 - `python -m pytest` muss laufen
 - Wichtig VOR M0.3 (Refactor ohne Tests = gefährlich)
 
-### [ ] M0.3 — Datenmodell refactorn
+### [~] M0.3 — Datenmodell refactorn
 - JSON/YAML-basierte Daten statt hartkodierte Python-Dicts
 - Item-Templates, Blueprints, Locations, Processes aus Dateien laden
 - Validierung beim Laden
@@ -155,29 +162,82 @@ Outputs landen in ~/projects/primal-process/ und im Discord #general.
 
 ---
 
-## Sprint Tasks (KW 31)
+## Sprint Tasks (KW 32)
 >
 > Vom Review priorisiert. Dev arbeitet diese Liste von oben nach unten ab.
 > `[ ]` offen, `[~]` in Arbeit, `[x]` erledigt, `[?]` blockiert/unklar
+> 🔴 Bugs haben Vorrang. Erst ALLE Bugs (je eigener Task), dann Refactor, dann Features.
 
-### [x] TASK-M03 — Datenmodell-Refactor: JSON-Loader
-- Typ: Refactor
-- Geschätzt: 2-3 Sessions
-- Details:
-  - `data/items.py`: Item-Templates aus JSON-Datei laden statt hartkodierte Dicts
-  - `data/blueprints.py`: Blueprints aus JSON laden
-  - `data/locations.py`: Locations aus JSON laden
-  - JSON-Schema-Validierung beim Laden (pydantic oder manuell)
-  - `engine/crafting.py:create_dynamic_item`: Fix für hardcoded `components["head"]` (aus BACKLOG-Bug)
-- Akzeptanz:
-  - Alle bestehenden 65 Tests grün (`python -m pytest`)
-  - Neue Tests für JSON-Loader (fehlende Datei, invalides JSON, fehlende Felder)
-  - Items/Blueprints/Locations verhalten sich identisch zu vorher
-  - Keine hartkodierten Dicts mehr in `data/`
+### [ ] TASK-B01 — 🔴 FIBER-Quelle in Locations (Crafting unspielbar)
+- Typ: Bug
+- Geschätzt: 1 Session
+- Details: `plant_fiber` (FIBER) und/oder `reeds` (RIGID+FIBER) sind in keiner Location — Axt/Messer strukturell uncraftbar. Zu mindestens einem Location-Node (z.B. forest_edge) mit niedriger Drop-Chance hinzufügen.
+- Akzeptanz: Neue Session findet per gather() ein FIBER-Item und kann das Axt-Crafting erfolgreich ausführen
+- Milestone: M1.2
+
+### [ ] TASK-B02 — 🔴 pebble-Template fehlt in items.json
+- Typ: Bug
+- Geschätzt: 1 Session
+- Details: `mountain_peak`-Node referenziert `"pebble"`, Template existiert nicht → Spieler sammelt nutzlose "Unbekannt"-Items. pebble-Template mit STONE/PROJECTILE-Tags anlegen (und sinnvoll in Location binden).
+- Akzeptanz: `create_item("pebble")` liefert ein Item mit Tags statt `Item("Unbekannt", 0.1)`
+- Milestone: M1.2
+
+### [ ] TASK-B03 — 🔴 Perception-Gates entschärfen (Items erreichbar)
+- Typ: Bug
+- Geschätzt: 1 Session
+- Details: Start perception=1.0; flint_shard 1.5, berries 2.0, mushroom 2.0 — unerreichbar, kein Erhöhungsweg. Entweder Startwert auf 2.0 ODER Node-Anforderungen senken (flint_shard 1.5→1.0, berries 2.0→1.0, mushroom 2.0→1.0). Anforderung entscheidet.
+- Akzeptanz: Ohne Skill-Grind sind berries/mushroom/flint per gather() sammelbar
+- Milestone: M2.1/M3.2
+
+### [ ] TASK-B04 — 🔴 Condition=0-Items vom Crafting ausschliessen
+- Typ: Bug
+- Geschätzt: 1 Session
+- Details: `execute_experiment` iteriert über `selected_items` ohne Condition-Check → kaputte Items craftbar, Ergebnis condition=1.0 (Exploit). Condition=0-Items vor dem Crafting filtern (analog `find_item_by_tag`).
+- Akzeptanz: Crafting mit condition=0-Item schlägt fehl und gibt verständliches Feedback
+- Milestone: M0.3/M1.3
+
+### [ ] TASK-B05 — 🔴 Nachtstart beheben (Spiel startet tagsüber)
+- Typ: Bug
+- Geschätzt: 1 Session
+- Details: tick_counter=0 → hour=0 → night_mod=-10 → Starttemp 5°C, Hypothermie fast sofort. tick_counter initial auf 36 setzen (6 Uhr morgens).
+- Akzeptanz: Neue Session startet mit Tageszeit 6 Uhr und normaler Starttemperatur
+- Milestone: M2.4
 
 ---
+
+### [ ] TASK-R01 — processes.py auf JSON-Loader umstellen
+- Typ: Refactor
+- Geschätzt: 1 Session
+- Details: `data/processes.py` hat noch hartkodierte ProcessDefs. Analog zu items/blueprints/locations einen JSON-Loader bauen und `processes.json` anlegen.
+- Akzeptanz: Keine hartkodierten ProcessDefs mehr in `data/`; bestehende Tests grün
+- Milestone: M0.3
+
+### [ ] TASK-R02 — _create_tool Slot-Erkennung angleichen
+- Typ: Refactor
+- Geschätzt: 1 Session
+- Details: `engine/core.py:_create_tool` nutzt `comp.get("head") or comp.get("blade")` — inkonsistent mit dem Fix in crafting.py. Gleiche dynamische Komponenten-Slot-Erkennung übernehmen.
+- Akzeptanz: Beide Code-Pfade nutzen dieselbe dynamische Slot-Suche
+- Milestone: M0.3
+
+### [ ] TASK-F01 — Crafting-Fehlschlag-Feedback verbessern
+- Typ: Feature
+- Geschätzt: 1 Session
+- Details: `"Nichts passiert."` ist uninformativ. Unterschiedliche Fehler benennen: fehlende Tags, falsche Kombination, fehlendes Werkzeug, Skill-Anforderung.
+- Akzeptanz: Fehlschlag nennt den konkreten Grund (z.B. "Dir fehlt ein scharfes Werkzeug")
+- Milestone: M3.3
+
+### [ ] TASK-F02 — Energie-Balance (Regeneration + Startwert)
+- Typ: Feature
+- Geschätzt: 1 Session
+- Details: Energie-Drain aggressiv (10/gather), Start 800, keine Regeneration. QA: Start auf 1000, passive/Schlaf-Regeneration. Zusätzlich Hypothermie-Warnung nur 1× pro Zustandsänderung (nicht jeder Tick).
+- Akzeptanz: Mittlerer Durchlauf (20+ Aktionen) ohne Energie-Frust; Warn-Nachricht nicht mehr gespammt
+- Milestone: M2.4
+
+---
+
 ## Nächste Schritte
-- **Do 30.07. 10:00** — Research: Ancestors + Neo Scavenger ✓
-- **Fr 31.07. 14:00** — Dev: TASK-M03 (Session 2, falls nötig) oder nächster Task
-- **So 02.08. 18:00** — Review: Weekly Triage + Sprint Planning
+- **Mo 03.08. 14:00** — Dev: Sprint KW 32 starten — 🔴 Bugs zuerst (TASK-B01 ff.)
 - **Di 04.08. 10:00** — Research: Don't Starve + Vintage Story
+- **Mi 05.08. 14:00** — Dev: nächste Tasks (Bugs / Refactor)
+- **Fr 07.08. 14:00** — Dev: Refactor/Feature (R01/F01)
+- **So 09.08. 18:00** — Review: Weekly Triage + Sprint-Planung (KW 33)
