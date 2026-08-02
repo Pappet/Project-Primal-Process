@@ -12,6 +12,8 @@
 Dinge die kaputt sind und gefixt werden müssen.
 
 > **Triage 2026-08-01:** Alle 5 🔴 Bugs → Sprint Tasks (KW 32) in PLAN.md promotet (je eigener Task, kein Bündeln). Nicht archivieren.
+>
+> **Triage 2026-08-02:** Keine neuen Bugs seit 01.08. — 5/5 unverändert im KW-32-Sprint (B01–B05). Bestätigt.
 
 ---
 
@@ -64,3 +66,4 @@ Vom Review aussortierte Einträge landen hier. Wird beim nächsten Review geleer
 - 🔴 5 Bugs → Sprint KW 32 (TASK-B01…B05), siehe PLAN.md
 - 🔵 create_dynamic_item-Refactor → erledigt in TASK-M03
 - 5 neue Research Leads → M0.2-Pipeline, siehe PLAN.md + ⚪ oben
+- *(2026-08-02)* Keine neuen Archiveinträge — alles Backlog trägt bereits Sprint-/Phase-Ziel
