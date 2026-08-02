@@ -143,7 +143,9 @@ Implementieren: Prozesse als Aktionen (trocknen, kochen, brennen, fermentieren)
 | Job | Frequenz | Aufgabe |
 |-----|----------|---------|
 | primal-research | 2×/Woche (Di+Do 10:00) | Game-Analyse, Mechanik-Recherche |
-| primal-dev | 3×/Woche (Mo+Mi+Fr 14:00) | Implementierung nächster Task |
+| primal-dev | 6×/Woche (Mo-Sa 14:00) | Implementierung nächster Task |
+| primal-QA | 1x/Woche (Sa 16:00) | 
+Game Testing, Mechanik-Testing |
 | primal-review | 1×/Woche (So 18:00) | Fortschritts-Review, Plan-Update |
 
 Outputs landen in ~/projects/primal-process/ und im Discord #general.
