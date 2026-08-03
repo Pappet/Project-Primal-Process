@@ -209,11 +209,33 @@ Outputs landen in ~/projects/primal-process/ und im Discord #general.
 - Ausgeführt: `processes.json` angelegt, `load_processes()` + `ProcessData` in loader.py, `get_all_processes()` baut ProcessDefs aus JSON.
 
 ---
-> **Hinweis (KW 32):** Sprint-Cap wurde als Zahl entfernt — der Review füllt jetzt nach Qualität statt nach fester Obergrenze. R02 (Tech Debt) + F01/F02 (Features) werden vom Review in KW 33 aufgenommen. Nicht abgearbeitete Tasks rollen in die Folgewoche.
+
+### [ ] TASK-R02 — engine/core.py _create_tool Slots vereinheitlichen
+- Typ: Refactor
+- Details: `_create_tool` hat `comp.get("head") or comp.get("blade")` — Fallback vorhanden aber inkonsistent mit dem Fix in crafting.py. Gleiche dynamische Slot-Erkennung verwenden.
+- Akzeptanz: `_create_tool` nutzt dieselbe dynamische Slot-Erkennung wie crafting.py; bestehende Tests grün.
+- Milestone: M0.3
+
+### [ ] TASK-F01 — Crafting-Fehlschlag-Feedback konkreter machen
+- Typ: Feature
+- Details: `"Nichts passiert."` uninformativ → konkreten Grund nennen (fehlende Tags, falsche Kombination, fehlendes Werkzeug).
+- Akzeptanz: Fehlschlag nennt den konkreten Grund statt generischem "Nichts passiert."
+- Milestone: M3.3
+
+### [ ] TASK-F02 — Energie-Balance ausbalancieren
+- Typ: Feature
+- Details: Drain aggressiv (10/gather), Start 800, keine Regeneration → Start 1000 + passive/Schlaf-Regeneration. Hypothermie-Warnung nur 1× pro Zustandsänderung.
+- Akzeptanz: Neue Session startet mit 1000 Energie, Regeneration funktioniert, Warnung spammt nicht.
+- Milestone: M2.4
+> **Hinweis (KW 32):** Sprint-Cap wurde als Zahl entfernt — der Review füllt jetzt nach Qualität statt nach fester Obergrenze. **Korr. 03.08. (Zero):** Die Woche wurde unterfüllt — nachdem Mo alle 6 Tasks gebündelt abarbeitete, standen Mi/Fr/Sa leer. R02 + F01/F02 wurden irrtümlich auf KW 33 verschoben statt die laufende Woche zu füllen. Zurückgeholt (siehe unten): Dev arbeitet die ganze Woche Mo–Sa.
+>
+> **Lessons-Learned für den Review:** Wenn Dev Minifixes bündelt, kann eine Session den ganzen Sprint konsumieren. Der Review muss den KW-Sprint mit ALLEM verfügbaren Arbeit (Bugs + Refactors + Features) füllen, nicht nur mit den Bug-Tasks — sonst steht Dev nach Tag 1 trotzdem leer. Keine "Verschiebung auf nächste Woche", solange in der laufenden Woche Dev-Slots (Mi/Fr/Sa) frei sind.
 
 ## Nächste Schritte
 - ✅ **Mo 03.08. 14:00** — Dev: Sprint KW 32 abgearbeitet — alle 5 🔴 Bugs (B01–B05) + R01 erledigt
 - **Di 04.08. 10:00** — Research: Don't Starve + Vintage Story
-- **Mi 05.08. 14:00** — Dev: keine offenen Tasks — Review plant KW 33
-- **Fr 07.08. 14:00** — Dev: Refactor/Feature (R01/F01)
+- **Mi 05.08. 14:00** — Dev: TASK-R02 (_create_tool Slots vereinheitlichen)
+- **Do 06.08. 14:00** — Dev: TASK-F01 (Crafting-Fehlschlag-Feedback) *(Korr. 03.08.)*
+- **Fr 07.08. 14:00** — Dev: TASK-F02 (Energie-Balance)
+- **Sa 08.08. 16:00** — QA: Playtest #2 (prüft B01–B05 + F02-Regeneration)
 - **So 09.08. 18:00** — Review: Weekly Triage + Sprint-Planung (KW 33)
