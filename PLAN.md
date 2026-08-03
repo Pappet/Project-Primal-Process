@@ -216,6 +216,12 @@ Outputs landen in ~/projects/primal-process/ und im Discord #general.
 - Akzeptanz: `_create_tool` nutzt dieselbe dynamische Slot-Erkennung wie crafting.py; bestehende Tests grün.
 - Milestone: M0.3
 
+### [ ] TASK-S01 — M0.4 Save/Load-System
+- Typ: Feature
+- Details: JSON-Serialisierung des GameState. Save-Slots, Autosave. Roundtrip-Test: save → load → state identisch.
+- Akzeptanz: Save/Load roundtrip liefert identischen State; Autosave triggert; bestehende Tests grün.
+- Milestone: M0.4
+
 ### [ ] TASK-F01 — Crafting-Fehlschlag-Feedback konkreter machen
 - Typ: Feature
 - Details: `"Nichts passiert."` uninformativ → konkreten Grund nennen (fehlende Tags, falsche Kombination, fehlendes Werkzeug).
@@ -227,6 +233,12 @@ Outputs landen in ~/projects/primal-process/ und im Discord #general.
 - Details: Drain aggressiv (10/gather), Start 800, keine Regeneration → Start 1000 + passive/Schlaf-Regeneration. Hypothermie-Warnung nur 1× pro Zustandsänderung.
 - Akzeptanz: Neue Session startet mit 1000 Energie, Regeneration funktioniert, Warnung spammt nicht.
 - Milestone: M2.4
+
+### [ ] TASK-F03 — M1.1 Tag-Hierarchien ausbauen
+- Typ: Feature
+- Details: Tag-Hierarchien (SHARP → CUTTING, PIERCING), Material-Tags (STONE, WOOD, BONE) zusätzlich zu Funktions-Tags, Qualitäts-Modifier auf Tags.
+- Akzeptanz: Tag-Subsumption funktioniert (Blueprint fragt CUTTING, findet SHARP-Item); Material-Tags wirken; bestehende Tests grün.
+- Milestone: M1.1
 > **Hinweis (KW 32):** Sprint-Cap wurde als Zahl entfernt — der Review füllt jetzt nach Qualität statt nach fester Obergrenze. **Korr. 03.08. (Zero):** Die Woche wurde unterfüllt — nachdem Mo alle 6 Tasks gebündelt abarbeitete, standen Mi/Fr/Sa leer. R02 + F01/F02 wurden irrtümlich auf KW 33 verschoben statt die laufende Woche zu füllen. Zurückgeholt (siehe unten): Dev arbeitet die ganze Woche Mo–Sa.
 >
 > **Lessons-Learned für den Review:** Wenn Dev Minifixes bündelt, kann eine Session den ganzen Sprint konsumieren. Der Review muss den KW-Sprint mit ALLEM verfügbaren Arbeit (Bugs + Refactors + Features) füllen, nicht nur mit den Bug-Tasks — sonst steht Dev nach Tag 1 trotzdem leer. Keine "Verschiebung auf nächste Woche", solange in der laufenden Woche Dev-Slots (Mi/Fr/Sa) frei sind.
@@ -234,8 +246,11 @@ Outputs landen in ~/projects/primal-process/ und im Discord #general.
 ## Nächste Schritte
 - ✅ **Mo 03.08. 14:00** — Dev: Sprint KW 32 abgearbeitet — alle 5 🔴 Bugs (B01–B05) + R01 erledigt
 - **Di 04.08. 10:00** — Research: Don't Starve + Vintage Story
+- **Di 04.08. 14:00** — Dev: TASK-S01 (M0.4 Save/Load-System) *(Korr. 03.08.: Dev-Slot war leer — gefüllt)*
 - **Mi 05.08. 14:00** — Dev: TASK-R02 (_create_tool Slots vereinheitlichen)
-- **Do 06.08. 14:00** — Dev: TASK-F01 (Crafting-Fehlschlag-Feedback) *(Korr. 03.08.)*
+- **Do 06.08. 10:00** — Research: (Kandidaten, falls ≤2 offen)
+- **Do 06.08. 14:00** — Dev: TASK-F01 (Crafting-Fehlschlag-Feedback)
 - **Fr 07.08. 14:00** — Dev: TASK-F02 (Energie-Balance)
+- **Sa 08.08. 14:00** — Dev: TASK-F03 (M1.1 Tag-Hierarchien) *(Korr. 03.08.: Dev-Slot war leer — gefüllt)*
 - **Sa 08.08. 16:00** — QA: Playtest #2 (prüft B01–B05 + F02-Regeneration)
 - **So 09.08. 18:00** — Review: Weekly Triage + Sprint-Planung (KW 33)
