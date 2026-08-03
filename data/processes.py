@@ -1,9 +1,13 @@
 """
 data/processes.py
 Definiert, wie Items in andere Items umgewandelt werden.
+ProcessDefs werden aus processes.json geladen (keine hartkodierten Dicts).
 """
 from dataclasses import dataclass
 from typing import Dict, List, Optional
+
+from data.loader import load_processes
+
 
 @dataclass
 class ProcessDef:
@@ -13,32 +17,19 @@ class ProcessDef:
     tools: List[str]                # Benötigte Tags (z.B. "CUTTING")
     outputs: Dict[str, int]         # item_id : menge
     duration_ticks: int
-    required_tag_in_env: Optional[str] = None # z.B. "HEAT_SOURCE" für Kochen
+    required_tag_in_env: Optional[str] = None  # z.B. "HEAT_SOURCE" für Kochen
+
 
 def get_all_processes() -> List[ProcessDef]:
     return [
         ProcessDef(
-            id="make_sharp_stone",
-            name="Stein schlagen (Knapping)",
-            inputs={"pebble": 2},
-            tools=[], # Man schlägt Steine gegeneinander
-            outputs={"sharp_stone": 1},
-            duration_ticks = 2
-        ),
-        ProcessDef(
-            id="create_tinder",
-            name="Zunder vorbereiten",
-            inputs={"reeds": 2},
-            tools=["CUTTING"],
-            outputs={"tinder": 3},
-            duration_ticks = 1
-        ),
-        ProcessDef(
-            id="start_fire",
-            name="Feuer bohren",
-            inputs={"tinder": 1, "stick": 2},
-            tools=["KINDLING"],
-            outputs={"fire_pit": 1},
-            duration_ticks = 5
+            id=p.id,
+            name=p.name,
+            inputs=p.inputs,
+            tools=p.tools,
+            outputs=p.outputs,
+            duration_ticks=p.duration_ticks,
+            required_tag_in_env=p.required_tag_in_env,
         )
+        for p in load_processes()
     ]

@@ -5,6 +5,30 @@
 
 ---
 
+## 2026-08-03 — [Dev] Sprint KW 32 abgearbeitet: 5 🔴 Bugs + R01
+
+### Erledigt (alle 6 Sprint-Tasks)
+- **TASK-B01** — FIBER-Quelle: `plant_fiber`-Node (Chance 0.4) in forest_edge ergänzt. Neue Session sammelt FIBER und kann Axt craften (End-to-End-Test).
+- **TASK-B02** — pebble-Template in items.json angelegt (STONE/PROJECTILE, durability 0.2). `create_item("pebble")` liefert "Kieselstein" mit Tags statt "Unbekannt".
+- **TASK-B03** — Perception-Gates gesenkt: flint_shard 1.5→1.0, berries 2.0→1.0, mushroom 2.0→1.0. Bei Start-perception=1.0 ohne Grind sammelbar.
+- **TASK-B04** — `execute_experiment` blockt condition=0-Items mit klarem Feedback ("... ist zerbrochen ...").
+- **TASK-B05** — tick_counter initial 36 (6 Uhr). Kein Nacht-Kälte-Penalty beim Start, normale Starttemp.
+- **TASK-R01** — processes.py auf JSON: `processes.json` + `ProcessData`/`load_processes()` in loader.py; `get_all_processes()` baut ProcessDefs aus JSON. Keine hartkodierten ProcessDefs mehr. **M0.3 damit abgeschlossen → `[x]`.**
+
+### Ergebnis
+- **93/93 Tests grün** (83 bestehend + 10 neu), `python -m pytest` in 0.44s.
+- Sprint KW 32 vollständig abgearbeitet — keine offenen Tasks. Review (So 09.08.) plant KW 33 (R02, F01/F02 gemäß PLAN-Notiz).
+
+### Änderungen
+- `data/items.json` — pebble-Template
+- `data/locations.json` — plant_fiber-Node (forest_edge), Perception-Gates gesenkt
+- `engine/core.py` — tick_counter=36, condition=0-Check beim Crafting
+- `data/processes.json` (neu), `data/loader.py`, `data/processes.py` — JSON-Loader
+- `tests/` — TestBugs (B01–B05) + TestLoadProcesses
+- `PLAN.md`, `BACKLOG.md` — Status-Updates
+
+---
+
 ## 2026-08-02 — [Review] Weekly Triage + Sprint-Bestätigung (KW 32)
 
 **Kontext:** Der Triage vom 01.08. (`187199c`) hat den KW-32-Sprint bereits vollständig aufgesetzt (5 🔴 Bugs + R01). Der heutige Review liest denselben neuesten QA-Report (`qa/2026-08-01.md`) — das ist ein Prüf-/Bestätigungslauf: Sprint steht, Backlog ist triagiert, seit dem 01.08. ist kein neuer Input dazugekommen.

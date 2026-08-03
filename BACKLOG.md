@@ -14,6 +14,8 @@ Dinge die kaputt sind und gefixt werden müssen.
 > **Triage 2026-08-01:** Alle 5 🔴 Bugs → Sprint Tasks (KW 32) in PLAN.md promotet (je eigener Task, kein Bündeln). Nicht archivieren.
 >
 > **Triage 2026-08-02:** Keine neuen Bugs seit 01.08. — 5/5 unverändert im KW-32-Sprint (B01–B05). Bestätigt.
+>
+> **Triage 2026-08-03:** Alle 5 🔴 Bugs (B01–B05) in der Dev-Session vom 03.08. gefixt (siehe PLAN.md). Zu archivieren beim nächsten Review.
 
 ---
 
@@ -42,7 +44,7 @@ Mechaniken, Features, Verbesserungen — nicht akut, aber wertvoll.
 Code-Qualität, Architektur, Refactoring-Bedarf.
 
 - [2026-07-27] (Dev) ~~`engine/crafting.py:create_dynamic_item` hardcoded auf `components["head"]`~~ — **✅ erledigt** in TASK-M03 (2026-07-29)
-- [2026-07-29] (Dev) `data/processes.py` hat noch hartkodierte ProcessDefs — sollte analog zu items/blueprints/locations JSON-Loader bekommen → **Sprint KW 32 (TASK-R01)**
+- [2026-07-29] (Dev) ~~`data/processes.py` hat noch hartkodierte ProcessDefs — sollte analog zu items/blueprints/locations JSON-Loader bekommen~~ — **✅ erledigt** in TASK-R01 (2026-08-03)
 - [2026-07-29] (Dev) `engine/core.py:_create_tool` hat `comp.get("head") or comp.get("blade")` — Fallback vorhanden aber inkonsistent mit fix in crafting.py. Sollte gleiche dynamische Slot-Erkennung verwenden → **nächste Woche (KW 33, TASK-R02)**
 
 ---

@@ -52,6 +52,16 @@ class LocationData(BaseModel):
     nodes: List[ResourceNodeData] = []
 
 
+class ProcessData(BaseModel):
+    id: str
+    name: str
+    inputs: Dict[str, int]
+    tools: List[str] = []
+    outputs: Dict[str, int]
+    duration_ticks: int
+    required_tag_in_env: Optional[str] = None
+
+
 # --- Loading functions ---
 
 def _load_json(filename: str) -> dict:
@@ -94,3 +104,14 @@ def load_locations() -> List[LocationData]:
         return [LocationData.model_validate(loc) for loc in data]
     except ValidationError as e:
         raise ValueError(f"Invalid locations.json schema: {e}")
+
+
+def load_processes() -> List[ProcessData]:
+    """Load processes from processes.json, validated via pydantic."""
+    data = _load_json("processes.json")
+    if not isinstance(data, list):
+        raise ValueError("processes.json must contain a JSON array")
+    try:
+        return [ProcessData.model_validate(p) for p in data]
+    except ValidationError as e:
+        raise ValueError(f"Invalid processes.json schema: {e}")

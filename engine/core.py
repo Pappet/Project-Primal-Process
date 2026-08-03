@@ -16,7 +16,7 @@ class GameEngine:
         self.locations = {loc.id: loc for loc in get_all_locations()}
         self.blueprints = {bp.id: bp for bp in get_all_blueprints()}
         self.current_location_id = "forest_edge"
-        self.tick_counter = 0
+        self.tick_counter = 36  # 6 Uhr morgens (36 Ticks), Tagesstart statt Mitternacht
         
         # Wettersystem
         self.weather_types = {
@@ -130,7 +130,13 @@ class GameEngine:
     def execute_experiment(self, selected_items: List[Item]) -> Dict[str, Any]:
         # Crafting ist sehr anstrengend (Effort 3.0)
         self._advance_time(2, effort_multiplier=3.0)
-        
+
+        # Zerbrochene Items (condition=0) sind nicht craftbar → verständliches Feedback
+        broken = [it.name for it in selected_items if it.condition <= 0]
+        if broken:
+            return {"success": False,
+                    "message": f"{', '.join(broken)} ist zerbrochen und kann nicht verwendet werden."}
+
         for bp_id, bp in self.blueprints.items():
             if len(selected_items) != len(bp.slots): continue
             if self.player.stats["survival"] < bp.min_survival_req: continue

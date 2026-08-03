@@ -6,11 +6,13 @@ from data.loader import (
     load_items,
     load_blueprints,
     load_locations,
+    load_processes,
     ItemTemplate,
     ItemTemplatesDB,
     BlueprintData,
     ResourceNodeData,
     LocationData,
+    ProcessData,
     _load_json,
 )
 
@@ -22,7 +24,8 @@ class TestLoadItems:
         assert "stick" in items
         assert "flint_shard" in items
         assert "berries" in items
-        assert len(items) == 8
+        assert "pebble" in items
+        assert len(items) == 9
 
     def test_template_has_correct_fields(self):
         items = load_items()
@@ -73,7 +76,7 @@ class TestLoadLocations:
         assert forest.name == "Waldrand"
         assert forest.base_temp == 15.0
         assert forest.exposure == 0.5
-        assert len(forest.nodes) == 3
+        assert len(forest.nodes) == 4
 
     def test_resource_node_has_fields(self):
         locs = load_locations()
@@ -90,6 +93,48 @@ class TestLoadLocations:
         cave = next(loc for loc in locs if loc.id == "hidden_cave")
         clay_node = next(n for n in cave.nodes if n.result_template_id == "clay_lump")
         assert clay_node.req_tool_tag == "SHOVEL"
+
+
+class TestLoadProcesses:
+    def test_loads_all_processes(self):
+        procs = load_processes()
+        assert len(procs) == 3
+        ids = [p.id for p in procs]
+        assert "make_sharp_stone" in ids
+        assert "create_tinder" in ids
+        assert "start_fire" in ids
+
+    def test_process_has_correct_fields(self):
+        procs = load_processes()
+        sharp = next(p for p in procs if p.id == "make_sharp_stone")
+        assert sharp.name == "Stein schlagen (Knapping)"
+        assert sharp.inputs == {"pebble": 2}
+        assert sharp.tools == []
+        assert sharp.outputs == {"sharp_stone": 1}
+        assert sharp.duration_ticks == 2
+        assert sharp.required_tag_in_env is None
+
+    def test_create_tinder_uses_tool_tag(self):
+        procs = load_processes()
+        tinder = next(p for p in procs if p.id == "create_tinder")
+        assert tinder.tools == ["CUTTING"]
+
+    def test_process_missing_required_field(self):
+        """Processes without 'inputs' should raise validation error."""
+        with pytest.raises(ValueError):
+            ProcessData.model_validate(
+                {"id": "test", "name": "Test", "tools": [], "outputs": {}, "duration_ticks": 1}
+            )
+
+    def test_get_all_processes_returns_defs(self):
+        """Public API builds ProcessDef objects from JSON (no hardcoded defs)."""
+        from data.processes import get_all_processes, ProcessDef
+        procs = get_all_processes()
+        assert len(procs) == 3
+        assert all(isinstance(p, ProcessDef) for p in procs)
+        sharp = next(p for p in procs if p.id == "make_sharp_stone")
+        assert sharp.inputs == {"pebble": 2}
+        assert sharp.outputs == {"sharp_stone": 1}
 
 
 class TestValidationErrors:

@@ -42,5 +42,11 @@
     "name": "Gebratenes Fleisch",
     "weight": 0.4,
     "tags": {"EDIBLE": 400}
+  },
+  "pebble": {
+    "name": "Kieselstein",
+    "weight": 0.05,
+    "tags": {"STONE": true, "PROJECTILE": true},
+    "attributes": {"durability": 0.2}
   }
 }

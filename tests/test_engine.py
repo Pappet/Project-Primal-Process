@@ -206,3 +206,61 @@ class TestEngineCore:
         for loc in engine.locations.values():
             assert hasattr(loc, "nodes")
             assert isinstance(loc.nodes, list)
+
+
+class TestBugs:
+    """Regression tests for the KW-32 sprint bug fixes (B01-B05)."""
+
+    def test_b01_new_session_can_gather_fiber_and_craft_axe(self, monkeypatch):
+        """B01/B03: FIBER is gatherable at start and a full axe craft works."""
+        from engine.core import GameEngine
+        engine = GameEngine()
+        # Deterministic: every node roll succeeds
+        monkeypatch.setattr("engine.core.random.random", lambda: 0.0)
+
+        engine.gather()  # forest_edge: plant_fiber (FIBER) + stick (RIGID)
+        assert any("FIBER" in it.tags for it in engine.player.inventory.items)
+
+        engine.travel("mountain_peak")
+        engine.gather()  # flint_shard (HARD)
+
+        hard = next(it for it in engine.player.inventory.items if "HARD" in it.tags)
+        rigid = next(it for it in engine.player.inventory.items if "RIGID" in it.tags)
+        fiber = next(it for it in engine.player.inventory.items if "FIBER" in it.tags)
+        result = engine.execute_experiment([hard, rigid, fiber])
+        assert result["success"] is True
+        assert "Axt" in result["message"]
+
+    def test_b03_perception_gates_reachable_at_start(self):
+        """B03: berries/mushroom/flint reachable at start perception, no grind."""
+        from data.locations import get_all_locations
+        targets = {"berries", "mushroom", "flint_shard"}
+        seen = set()
+        for loc in get_all_locations():
+            for node in loc.nodes:
+                if node.result_template_id in targets:
+                    seen.add(node.result_template_id)
+                    assert node.req_perception <= 1.0  # start perception
+        assert seen == targets
+
+    def test_b04_crafting_with_broken_item_fails(self):
+        """B04: condition=0 item must block crafting with clear feedback."""
+        engine = GameEngine()
+        engine.player.inventory.add(create_item("flint_shard"))
+        engine.player.inventory.add(create_item("stick"))
+        engine.player.inventory.add(create_item("plant_fiber"))
+        engine.player.inventory.items[1].condition = 0.0  # broken stick
+
+        items = list(engine.player.inventory.items)
+        result = engine.execute_experiment(items)
+        assert result["success"] is False
+        assert "zerbrochen" in result["message"]
+
+    def test_b05_new_session_starts_in_morning(self):
+        """B05: new session starts at 6:00 (tick 36), no night temp penalty."""
+        engine = GameEngine()
+        assert engine.tick_counter == 36
+        hour = (engine.tick_counter % 144) / 6
+        assert hour == 6
+        # forest_edge base_temp 15, CLEAR weather, daytime → no -10 night mod
+        assert engine._get_ambient_temp() >= 15.0

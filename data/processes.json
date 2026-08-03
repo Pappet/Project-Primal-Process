@@ -1,0 +1,26 @@
+[
+  {
+    "id": "make_sharp_stone",
+    "name": "Stein schlagen (Knapping)",
+    "inputs": {"pebble": 2},
+    "tools": [],
+    "outputs": {"sharp_stone": 1},
+    "duration_ticks": 2
+  },
+  {
+    "id": "create_tinder",
+    "name": "Zunder vorbereiten",
+    "inputs": {"reeds": 2},
+    "tools": ["CUTTING"],
+    "outputs": {"tinder": 3},
+    "duration_ticks": 1
+  },
+  {
+    "id": "start_fire",
+    "name": "Feuer bohren",
+    "inputs": {"tinder": 1, "stick": 2},
+    "tools": ["KINDLING"],
+    "outputs": {"fire_pit": 1},
+    "duration_ticks": 5
+  }
+]

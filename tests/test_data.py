@@ -57,6 +57,13 @@ class TestCreateItem:
         assert item.name == "Unbekannt"
         assert item.base_weight == 0.1
 
+    def test_create_pebble(self):
+        item = create_item("pebble")
+        assert item.name == "Kieselstein"
+        assert "STONE" in item.tags
+        assert "PROJECTILE" in item.tags
+        assert item.get_attr("durability") == 0.2
+
     def test_create_with_quantity(self):
         item = create_item("stick", quantity=5)
         assert item.quantity == 5
