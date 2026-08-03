@@ -4,11 +4,11 @@
 > Grenze: CONSTITUTION.md.
 
 ## Aktueller Zustand
-Das Spiel startet in Sekundenbruchteilen und läuft stabil: 93 Tests grün, Tag-basiertes Blueprint-Crafting (Axt, Messer) funktioniert, beide Blueprints erreichbar (Reachability 1.0). Aber es gibt zu wenig zu entdecken: In 100 Aktionen gelingt nur **1** unterscheidbarer Craft-Typ (`craft_variety`=1), und ab ~16 Aktionen passiert nichts Neues mehr (`session_depth`=16) — das Experimentiersystem ist da, aber es gibt fast keine Ziele dafür. Content-Deckung: nur 6 von 9 definierten Items sind sammelbar (`content_reachable`=0.667); `raw_meat`, `cooked_meat`, `reeds` hängen unerreichbar, weil das Prozess-System (`processes.json`) nicht in die Engine eingebunden ist. Können bringt bereits etwas (`skill_spread`=0.298) und Feedback ist zu 60% informativ — das ist solide, aber kein Differenzierer.
+Das Spiel startet in Sekundenbruchteilen und läuft stabil: 130 Tests grün, Tag-basiertes Blueprint-Crafting (Axt, Messer) funktioniert, beide Blueprints erreichbar (Reachability 1.0), und Spieler-Feedback nennt jetzt die fehlende Eigenschaft statt „Nichts passiert." (feedback_quality misst die Spielersicht). Aber es gibt zu wenig zu entdecken: `craft_variety`=0.5 (Median), `session_depth`=24 — das Experimentiersystem ist da, aber es gibt fast keine Ziele dafür. `discovery_gap`=0.5 (Band 0.2–0.6): das Orakel erreicht 100%, ein naiver Spieler nur 50% — die Lücke ist im Zielband, aber an der oberen Grenze. Content-Deckung: nur 6 von 9 definierten Items sammelbar (`content_reachable`=0.667); `raw_meat`, `cooked_meat`, `reeds` hängen unerreichbar, weil das Prozess-System nicht eingebunden ist.
 
 ## Was als nächstes besser werden muss
-1. **Craft-Varietät erhöhen** — `craft_variety` von 1 auf ≥ 4. Das Spiel braucht mehr erkennbare, unterscheidbare Craft-Wege (Prozesse + Blueprint-Familien), sonst stirbt die Entdeckung nach dem ersten Fund.
-2. **Session-Tiefe erhöhen** — `session_depth` von 16 deutlich steigern. Mehr Aktionen, bis nichts Interessantes mehr passiert.
+1. **Discovery-Gap im Band halten** — `discovery_gap` (Band 0.2–0.6) liegt bei 0.5. Neue Mechaniken müssen die naive Entdeckungsrate heben, ohne die Lücke über 0.6 zu treiben (unentdeckbar) oder unter 0.2 zu drücken (Überführung).
+2. **Session-Tiefe erhöhen** — `session_depth` von 24 steigern. Mehr Aktionen, bis nichts Interessantes mehr passiert.
 3. **Content-Deckung schließen** — `content_reachable` von 0.667 auf ≥ 0.8. Die 3 unerreichbaren Items über Mechaniken erreichbar machen (Start: Prozess-System aktivieren).
 
 ## Tasks
@@ -16,8 +16,9 @@ Das Spiel startet in Sekundenbruchteilen und läuft stabil: 93 Tests grün, Tag-
 > `[ ]` offen · `[~]` in Arbeit · `[x]` erledigt
 
 - [ ] **SPEC-001 — Prozess-System aktivieren.** `execute_process` in Engine, `[p]rocess` im CLI, `reeds` eine Quelle geben. Akzeptanz: `make_sharp_stone`, `create_tinder`, `start_fire` von frischem Start erreichbar; `cooked_meat` aus `raw_meat` das Koch-Prozess; Tests grün.
-- [ ] **SPEC-002 — Blueprint-Familien + Discovery-Feedback.** Tag-Familien-Slots, 2–3 Varianten pro Werkzeug-Typ, kategorisierte Fehlschlags-Meldungen. Akzeptanz: ≥ 4 unterscheidbare Crafts in 100 Aktionen; Fehlschlag mit bekanntem Tag nennt Grund; Tests grün.
-- [ ] **Baseline verankern.** Scorecard-Lauf einmal pro Woche via Play-Job; `craft_variety`/`session_depth`/`content_reachable` als Ziel-Metriken fahren.
+- [ ] **SPEC-002 — Blueprint-Familien + Discovery-Feedback.** Tag-Familien-Slots, 2–3 Varianten pro Werkzeug-Typ, kategorisierte Fehlschlags-Meldungen. Akzeptanz: ≥ 3 Werkzeugtypen mit je ≥ 2 Varianten; Fehlschlag mit bekanntem Tag nennt Grund; Tests grün.
+- [ ] **Rückwärtsprüfung verankern (Fix-Session 03.08.).** `skill_spread` (0.298→0.315) und `session_depth` (16→24) stiegen durch die Zählweisen- und Median-Umstellung, ohne Spielerlebnis-Änderung. Nicht stillschweigend stehen lassen: beim nächsten Play-Lauf prüfen, dass diese Werte echte Spielerfahrung abbilden, sonst Metrik-Version bumpen.
+- [ ] **Baseline verankern.** Scorecard-Lauf einmal pro Woche via Play-Job; `discovery_gap`/`session_depth`/`content_reachable` als Ziel-Metriken fahren.
 
 ---
 *Nächste Scorecard-Kontrolle: nächster Play-Job. Plan-Neufassung: nächster Direktor (So).*

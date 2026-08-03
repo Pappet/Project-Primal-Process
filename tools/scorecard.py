@@ -24,7 +24,7 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(ROOT))
 
-from engine.core import GameEngine              # noqa: E402
+from engine.core import GameEngine, _label_for, TAG_LABELS  # noqa: E402
 from data.items import TEMPLATE_DB              # noqa: E402
 from data.blueprints import get_all_blueprints  # noqa: E402
 from data.locations import get_all_locations    # noqa: E402
@@ -36,12 +36,6 @@ SEEDS = tuple(BASE_SEED + i for i in range(20))
 HORIZON = 500                                    # Tick-Cap für Überlebensmetriken
 SCORECARD_DIR = ROOT / "scorecard"
 ARCHIVE_DIR = SCORECARD_DIR / "archive"
-
-# Reason-Codes, die als "informativ" gelten (Feedback sagt etwas aus).
-# SUCCESS, BROKEN_ITEM, TOO_FEW_ITEMS und MISSING_TAG:* zählen; NO_MATCH ohne
-# Detail und UNKNOWN zählen NICHT. Keine String-Blacklist.
-INFORMATIVE_REASONS_PREFIX = ("MISSING_TAG:",)
-INFORMATIVE_REASONS = {"SUCCESS", "BROKEN_ITEM", "TOO_FEW_ITEMS"}
 
 
 # ----------------------------------------------------------------------------
@@ -279,11 +273,35 @@ def metric_skill_spread():
 
 
 # ----------------------------------------------------------------------------
-# Metrik 5 — feedback_quality (Reason-Codes statt Blacklist)
+# Metrik 5 — feedback_quality (Spielersicht: Label passt zum Reason)
 # ----------------------------------------------------------------------------
 
+# Erwartetes Text-Fragment pro Reason-Code — der Konsistenz-Wächter zwischen
+# interner Wahrheit und Spielertext. Informativ NUR, wenn die Meldung das zum
+# Code gehörende Label wirklich enthält. Verrät die Engine den Grund nicht im
+# Text, zählt die Aktion als NICHT informativ (auch wenn der Code stimmt).
+def _expected_fragment(reason):
+    if reason == "SUCCESS":
+        return "Hergestellt"
+    if reason.startswith("MISSING_TAG:"):
+        tag = reason.split(":", 1)[1]
+        return _label_for(tag)
+    if reason == "TOO_FEW_ITEMS":
+        return "mindestens zwei"
+    if reason == "BROKEN_ITEM":
+        return "zerbrochen"
+    if reason == "NO_MATCH":
+        return "ergibt nichts"
+    return None  # UNKNOWN / unklar → nie informativ
+
+
+def _informative_experiment(message, reason):
+    fragment = _expected_fragment(reason)
+    return fragment is not None and fragment in message
+
+
 def _run_feedback_quality(seed, steps=60):
-    """Anteil informativer Aktionen über Reason-Codes (ein Run)."""
+    """Anteil informativer Aktionen — Meldung muss den Reason widerspiegeln."""
     random.seed(seed)
     rng = random.Random(seed)
     game = GameEngine()
@@ -296,29 +314,70 @@ def _run_feedback_quality(seed, steps=60):
         if rng.random() < 0.5:
             if rng.random() < 0.2:
                 _travel_or_fail(game, locs[rng.randrange(len(locs))])
-            # Sammeln: nicht-leere Ergebnisliste = informativ
+            # Sammeln: nicht-leere Ergebnisliste = Spieler sieht einen Fund
             if game.gather():
                 informative += 1
         else:
             sel = _random_sel(game, rng, kmin=1)
             res = game.execute_experiment(sel) if sel else \
                 game.execute_experiment([])
-            reason = res.get("reason", "UNKNOWN")
-            if _is_informative_reason(reason):
+            if _informative_experiment(res["message"], res.get("reason")):
                 informative += 1
     return informative / total if total else 0.0
 
 
-def _is_informative_reason(reason):
-    if reason in INFORMATIVE_REASONS:
-        return True
-    if reason and reason.startswith(INFORMATIVE_REASONS_PREFIX):
-        return True
-    return False
-
-
 def metric_feedback_quality():
     return _aggregate(lambda s: _run_feedback_quality(s))
+
+
+# ----------------------------------------------------------------------------
+# Metrik 8 — discovery_gap (Abstand erreichbar vs. tatsächlich gefunden)
+# ----------------------------------------------------------------------------
+
+def _run_naive_discovery(seed, actions=150):
+    """Anteil der Blueprints, die ein naiver Spieler in N Aktionen entdeckt."""
+    random.seed(seed)
+    rng = random.Random(seed)
+    game = GameEngine()
+    locs = list(game.locations.keys())
+    total = max(1, len(get_all_blueprints()))
+    discovered = set()
+    done = 0
+    while done < actions:
+        if _drain_check(game):
+            break
+        done += 1
+        if game.player.energy < 150:
+            _eat_best(game)
+        if rng.random() < 0.5:
+            if rng.random() < 0.2:
+                _travel_or_fail(game, locs[rng.randrange(len(locs))])
+            game.gather()
+        else:
+            sel = _random_sel(game, rng, kmin=2)
+            if sel:
+                res = game.execute_experiment(sel)
+                if res.get("blueprint_id"):
+                    discovered.add(res["blueprint_id"])
+    return len(discovered) / total
+
+
+def metric_discovery_gap():
+    """Abstand zwischen Erreichbarem und dem, was ein Spieler wirklich findet."""
+    reach_val = _collapse(metric_reachability())
+    reach = float(reach_val) if reach_val is not None else 0.0
+    naive = _aggregate(lambda s: _run_naive_discovery(s))
+    naive_rate = float(naive["value"]) if naive.get("value") is not None else 0.0
+    gap = reach - naive_rate
+    return {
+        "value": round(gap, 3),
+        "blueprint_reachability": round(reach, 3),
+        "naive_discovery_rate": naive_rate,
+        "naive_p25": naive.get("p25"),
+        "naive_p75": naive.get("p75"),
+        "band": [0.2, 0.6],
+    }
+
 
 
 # ----------------------------------------------------------------------------
@@ -423,15 +482,22 @@ def _aggregate(run_fn, cap=None):
 # Aggregation, JSON + Markdown
 # ----------------------------------------------------------------------------
 
+# version: wird bei Umdefinition einer Metrik erhöht. Beim Delta wird eine
+# Metrik übersprungen, deren Version sich geändert hat → "— (neu definiert)".
+# band: optionale Zielbandgrenzen [unter, ober] — Band-Metriken haben keine
+# Richtung (kein "höher = besser"), nur "im/unter/über Band".
 METRICS = [
-    ("actions_to_first_craft", "Aktionen bis zum ersten erfolgreichen Craft (naiv)", metric_first_craft, "niedriger = besser"),
-    ("blueprint_reachability", "Anteil erreichbarer Blueprints (N=50)", metric_reachability, "höher = besser"),
-    ("craft_variety", "Unterschiedliche Craft-Typen in 100 Aktionen", metric_craft_variety, "höher = besser"),
-    ("skill_spread", "Überlebens-Spanne optimal vs. zufällig", metric_skill_spread, "höher = besser"),
-    ("feedback_quality", "Anteil informativer Rückmeldungen", metric_feedback_quality, "höher = besser"),
-    ("content_reachable", "Anteil sammelbarer definierter Items", metric_content_reachable, "höher = besser"),
-    ("session_depth", "Aktionen bis nichts Neues passiert", metric_session_depth, "höher = besser"),
+    {"key": "actions_to_first_craft", "desc": "Aktionen bis zum ersten erfolgreichen Craft (naiv)", "fn": metric_first_craft, "direction": "niedriger = besser", "version": 1},
+    {"key": "blueprint_reachability", "desc": "Anteil erreichbarer Blueprints (N=50)", "fn": metric_reachability, "direction": "höher = besser", "version": 1},
+    {"key": "craft_variety", "desc": "Unterschiedliche Craft-Typen in 100 Aktionen", "fn": metric_craft_variety, "direction": "höher = besser", "version": 1},
+    {"key": "skill_spread", "desc": "Überlebens-Spanne optimal vs. zufällig", "fn": metric_skill_spread, "direction": "höher = besser", "version": 1},
+    {"key": "feedback_quality", "desc": "Anteil informativer Rückmeldungen (Label-Stimmt)", "fn": metric_feedback_quality, "direction": "höher = besser", "version": 2},
+    {"key": "content_reachable", "desc": "Anteil sammelbarer definierter Items", "fn": metric_content_reachable, "direction": "höher = besser", "version": 1},
+    {"key": "session_depth", "desc": "Aktionen bis nichts Neues passiert", "fn": metric_session_depth, "direction": "höher = besser", "version": 1},
+    {"key": "discovery_gap", "desc": "Abstand erreichbar vs. tatsächlich gefunden", "fn": metric_discovery_gap, "direction": None, "version": 1, "band": (0.2, 0.6)},
 ]
+
+METRIC_VERSIONS = {m["key"]: m["version"] for m in METRICS}
 
 
 def _collapse(result):
@@ -444,11 +510,15 @@ def _collapse(result):
 
 def compute_all():
     out = {}
-    for key, _desc, fn, _dir in METRICS:
+    for m in METRICS:
+        key = m["key"]
         try:
-            out[key] = fn()
+            val = m["fn"]()
+            if isinstance(val, dict):
+                val.setdefault("version", m["version"])
+            out[key] = val
         except Exception as e:  # noqa: BLE001 — eine Metrik killt nicht alle
-            out[key] = {"error": f"{type(e).__name__}: {e}"}
+            out[key] = {"error": f"{type(e).__name__}: {e}", "version": m["version"]}
             print(f"[scorecard] WARN {key}: {e}", file=sys.stderr)
     return out
 
@@ -487,11 +557,31 @@ def _delta_cell(key, val, prev_val, direction):
         return "—", ""
     if abs(val - prev_val) < 0.001:
         return "±0", "±0"
+    sign = "+" if (val - prev_val) > 0 else ""
+    num = f"{sign}{val - prev_val:.3f}"
+    if direction is None:  # Band-Metrik — keine Richtungsbewertung
+        return num, ""
     better = (direction == "niedriger = besser" and val < prev_val) or \
              (direction == "höher = besser" and val > prev_val)
     arrow = "↑ besser" if better else "↓ schlechter"
-    sign = "+" if (val - prev_val) > 0 else ""
-    return f"{sign}{val - prev_val:.3f}", arrow
+    return num, arrow
+
+
+def _metric_version(data_metrics, key):
+    """Version einer Metrik (default 1, falls nicht vorhanden)."""
+    m = data_metrics.get(key) or {}
+    return m.get("version", 1)
+
+
+def _band_status(val, band):
+    if val is None or band is None:
+        return ""
+    lo, hi = band
+    if val < lo:
+        return "unter Band"
+    if val > hi:
+        return "über Band"
+    return "im Band"
 
 
 def build_table(data, prev):
@@ -500,12 +590,17 @@ def build_table(data, prev):
         "",
         "> Fitness-Signal: misst das **Spiel**, nicht die Prozesstreue. Schema v2.",
         "> Erzeugt von `tools/scorecard.py` (deterministisch, stdlib only, Seed-Satz).",
+        "> Metriken mit `(vN)` sind versioniert; umdefinierte Metriken zeigen im Delta `— (neu definiert)`.",
         "",
         "| Metrik | Wert | Δ Vorwoche | Richtung | Beschreibung |",
         "|--------|------|-----------|----------|--------------|",
     ]
     prev_metrics = (prev or {}).get("metrics", {}) if prev else {}
-    for key, desc, _fn, direction in METRICS:
+    for m in METRICS:
+        key = m["key"]
+        version = m["version"]
+        band = m.get("band")
+        direction = m["direction"]
         val = _collapse(data.get(key))
         val_txt = _fmt_num(val) if val is not None else "n/a"
         # content_reachable: Content-Reduktion als Warnung statt als Verbesserung
@@ -517,15 +612,30 @@ def build_table(data, prev):
                     and cur["defined_count"] < pv["defined_count"]):
                 warn = " ⚠ Content entfernt"
         prev_val = _collapse(prev_metrics.get(key))
-        delta, arrow = _delta_cell(key, val, prev_val, direction)
+        # Versionswechsel → Metrik nicht mit Vorgänger vergleichbar
+        prev_version = _metric_version(prev_metrics, key) if prev_metrics.get(key) else None
+        neu_definiert = prev_version is not None and prev_version != version
         if warn:
             delta = "⚠ Content entfernt"
             arrow = ""
-        # Richtung: nur Richtungsbeschreibung; Arrow steckt im Delta
-        dir_txt = "niedriger" if direction == "niedriger = besser" else "höher"
-        if arrow and arrow != "±0":
-            delta = f"{delta} {arrow}"
-        lines.append(f"| {key} | {val_txt} | {delta} | {dir_txt} = besser | {desc}{warn} |")
+        elif prev_version is None:
+            delta = "— (Baseline)"
+            arrow = ""
+        elif neu_definiert:
+            delta = "— (neu definiert)"
+            arrow = ""
+        else:
+            delta, arrow = _delta_cell(key, val, prev_val, direction)
+            if arrow and arrow != "±0":
+                delta = f"{delta} {arrow}"
+        # Richtungsspalte: Band-Metrik zeigt Band-Status statt Richtung
+        if band is not None:
+            dir_txt = _band_status(val, band)
+        elif direction == "niedriger = besser":
+            dir_txt = "niedriger"
+        else:
+            dir_txt = "höher"
+        lines.append(f"| {key} (v{version}) | {val_txt} | {delta} | {dir_txt} | {m['desc']}{warn} |")
     lines.append("")
     return "\n".join(lines)
 
@@ -550,6 +660,19 @@ def main():
         json.dumps(payload, indent=2, ensure_ascii=False) + "\n")
 
     body = build_table(data, prev)
+    # Band-Metriken dokumentieren (Begründung + Zielband)
+    for m in METRICS:
+        band = m.get("band")
+        if band is not None:
+            md = data.get(m["key"]) or {}
+            body += f"\n## {m['key']} — Zielband\n\n"
+            body += (f"**Band: {band[0]} – {band[1]}.** Keine Richtung (kein "
+                     f"\"höher = besser\"). Unter {band[0]} nimmt das Spiel den Spieler "
+                     f"an die Hand; über {band[1]} ist es faktisch unentdeckbar. "
+                     f"`blueprint_reachability` ({md.get('blueprint_reachability')}) "
+                     f"misst, was ein Orakel erreichen kann; `naive_discovery_rate` "
+                     f"({md.get('naive_discovery_rate')}) was ein Spieler wirklich "
+                     f"findet. Der Abstand dazwischen ist das eigentliche Spiel.\n\n")
     body += f"\n## Details ({today})\n\n"
     body += "```json\n" + json.dumps(data, indent=2, ensure_ascii=False) + "\n```\n"
     (ROOT / "SCORECARD.md").write_text(body)

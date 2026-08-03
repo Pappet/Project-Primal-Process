@@ -55,7 +55,8 @@ class TestEngineCrafting:
         result = engine.execute_experiment(items)
 
         assert result["success"] is False
-        assert result["message"] == "Nichts passiert."
+        # Die Meldung nennt das fehlende Label, nie "Nichts passiert."
+        assert "fehlt" in result["message"]
 
     def test_crafting_wrong_count(self):
         engine = GameEngine()

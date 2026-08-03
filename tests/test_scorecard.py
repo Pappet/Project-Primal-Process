@@ -90,27 +90,82 @@ class TestDeltaCell:
 
 
 # ----------------------------------------------------------------------------
-# Reason-Codes (feedback_quality)
+# feedback_quality — Konsistenz-Wächter zwischen Reason und Spielertext
 # ----------------------------------------------------------------------------
 
-class TestInformativeReason:
-    def test_success_informative(self):
-        assert sc._is_informative_reason("SUCCESS") is True
+class TestFeedbackLabelConsistency:
+    """Jeder Reason hat eine eigene Meldung, die das zum Code gehörende Label
+    enthält. Das ist die Brücke von interner Wahrheit zu Spielertext."""
 
-    def test_no_match_not_informative(self):
-        assert sc._is_informative_reason("NO_MATCH") is False
+    def test_success_message(self):
+        frag = sc._expected_fragment("SUCCESS")
+        assert frag is not None
+        assert sc._informative_experiment("Hergestellt: Axt (Eichenast)", "SUCCESS") is True
 
-    def test_unknown_not_informative(self):
-        assert sc._is_informative_reason("UNKNOWN") is False
+    def test_missing_tag_message_has_label(self):
+        frag = sc._expected_fragment("MISSING_TAG:SHARP")
+        assert frag is not None
+        # Meldung muss das SHARP-Label enthalten
+        assert sc._informative_experiment(f"Es fehlt dir {frag}.", "MISSING_TAG:SHARP") is True
 
-    def test_missing_tag_informative(self):
-        assert sc._is_informative_reason("MISSING_TAG:SHARP") is True
+    def test_missing_tag_without_label_not_informative(self):
+        # Code richtig, aber Meldung verschweigt das Label → NICHT informativ
+        assert sc._informative_experiment("Nichts passiert.", "MISSING_TAG:SHARP") is False
 
-    def test_broken_item_informative(self):
-        assert sc._is_informative_reason("BROKEN_ITEM") is True
+    def test_too_few_items_message(self):
+        assert sc._informative_experiment(
+            "Dafür brauchst du mindestens zwei Dinge.", "TOO_FEW_ITEMS") is True
 
-    def test_too_few_informative(self):
-        assert sc._is_informative_reason("TOO_FEW_ITEMS") is True
+    def test_broken_item_message(self):
+        assert sc._informative_experiment(
+            "Stein ist zerbrochen und kann nicht verwendet werden.", "BROKEN_ITEM") is True
+
+    def test_no_match_message(self):
+        frag = sc._expected_fragment("NO_MATCH")
+        assert frag is not None
+        assert sc._informative_experiment("Die Kombination ergibt nichts.", "NO_MATCH") is True
+
+    def test_unknown_never_informative(self):
+        assert sc._expected_fragment("UNKNOWN") is None
+        assert sc._informative_experiment("Das geht so nicht.", "UNKNOWN") is False
+
+    def test_every_tag_has_label(self):
+        """TAG_LABELS ist vollständig für alle im Spiel vorkommenden Tags."""
+        from data.items import TEMPLATE_DB
+        from data.blueprints import get_all_blueprints
+        from data.locations import get_all_locations
+        tags = set()
+        for tid, t in TEMPLATE_DB.items():
+            tags.update(t.tags)
+        for bp in get_all_blueprints():
+            tags.update(bp.slots.values())
+        for loc in get_all_locations():
+            for node in loc.nodes:
+                if node.req_tool_tag:
+                    tags.add(node.req_tool_tag)
+        for t in tags:
+            assert t in sc.TAG_LABELS or t == "DURABILITY", f"Tag {t} ohne Label"
+
+
+class TestNoNichtsPassiert:
+    """'Nichts passiert.' darf als Meldung nicht mehr vorkommen."""
+
+    def test_no_nichts_passiert_in_core(self):
+        src = (ROOT / "engine" / "core.py").read_text()
+        assert "Nichts passiert." not in src
+
+    def test_execute_experiment_never_returns_nichts_passiert(self):
+        from engine.core import GameEngine
+        from data.items import create_item
+        engine = GameEngine()
+        # leere Auswahl → früher "Nichts passiert."
+        res = engine.execute_experiment([])
+        assert "Nichts passiert" not in res["message"]
+        # einzeln → früher "Nichts passiert."
+        engine.player.inventory.add(create_item("stick"))
+        res = engine.execute_experiment([engine.player.inventory.items[0]])
+        assert "Nichts passiert" not in res["message"]
+
 
 
 # ----------------------------------------------------------------------------
@@ -168,9 +223,20 @@ class TestEngineStructuredFields:
 class TestMetricsProduceValues:
     def test_all_metrics_have_value(self):
         data = sc.compute_all()
-        for key, _desc, _fn, _dir in sc.METRICS:
-            assert key in data
+        for m in sc.METRICS:
+            key = m["key"]
+            assert key in data, f"{key} fehlt"
             assert sc._collapse(data[key]) is not None, f"{key} hat keinen value"
+
+    def test_each_metric_has_version(self):
+        data = sc.compute_all()
+        for m in sc.METRICS:
+            key = m["key"]
+            assert data[key].get("version") == m["version"], f"{key} Version falsch"
+
+    def test_feedback_quality_is_v2(self):
+        data = sc.compute_all()
+        assert data["feedback_quality"]["version"] == 2
 
     def test_craft_variety_uses_blueprint_ids(self):
         from engine.core import GameEngine
@@ -197,3 +263,60 @@ class TestMetricsProduceValues:
             data = sc.compute_all()
             payload = {"schema": sc.SCHEMA, "metrics": data}
             assert payload["schema"] == 2
+
+
+# ----------------------------------------------------------------------------
+# discovery_gap (Band-Metrik)
+# ----------------------------------------------------------------------------
+
+class TestDiscoveryGap:
+    def test_gap_between_zero_and_one(self):
+        m = sc.metric_discovery_gap()
+        assert 0 <= m["value"] <= 1
+
+    def test_gap_is_reach_minus_naive(self):
+        m = sc.metric_discovery_gap()
+        assert abs(m["value"] - (m["blueprint_reachability"] - m["naive_discovery_rate"])) < 1e-6
+
+    def test_band_present(self):
+        m = sc.metric_discovery_gap()
+        assert m["band"] == [0.2, 0.6]
+
+    def test_band_status_rendering(self):
+        assert sc._band_status(0.3, (0.2, 0.6)) == "im Band"
+        assert sc._band_status(0.1, (0.2, 0.6)) == "unter Band"
+        assert sc._band_status(0.9, (0.2, 0.6)) == "über Band"
+
+    def test_table_shows_band_not_direction(self):
+        data = sc.compute_all()
+        table = sc.build_table(data, None)
+        row = [l for l in table.splitlines() if l.startswith("| discovery_gap")]
+        # Richtungsspalte zeigt Band-Status, kein "höher/niedriger"
+        assert row and ("Band" in row[0].split("|")[4])
+        assert "höher" not in row[0].split("|")[4]
+
+
+# ----------------------------------------------------------------------------
+# Versionierte Deltas
+# ----------------------------------------------------------------------------
+
+class TestVersionedDelta:
+    def test_rmoredef_skips_metric(self):
+        """Version geändert → '— (neu definiert)' statt Zahl."""
+        prev = {"metrics": {
+            "feedback_quality": {"value": 1.0, "version": 1},
+            "session_depth": {"value": 10, "version": 1},
+        }}
+        data = {"feedback_quality": {"value": 0.4, "version": 2},
+                "session_depth": {"value": 24, "version": 1}}
+        table = sc.build_table(data, prev)
+        fq_row = [l for l in table.splitlines() if l.startswith("| feedback_quality")]
+        sd_row = [l for l in table.splitlines() if l.startswith("| session_depth")]
+        assert "neu definiert" in fq_row[0]
+        assert "neu definiert" not in sd_row[0]
+
+    def test_version_field_in_json_output(self):
+        data = sc.compute_all()
+        assert data["feedback_quality"]["version"] == 2
+        assert data["session_depth"]["version"] == 1
+

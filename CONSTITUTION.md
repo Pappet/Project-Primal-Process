@@ -18,6 +18,7 @@ Das System soll nie in Richtungen driften, die das Entdecken ersticken: Content-
 ## Messung
 `tools/scorecard.py`, die Metrikdefinitionen in `METRICS` und der Play-Job gehören zum unantastbaren Kern. Metriken dürfen **ergänzt**, aber nicht entfernt, umdefiniert oder in ihrer Berechnung abgeschwächt werden. Änderungen daran brauchen Peters Freigabe.
 Metriken sind Indikatoren, nicht Ziele. Eine Änderung, die eine Metrik hebt, ohne das Spielerlebnis zu verändern, ist ungültig und wird zurückgerollt.
+Neue Metriken müssen benennen, welche Schwäche sie erfassen, und zwei Wochen mitlaufen, bevor sie Plan-Ziele steuern dürfen.
 
 ## Änderungsregel
 Nur Peter ändert diese Datei. Alle anderen Dokumente im Repo sind für Agenten frei änderbar. Jede Agenten-Änderung wird gegen diese Datei geprüft.

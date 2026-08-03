@@ -5,6 +5,68 @@
 
 ---
 
+## 2026-08-03 — [Fix] Spieler-Feedback ehrlich + discovery_gap eingeführt
+
+### Freigabe
+**Peter hat die Umdefinition von `feedback_quality` genehmigt.** Vermerkt hier, damit der Direktor nicht auf eine vermeintliche Regression reagiert.
+
+### Warum
+`feedback_quality` stand auf 1.0, obwohl der Spieler unverändert "Nichts passiert." las — die Engine kannte den Grund (`MISSING_TAG:SHARP`), behielt ihn aber für sich. Genau der Fall, den die Messungs-Klausel der Constitution für ungültig erklärt. Und es fehlte die wichtigste Größe: der Abstand zwischen Erreichbarem und tatsächlich Gefundenem.
+
+### Engine (Meldungen aus Reason abgeleitet — Spielerlebnis, nicht Metrik)
+- `TAG_LABELS` angelegt: vollständig für alle im Spiel vorkommenden Tags (SHARP→"etwas Scharfes", FIBER→"etwas Faseriges", RIGID→"etwas Festes", etc.).
+- `_feedback_message(reason)` baut für jeden Code eine konkrete Meldung; verrät nie mehr als der Reason hergibt (kein Rezept-Leaking).
+- **"Nichts passiert." ist als Meldung vollständig verschwunden.** Fehlschläge nennen jetzt das fehlende Label, "mindestens zwei Dinge", das kaputte Item, oder "die Kombination ergibt nichts".
+- Kein verändertes Spielverhalten, keine Balance-Änderung.
+
+### feedback_quality neu definiert (v2)
+> Eine Aktion zählt als informativ, wenn die Meldung das Label enthält, das zum tatsächlich zurückgegebenen Reason-Code gehört.
+
+Damit ist die Metrik nur zu heben, indem man dem Spieler die Wahrheit sagt — nicht durch String-Renaming oder interne Codierung. `_expected_fragment(reason)` ist der Konsistenz-Wächter.
+
+**Ehrlicher Befund:** Der Wert bleibt bei 1.0 — **nicht** weil nichts passiert ist, sondern weil die Engine in genau dieser Session gelernt hat, die Labels auch wirklich auszugeben. Die Metrik misst jetzt die Spielersicht und ist verdient auf 1.0. Würde jemand das Label aus der Meldung nehmen (ohne den Code zu ändern), fällt sie sofort. Ein künftiger Rückgang ist also korrekt, kein Alarmsignal.
+
+### discovery_gap (neu, Band-Metrik)
+- `blueprint_reachability` (Orakel) = 1.0, `naive_discovery_rate` (150 Aktionen) = 0.5.
+- **`discovery_gap` = 0.5.** Zielband **0.2–0.6**, keine Richtung. Unter 0.2 nimmt das Spiel an die Hand, über 0.6 ist es unentdeckbar.
+- Aktuell an der oberen Bandgrenze — nahe daran, dass ein Spieler zu wenig findet. Wichtiges Signal für die zwei Specs.
+- Begründung + Zielband stehen in SCORECARD.md.
+
+### Metrik-Historie versioniert
+- Jede Metrik hat ein `version`-Feld in der JSON-Ausgabe. `feedback_quality` = 2, alle anderen = 1.
+- Beim Delta wird eine Metrik mit Versionswechsel übersprungen → `— (neu definiert)`, die anderen bleiben vergleichbar. **Kein globaler Schema-Bump.**
+
+### Rückwärtsprüfung (Punkt 6)
+Außer `feedback_quality` sind auch `skill_spread` (0.298→0.315) und `session_depth` (16→24) durch die Zählweisen- und Median-Umstellung gestiegen, ohne dass sich am Spielerlebnis etwas geändert hätte. **Das ist kein stiller Fortschritt zu feiern.** Task in PLAN.md angelegt: beim nächsten Play-Lauf prüfen, dass beide Werte echte Spielerfahrung abbilden, sonst Metrik-Version bumpen.
+
+### Constitution
+Messung-Sektion ergänzt: *"Neue Metriken müssen benennen, welche Schwäche sie erfassen, und zwei Wochen mitlaufen, bevor sie Plan-Ziele steuern dürfen."* Status bleibt Entwurf.
+
+### Verifikation
+- `python -m pytest` → **130 passed** (117 + 13 neue).
+- Neue Tests: Reason↔Label-Konsistenz für jeden Code, Etikett-vollständig für alle Tags, "Nichts passiert." kommt im Code nicht mehr vor, `discovery_gap` 0–1 + Band-Rendering.
+- Determinismus: 2 Läufe, identische `metrics`.
+- Delta real geprüft: unveränderte Metriken zeigen Zahlen, `feedback_quality` zeigt `— (neu definiert)`, Band-Zeile `im Band`.
+
+### Neue Baseline (2026-08-03)
+| Metrik | v | Wert |
+|--------|---|------|
+| actions_to_first_craft | 1 | 63 |
+| blueprint_reachability | 1 | 1.000 |
+| craft_variety | 1 | 0.5 |
+| skill_spread | 1 | 0.315 |
+| feedback_quality | **2** | 1.0 |
+| content_reachable | 1 | 0.667 |
+| session_depth | 1 | 24 |
+| **discovery_gap** | 1 | **0.5** (Band 0.2–0.6) |
+
+`feedback_quality` v2 ist nicht mit v1 vergleichbar.
+
+### Wartet auf Peter
+- Constitution-Freigabe (aktualisierte Fassung).
+- Bestätigung der feedback_quality-Umdefinition (bereits in der Session als erteilt angenommen).
+
+---
 ## 2026-08-03 — [Fix] Scorecard repariert + gegen Selbstoptimierung gehärtet
 
 ### Warum

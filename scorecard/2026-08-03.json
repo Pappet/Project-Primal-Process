@@ -29,32 +29,37 @@
       "value": 63,
       "p25": 41,
       "p75": 118,
-      "n_runs": 17
+      "n_runs": 17,
+      "version": 1
     },
     "blueprint_reachability": {
       "value": 1.0,
       "per_blueprint": {
         "axe": true,
         "knife": true
-      }
+      },
+      "version": 1
     },
     "craft_variety": {
       "value": 0.5,
       "p25": 0,
       "p75": 1,
-      "n_runs": 20
+      "n_runs": 20,
+      "version": 1
     },
     "skill_spread": {
       "value": 0.315,
       "p25": 0.289,
       "p75": 0.386,
-      "n_runs": 20
+      "n_runs": 20,
+      "version": 1
     },
     "feedback_quality": {
       "value": 1.0,
       "p25": 1.0,
       "p75": 1.0,
-      "n_runs": 20
+      "n_runs": 20,
+      "version": 2
     },
     "content_reachable": {
       "value": 0.667,
@@ -72,13 +77,27 @@
         "cooked_meat",
         "raw_meat",
         "reeds"
-      ]
+      ],
+      "version": 1
     },
     "session_depth": {
       "value": 24.0,
       "p25": 19,
       "p75": 30,
-      "n_runs": 20
+      "n_runs": 20,
+      "version": 1
+    },
+    "discovery_gap": {
+      "value": 0.5,
+      "blueprint_reachability": 1.0,
+      "naive_discovery_rate": 0.5,
+      "naive_p25": 0.0,
+      "naive_p75": 1.0,
+      "band": [
+        0.2,
+        0.6
+      ],
+      "version": 1
     }
   }
 }

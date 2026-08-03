@@ -10,6 +10,47 @@ from data.locations import get_all_locations
 from data.items import create_item
 from data.blueprints import get_all_blueprints
 
+# Spielersprachliche Labels für Tags — die Brücke von internem Reason zu Text.
+# Vollständig für alle im Spiel vorkommenden Tags (Konsistenz-Wächter in Tests).
+TAG_LABELS = {
+    "SHARP": "etwas Scharfes",
+    "HARD": "etwas Hartes",
+    "FIBER": "etwas Faseriges",
+    "RIGID": "etwas Festes",
+    "STONE": "etwas Steinernes",
+    "PROJECTILE": "etwas Wurfgeschossartiges",
+    "EDIBLE": "etwas Essbares",
+    "CHOPPING": "etwas zum Schneiden",
+    "CUTTING": "etwas zum Schneiden",
+    "KINDLING": "etwas zum Feuermachen",
+    "SHOVEL": "etwas zum Graben",
+    "DURABILITY": "etwas Haltbares",
+}
+
+
+def _label_for(tag: str) -> str:
+    return TAG_LABELS.get(tag, f"etwas mit der Eigenschaft {tag}")
+
+
+def _feedback_message(reason: str, broken_names: "List[str] | None" = None) -> str:
+    """Baut eine spielersprachliche Meldung exakt aus dem Reason-Code.
+
+    Verrät niemals mehr als der Reason hergibt — kein Rezept-Leaking. Wird der
+    Code unkenntlich, gibt es eine generische (aber nicht lügende) Antwort.
+    """
+    if reason.startswith("MISSING_TAG:"):
+        tag = reason.split(":", 1)[1]
+        return f"Es fehlt dir {_label_for(tag)}."
+    if reason == "TOO_FEW_ITEMS":
+        return "Dafür brauchst du mindestens zwei Dinge."
+    if reason == "BROKEN_ITEM":
+        names = ", ".join(broken_names or [])
+        return f"{names} ist zerbrochen und kann nicht verwendet werden."
+    if reason == "NO_MATCH":
+        return "Die Kombination ergibt nichts."
+    return "Das geht so nicht."  # UNKNOWN-Fallback — nie eine generische Leer-Meldung
+
+
 class GameEngine:
     def __init__(self):
         self.player = Player("Survivor")
@@ -160,14 +201,15 @@ class GameEngine:
         if broken:
             return self._result(
                 False,
-                f"{', '.join(broken)} ist zerbrochen und kann nicht verwendet werden.",
+                _feedback_message("BROKEN_ITEM", broken),
                 "BROKEN_ITEM")
 
         # Zu wenige Items für den kleinsten Blueprint → nicht einmal ein Versuch
         slot_counts = [len(bp.slots) for bp in self.blueprints.values()]
         min_count = min(slot_counts) if slot_counts else 0
         if len(selected_items) < min_count:
-            return self._result(False, "Nichts passiert.", "TOO_FEW_ITEMS")
+            return self._result(False, _feedback_message("TOO_FEW_ITEMS"),
+                                "TOO_FEW_ITEMS")
 
         for bp_id, bp in self.blueprints.items():
             if len(selected_items) != len(bp.slots): continue
@@ -186,8 +228,8 @@ class GameEngine:
                         self.player.known_blueprints.add(bp_id)
                         self.player.stats["survival"] += 0.2
                     return self._create_tool(bp, mapping)
-        return self._result(False, "Nichts passiert.",
-                            self._no_match_reason(selected_items))
+        reason = self._no_match_reason(selected_items)
+        return self._result(False, _feedback_message(reason), reason)
 
     def _create_tool(self, bp: ToolBlueprint, comp: Dict[str, Item]) -> Dict[str, Any]:
         dur_attr = min(c.get_attr("durability", 0.5) for c in comp.values())
