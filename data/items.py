@@ -17,5 +17,6 @@ def create_item(template_id: str, quantity: int = 1) -> Item:
         base_weight=data.weight,
         tags=data.tags.copy(),
         attributes=data.attributes.copy(),
-        quantity=quantity
+        quantity=quantity,
+        template_id=template_id,
     )

@@ -19,7 +19,7 @@ Dateien: `data/blueprints.json`, `engine/crafting.py`, `engine/core.py:execute_e
 4. Richtung zählt nicht ein in kraftvolles neues Tag; es erweitert nur vorhandene Slot-Matching-Logik.
 
 ## Akzeptanzkriterien
-- Mind. 5 unterschiedliche erfolgreiche Craft-Ergebnisse (über Axt/Messer + Familien) in 100 Aktionen erreichbar.
+- Mindestens **3 Werkzeugtypen mit je ≥ 2 Varianten craftbar**, jede über eine eigene Tag-Kombination (nicht nur Axt/Messer).
 - Ein Fehlschlag mit mind. einem bekannten Ziel-Tag nennt einen konkreten Grund (kein generisches `"Nichts passiert."`).
 - Ein Spieler, der erst ein SHARP-Item gefunden hat, bekommt kategorisiertes Feedback.
 - `python -m pytest` bleibt grün.

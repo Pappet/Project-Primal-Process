@@ -1,8 +1,36 @@
 {
+  "schema": 2,
   "date": "2026-08-03",
   "base_seed": 20260803,
+  "seeds": [
+    20260803,
+    20260804,
+    20260805,
+    20260806,
+    20260807,
+    20260808,
+    20260809,
+    20260810,
+    20260811,
+    20260812,
+    20260813,
+    20260814,
+    20260815,
+    20260816,
+    20260817,
+    20260818,
+    20260819,
+    20260820,
+    20260821,
+    20260822
+  ],
   "metrics": {
-    "actions_to_first_craft": 43,
+    "actions_to_first_craft": {
+      "value": 63,
+      "p25": 41,
+      "p75": 118,
+      "n_runs": 17
+    },
     "blueprint_reachability": {
       "value": 1.0,
       "per_blueprint": {
@@ -11,21 +39,27 @@
       }
     },
     "craft_variety": {
-      "distinct_results": 1,
-      "value": 1
+      "value": 0.5,
+      "p25": 0,
+      "p75": 1,
+      "n_runs": 20
     },
     "skill_spread": {
-      "optimal_ticks": 258,
-      "random_ticks": 181,
-      "value": 0.298
+      "value": 0.315,
+      "p25": 0.289,
+      "p75": 0.386,
+      "n_runs": 20
     },
     "feedback_quality": {
-      "value": 0.6,
-      "informative": 27,
-      "total": 45
+      "value": 1.0,
+      "p25": 1.0,
+      "p75": 1.0,
+      "n_runs": 20
     },
     "content_reachable": {
       "value": 0.667,
+      "reachable_count": 6,
+      "defined_count": 9,
       "reachable": [
         "berries",
         "flint_shard",
@@ -41,8 +75,10 @@
       ]
     },
     "session_depth": {
-      "value": 16,
-      "stall_limit": 15
+      "value": 24.0,
+      "p25": 19,
+      "p75": 30,
+      "n_runs": 20
     }
   }
 }

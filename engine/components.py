@@ -13,6 +13,7 @@ class Item:
     quantity: int = 1
     condition: float = 1.0 
     attributes: Dict[str, float] = field(default_factory=dict)
+    template_id: str = ""
 
     @property
     def total_weight(self):

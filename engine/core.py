@@ -127,6 +127,30 @@ class GameEngine:
         
         return f"Du isst {name} und regenerierst {kcal} Energie."
 
+    def _result(self, success, message, reason, blueprint_id=None,
+                result_template_id=None):
+        """Strukturiertes Ergebnis mit Reason-Code (kein Verhaltensunterschied)."""
+        return {
+            "success": success,
+            "message": message,
+            "reason": reason,                 # SUCCESS/NO_MATCH/BROKEN_ITEM/MISSING_TAG:<T>/TOO_FEW_ITEMS/UNKNOWN
+            "blueprint_id": blueprint_id,
+            "result_template_id": result_template_id,
+        }
+
+    def _no_match_reason(self, selected_items):
+        """Bestimmt den konkretesten Reason für einen Fehlschlag."""
+        available = set()
+        for it in selected_items:
+            available.update(it.tags)
+        for bp in self.blueprints.values():
+            if len(bp.slots) != len(selected_items):
+                continue
+            for _slot, tag in bp.slots.items():
+                if tag not in available:
+                    return f"MISSING_TAG:{tag}"
+        return "NO_MATCH"
+
     def execute_experiment(self, selected_items: List[Item]) -> Dict[str, Any]:
         # Crafting ist sehr anstrengend (Effort 3.0)
         self._advance_time(2, effort_multiplier=3.0)
@@ -134,8 +158,16 @@ class GameEngine:
         # Zerbrochene Items (condition=0) sind nicht craftbar → verständliches Feedback
         broken = [it.name for it in selected_items if it.condition <= 0]
         if broken:
-            return {"success": False,
-                    "message": f"{', '.join(broken)} ist zerbrochen und kann nicht verwendet werden."}
+            return self._result(
+                False,
+                f"{', '.join(broken)} ist zerbrochen und kann nicht verwendet werden.",
+                "BROKEN_ITEM")
+
+        # Zu wenige Items für den kleinsten Blueprint → nicht einmal ein Versuch
+        slot_counts = [len(bp.slots) for bp in self.blueprints.values()]
+        min_count = min(slot_counts) if slot_counts else 0
+        if len(selected_items) < min_count:
+            return self._result(False, "Nichts passiert.", "TOO_FEW_ITEMS")
 
         for bp_id, bp in self.blueprints.items():
             if len(selected_items) != len(bp.slots): continue
@@ -154,7 +186,8 @@ class GameEngine:
                         self.player.known_blueprints.add(bp_id)
                         self.player.stats["survival"] += 0.2
                     return self._create_tool(bp, mapping)
-        return {"success": False, "message": "Nichts passiert."}
+        return self._result(False, "Nichts passiert.",
+                            self._no_match_reason(selected_items))
 
     def _create_tool(self, bp: ToolBlueprint, comp: Dict[str, Item]) -> Dict[str, Any]:
         dur_attr = min(c.get_attr("durability", 0.5) for c in comp.values())
@@ -162,13 +195,16 @@ class GameEngine:
         power = main.get_attr("sharpness", 0.1) * bp.base_efficiency
         name = f"{main.name}-{bp.result_name} ({list(comp.values())[1].name})"
         new_tool = Item(name=name, base_weight=sum(c.base_weight for c in comp.values()),
-                        tags={"DURABILITY": dur_attr}, attributes={"durability": dur_attr, "power": power})
+                        tags={"DURABILITY": dur_attr}, attributes={"durability": dur_attr, "power": power},
+                        template_id=bp.id)
         if bp.id == "axe": new_tool.tags["CHOPPING"] = power
         for c in comp.values():
             if c.quantity > 1: c.quantity -= 1
             else: self.player.inventory.items.remove(c)
         self.player.inventory.add(new_tool)
-        return {"success": True, "message": f"Hergestellt: {name}"}
+        return {"success": True, "message": f"Hergestellt: {name}",
+                "reason": "SUCCESS", "blueprint_id": bp.id,
+                "result_template_id": bp.id}
 
     def travel(self, tid: str):
         if tid not in self.locations: return "Unbekannt."
