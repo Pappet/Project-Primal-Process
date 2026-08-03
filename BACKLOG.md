@@ -1,12 +1,30 @@
 # Project Primal Process — Backlog
 
 > Jede Session (Research, Dev, Review) schreibt hier rein, was ihr auffällt.
-> Der Sunday Review räumt auf: promoten, verschieben, verwerfen.
+> Der Direktor (So) räumt auf: zu Specs machen, verschieben, verwerfen.
 > Format: `- [DATUM] (Quelle-Session) Beschreibung — einzeilig, konkret`
-> Quelle-Session: Research, Dev, oder Review
+> Quelle-Session: Research, Dev, Play, oder Direktor
 > Keine Romane — das Ziel ist schnelle Triage am Sonntag.
 
 ---
+
+## 🗂 Rohmaterial (aus altem Plan, 2026-08-03, Umbau)
+> Frühere Milestones M0.4–M3.4. Als Ideen, nicht als Struktur. Konvertiert der Direktor/Research gezielt in Specs, wenn die Metriken es verlangen.
+- [2026-08-03] (Umbau) Save/Load-System: JSON-Serialisierung des GameState + Save-Slots + Autosave (war M0.4) — `session_depth`/Langzeit-Tiefe
+- [2026-08-03] (Umbau) Erweitertes Tag-System: Tag-Hierarchien (SHARP→CUTTING/PIERCING), Material-Tags, Qualitäts-Modifier (war M1.1) — craft_variety
+- [2026-08-03] (Umbau) Item-Content ×5: von 8 auf 40+ Templates, Kategorien Rohstoffe/Werkzeuge/Baumaterial/Nahrung/Kleidung/Medizin (war M1.2) — content_reachable
+- [2026-08-03] (Umbau) Blueprint-Conditions: min_item_quality, required_skill_level, Blueprint-Familien (war M1.3) — craft_variety
+- [2026-08-03] (Umbau) Erweiterte Weltkarte: 10–15 Locations, Reisezeit, Gefahren, saisonale Änderungen (war M2.1) — session_depth
+- [2026-08-03] (Umbau) Persistente Welt: Shelter/Feuerstellen/Werkbänke bauen, Gelände veränderbar (war M2.2) — session_depth
+- [2026-08-03] (Umbau) Gefahren-System: Raubtiere, Krankheiten, Wetterextreme, Verletzungen (war M2.3) — skill_spread
+- [2026-08-03] (Umbau) Gesundheitssystem: mehrere Vitalwerte, Wunden, Immunsystem, Erste Hilfe (war M2.4) — skill_spread
+- [2026-08-03] (Umbau) Tech-Stufen: implizite Progression über Tag-Komplexität, keine Tech-Tree, Aha-Momente (war M3.1) — session_depth
+- [2026-08-03] (Umbau) Skill-System: Skills durch Nutzung, gaten komplexere Blueprints (war M3.2) — skill_spread
+- [2026-08-03] (Umbau) UI/UX-Upgrade: besseres Feedback, Discovery-Log, Tooltips für Tags (war M3.3) — feedback_quality
+- [2026-08-03] (Umbau) Spielbare Alpha: 40+ Items, 15+ Blueprints, funktionierende Prozesse (war M3.4) — Gesamtziel
+
+---
+
 
 ## 🔴 Bugs
 Dinge die kaputt sind und gefixt werden müssen.

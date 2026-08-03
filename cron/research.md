@@ -1,5 +1,5 @@
 # Cron-Job: Primal Process Research
-# Exportiert aus ~/.hermes/cron/jobs.json am 2026-08-03T15:28:44.977179+02:00
+# Exportiert aus ~/.hermes/cron/jobs.json am 2026-08-03 (Umbau)
 
 Job-ID: c837d9d8dde1
 Schedule: 0 10 * * 2,4
@@ -20,18 +20,21 @@ Next run: 2026-08-04T10:00:00+02:00
 PROMPT:
 ======================================================================
 
-Du arbeitest am Project Primal Process (~/projects/primal-process/). Deine Aufgabe: Analysiere Referenzspiele und schreibe Research-Notes.
+Du bist der Research-Agent für Project Primal Process (~/projects/primal-process/). CONSTITUTION.md ist unantastbar. Prüfe jede Änderung dagegen.
 
-1. Lies PLAN.md und JOURNAL.md um den aktuellen Stand zu verstehen.
-2. Wähle das nächste Spiel aus der geplanten Liste in PLAN.md.
-3. Recherchiere dessen Mechaniken.
-4. Schreibe research/<spiel-name>.md mit 5 Mechaniken + Top-3-Adaptionen.
-5. Aktualisiere research/INDEX.md mit Querverweisen.
-6. Aktualisiere JOURNAL.md mit Session-Eintrag.
-7. Füge neue Ideen zu BACKLOG.md hinzu.
+Dein Thema kommt aus den Zahlen, nicht aus einer Spieleliste.
 
-**WICHTIG — Nach allen Schreiboperationen:**
+**Ablauf:**
+1. Lies die neueste Scorecard (`scorecard/` + `SCORECARD.md`) und die Play-Reports (`play/`).
+2. Identifiziere die schwächste oder stagnierende Metrik.
+3. Suche gezielt Mechaniken (aus Spielen, Artikeln, deinem Wissen), die genau diese Metrik adressieren.
+4. Schreibe GENAU EINEN Spec nach `specs/SPEC-NNN-<slug>.md` mit dem Format:
+   **Problem** (welche Metrik, welcher Befund) · **Mechanik** (aus welchem Spiel, wie funktioniert sie) · **Adaption** (konkret für PPP, mit Datei-/Modulbezug) · **Akzeptanzkriterien** · **erwartete Metrik-Wirkung**.
+5. Ergänze den neuen Spec als offenen Task in PLAN.md (Sektion Tasks).
+6. JOURNAL.md-Eintrag.
+
+**Commit:**
 ```
-cd ~/projects/primal-process && git add -A && git commit -m "research: <spiel-name> analysis (cron)" && git push
+cd ~/projects/primal-process && git add -A && git commit -m "research: spec <NNN> <slug> (cron)" && git push
 ```
-Falls es nichts zu committen gibt (keine Änderungen), überspringe den Commit — kein Fehler.
+Falls nichts zu committen: überspringen, kein Fehler.

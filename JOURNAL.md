@@ -1,10 +1,57 @@
 # Project Primal Process — Journal
 
-> Geführt von Zero. Chronologisch. Jeder Eintrag = eine Session (Research, Dev, Review).
+> Geführt von Zero. Chronologisch. Jeder Eintrag = eine Session (Research, Dev, Play, Direktor).
 > Format: `## YYYY-MM-DD — [Typ] Titel`
 
 ---
 
+## 2026-08-03 — [Umbau] Primal Process auf autonomen Betrieb umgestellt
+
+### Kontext
+Das System lief wie ein Scrum-Team ohne Product Owner: Der Plan (Tag 1) fror jede Erkenntnis ein, die einzigen Signale waren "Tests grün" und "Sprint gefüllt". Beides misst Prozess, nicht das Spiel. Umbau: Selbstversorgung + messbare Spiel-Fitness + selbstmodifizierender Prozess. **Kein Spiel-Code geändert.** Einzige neue ausführbare Datei: `tools/scorecard.py`.
+
+### Was gebaut wurde
+- **CONSTITUTION.md** — unantastbarer Kern (Identität, Nicht-Ziele, Constraints, Änderungsregel). STATUS: Entwurf, wartet auf Peter. **Entscheidung:** max. 25 Zeilen respektiert (22). Nur Peter ändert diese Datei.
+- **Scorecard** — `tools/scorecard.py` (stdlib only, deterministischer Seed) + `SCORECARD.md`. 7 Metriken aus echten Playthroughs, Delta zur Vorwoche, JSON nach `scorecard/`. Baseline lief.
+- **PLAN.md neugeschrieben** — alte Fassung nach `archive/PLAN-phases-2026-08.md`. Drei Sektionen (Zustand/Ziele/Tasks), keine Phasen/KWs. Milestones M0.4–M3.4 als Rohmaterial nach BACKLOG.md.
+- **Research → Specs** — Format definiert; 2 Beispiel-Specs aus der schwächsten Metrik geschrieben (SPEC-001 Prozess-System, SPEC-002 Blueprint-Familien).
+- **4 Cron-Jobs umgebaut** — Play (ersetzt QA), Research, Dev, Direktor (ersetzt Review). Details unten.
+
+### Baseline-Scorecard (2026-08-03)
+| Metrik | Wert | Befund |
+|--------|------|--------|
+| actions_to_first_craft | 43 | Erst-Craft in 43 Aktionen — okay |
+| blueprint_reachability | 1.000 | beide Blueprints erreichbar |
+| **craft_variety** | **1** | 🔴 nur 1 Craft-Typ in 100 Aktionen |
+| skill_spread | 0.298 | Können bringt etwas |
+| feedback_quality | 0.600 | 60% informative Rückmeldungen |
+| content_reachable | 0.667 | 3 Items (raw_meat/cooked_meat/reeds) unerreichbar |
+| **session_depth** | **16** | 🔴 Langeweile nach 16 Aktionen |
+
+Schwächste Metrik: `craft_variety` (1) — eng gekoppelt an `session_depth` (16). Ursache: nur 2 Blueprints, Prozess-System nicht eingebunden, kaum erreichbare Items. Daraus die zwei Specs.
+
+### Cron-Jobs (IDs beibehalten, anpassen statt neu)
+| Rolle | Job-ID | Schedule | Änderung |
+|-------|--------|----------|----------|
+| Play | `9777fe714dfb` | Mo/Mi/Fr 09:00 | war QA (Sa 16:00). Spielt Runs, rechnet Scorecard, findet Langeweile-Stelle. |
+| Research | `c837d9d8dde1` | Di+Do 10:00 | Thema aus den Zahlen (schwächste Metrik), genau 1 Spec. |
+| Dev | `10c0e68f3673` | Mo–Sa 14:00 | Tasks aus PLAN.md, sonst oberster Spec; darf sich bedienen, kein Summon. |
+| Direktor | `d8ed1b92bc80` | So 18:00 | war Review. Schreibt PLAN.md neu, darf Cron-Jobs selbst ändern. |
+
+Aus allen Prompts entfernt: Sprint-Cap, "Leerlauf ist der Feind", Worst-Case-Füllung, Summon-Mechanik, KW-Bezüge, Verbot Plan-Struktur zu ändern, Lessons-Learned 01.–03.08. Jeder Prompt trägt jetzt: *"CONSTITUTION.md ist unantastbar."* Export nach `cron/` aktualisiert (play/research/dev/direktor + OVERVIEW).
+
+### Selbstmodifikation abgesichert
+- Snapshot-Branch `pre-autonomy-2026-08-03` gepusht, bleibt liegen.
+- Jede Änderung an `~/.hermes/cron/jobs.json` wird nach `cron/` exportiert + committet.
+
+### Verifikation
+- `python -m pytest` → **93 passed** (unverändert grün gegenüber Session-Start).
+- Scorecard-Baseline deterministisch, reproducable über `python tools/scorecard.py`.
+
+### Wartet auf Peter
+- **CONSTITUTION.md** Freigabe (STATUS: Entwurf). Wenn er sie ändert/absegnet, ist der Kern gesetzt.
+
+---
 ## 2026-08-03 — [Dev] Sprint KW 32 abgearbeitet: 5 🔴 Bugs + R01
 
 ### Erledigt (alle 6 Sprint-Tasks)

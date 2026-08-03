@@ -1,0 +1,48 @@
+{
+  "date": "2026-08-03",
+  "base_seed": 20260803,
+  "metrics": {
+    "actions_to_first_craft": 43,
+    "blueprint_reachability": {
+      "value": 1.0,
+      "per_blueprint": {
+        "axe": true,
+        "knife": true
+      }
+    },
+    "craft_variety": {
+      "distinct_results": 1,
+      "value": 1
+    },
+    "skill_spread": {
+      "optimal_ticks": 258,
+      "random_ticks": 181,
+      "value": 0.298
+    },
+    "feedback_quality": {
+      "value": 0.6,
+      "informative": 27,
+      "total": 45
+    },
+    "content_reachable": {
+      "value": 0.667,
+      "reachable": [
+        "berries",
+        "flint_shard",
+        "mushroom",
+        "pebble",
+        "plant_fiber",
+        "stick"
+      ],
+      "unreachable": [
+        "cooked_meat",
+        "raw_meat",
+        "reeds"
+      ]
+    },
+    "session_depth": {
+      "value": 16,
+      "stall_limit": 15
+    }
+  }
+}

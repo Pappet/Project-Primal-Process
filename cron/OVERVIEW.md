@@ -1,12 +1,13 @@
 # Primal Process — Cron-Jobs Übersicht
 
-> Exportiert am 2026-08-03T15:28:07.761281 aus `~/.hermes/cron/jobs.json`
+> Exportiert am 2026-08-03 (Umbau) aus `~/.hermes/cron/jobs.json`
 
-| Job | Schedule | Beschreibung | Nächster Run | Status |
-|-----|----------|--------------|--------------|--------|
-| Primal Process Dev | `0 14 * * 1,2,3,4,5,6` | Implementierung der Sprint-Tasks (Mo-Sa 14:00); summoned Review wenn Sprint leer | 2026-08-04T14:00:00+02:00 | ok |
-| Primal Process QA | `0 16 * * 6` | Playtest & Balance aus User-Sicht (Sa 16:00) | 2026-08-08T16:00:00+02:00 | ok |
-| Primal Process Research | `0 10 * * 2,4` | Referenzspiel-Analyse (Di+Do 10:00) | 2026-08-04T10:00:00+02:00 | ok |
-| Primal Process Review | `0 18 * * 0` | Weekly Triage + Sprint-Planung, kann mid-week gesummondt werden (So 18:00) | 2026-08-09T18:00:00+02:00 | ok |
+| Job | Schedule | Rolle | Nächster Run | Status |
+|-----|----------|-------|--------------|--------|
+| Primal Process Play | `0 9 * * 1,3,5` | Echte Runs, Scorecard, Langeweile-Stelle finden (Mo/Mi/Fr 09:00) | 2026-08-05T09:00:00+02:00 | ok |
+| Primal Process Research | `0 10 * * 2,4` | Schwächste Metrik → genau 1 Spec (Di+Do 10:00) | 2026-08-04T10:00:00+02:00 | ok |
+| Primal Process Dev | `0 14 * * 1,2,3,4,5,6` | Tasks aus PLAN.md / oberster Spec (Mo–Sa 14:00) | 2026-08-04T14:00:00+02:00 | ok |
+| Primal Process Direktor | `0 18 * * 0` | Schreibt PLAN.md neu, darf Cron-Jobs ändern (So 18:00) | 2026-08-09T18:00:00+02:00 | ok |
 
-Einzelne Prompts: `research.md`, `dev.md`, `review.md`, `qa.md`
+Einzelne Prompts: `play.md`, `research.md`, `dev.md`, `direktor.md`.
+Grenze für alle: `CONSTITUTION.md`.
