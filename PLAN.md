@@ -160,6 +160,7 @@ Outputs landen in ~/projects/primal-process/ und im Discord #general.
 | `JOURNAL.md` | Chronologisches Session-Tagebuch (letzte 4 Wochen) |
 | `archive/` | Archivierte alte Journal-Einträge |
 | `BACKLOG.md` | Bugs, Ideen, Tech Debt — jede Session schreibt rein, Review triagiert |
+| `cron/` | Export der Cron-Jobs (Prompts + Metadaten) — Quelle: ~/.hermes/cron/jobs.json |
 
 ---
 
