@@ -41,6 +41,7 @@ Dinge die kaputt sind und gefixt werden müssen.
 Mechaniken, Features, Verbesserungen — nicht akut, aber wertvoll.
 
 <!-- Session-Einträge hier drunter -->
+- [2026-08-03] (Direktor) **Lern-Signal messen**: steigt die Trefferquote eines naiven Spielers nach einer informativen Fehlermeldung? Misst, ob der Spieler das Feedback *versteht* — im Gegensatz zu `feedback_quality`, das nur die Konsistenz zwischen Reason-Code und Meldung prüft und konstruktionsbedingt bei 1.0 steht. **Option für den Explore-Job, kein Auftrag** — der wählt sein Thema selbst.
 - [2026-07-28] (Research) Body-Part-System: Lokalisierte Verletzungen pro Körperteil (URW-Referenz) — M2.4 Gesundheitssystem → **später (Phase 2)**
 - [2026-07-28] (Research) Material-Quelle→Eigenschaften: Tags wie `BEAR_FUR`/`OAK_WOOD` als Qualitäts-Multiplikatoren (URW) — M1.1 Tag-Hierarchien → **nächste Woche (M1.1)**
 - [2026-07-28] (Research) Skill→Qualität: Crafting-Skill modifiziert Output-Qualität, wächst auch bei Fehlschlag (URW) — M3.2 Skill-System → **später (Phase 3)**

@@ -67,6 +67,19 @@ class TestEngineCrafting:
 
         assert result["success"] is False
 
+    def test_three_same_items_no_blueprint(self):
+        """3 Items ohne gültige Kombination (berries+mushroom+stick) matcht
+        keine Axt (HARD+RIGID+FIBER). Muss scheitern und das Merkmal nennen."""
+        engine = GameEngine()
+        for tpl in ("berries", "mushroom", "stick"):
+            engine.player.inventory.add(create_item(tpl))
+        items = list(engine.player.inventory.items)
+        result = engine.execute_experiment(items)
+        assert result["success"] is False
+        assert "Nichts passiert" not in result["message"]
+        # Fehlt HARD (Axt) → Meldung nennt das Merkmal
+        assert "fehlt" in result["message"]
+
     def test_known_blueprints_tracked(self):
         engine = GameEngine()
         engine.player.inventory.add(create_item("flint_shard"))

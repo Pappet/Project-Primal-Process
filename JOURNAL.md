@@ -5,6 +5,45 @@
 
 ---
 
+## 2026-08-03 — [Finalisierung] Constitution gültig + Research explorativ geöffnet
+
+### Autorisierung
+**Peter autorisiert in dieser Session ausschließlich die drei in Abschnitt 1 des Auftrags wörtlich spezifizierten Änderungen an CONSTITUTION.md.** Alles darüber hinaus bleibt ihm vorbehalten. Vermerkt hier.
+
+### CONSTITUTION.md — drei Änderungen, sonst nichts
+- **Status:** `ENTWURF — wartet auf Freigabe` → **`Gültig — freigegeben von Peter am 2026-08-03`**.
+- **Positiver Rahmen** (Ende Identität): *"Neue Mechaniken sind ausdrücklich erwünscht, solange sie das Entdecken vertiefen statt es abzukürzen. Das Spiel darf wachsen — in Systemen, nicht nur in Inhalten."*
+- **"Keine festen Rezepte" präzisiert:** ersetzt durch *"Keine vorgegebenen Rezepte; Entdeckung durch Experimentieren. Dass der Spieler festhält, was er selbst entdeckt hat — Entdeckungsjournal, Hinweise, Experimentiergedächtnis — ist ausdrücklich erlaubt und kein Widerspruch dazu."*
+
+Damit ist die Constitution final. Vier Agenten lesen sie jede Session; der positive Rahmen löst die Vorsicht, die reine Verbote erzeugt hatten.
+
+### Research in zwei Modi aufgeteilt
+- **research-metric** (Job-ID `c837d9d8dde1`, Di 10:00) — wie bisher: schwächste/stagnierende Metrik, gezielt Mechaniken, genau ein Spec.
+- **research-explore** (neuer Job `ba3954705006`, Do 10:00) — **kein Metrik-Anker.** Freie Suche nach Mechaniken, die das Spiel als System vertiefen, auch solche, die keine bestehende Metrik bewegt. Output: Spec **plus Metrik-Vorschlag** als `metrics/proposed/<name>.md` (Definition, Berechnungsskizze, Richtung/Zielband, warum nicht trivial zu heben). Ohne Metrik ist der Spec unvollständig.
+- Beide nach `cron/` exportiert, beide tragen die Constitution-Zeile.
+
+### Probezeit mechanisch durchgesetzt
+- `METRICS` unterstützt optionales `probation_until` (ISO-Datum). Neue Metriken setzt Dev auf +14 Tage.
+- SCORECARD.md markiert solche Zeilen mit `(Probe bis TT.MM.)`.
+- Direktor-Prompt: Metriken in Probezeit dürfen beobachtet, aber **nicht** als Plan-Ziel gesetzt werden.
+- Dev-Prompt: Hinzufügen von Metriken ist erlaubt und braucht keine Freigabe — nur Entfernen/Umdefinieren.
+
+### Altlast entfernt
+- `qa/` (abgelöste QA-Rolle) nach `archive/qa-legacy/`. `_smoke_test.py:162` prüfte auf "Nichts passiert" — sicherte also das Gegenteil des gewollten Verhaltens ab (inzwischen false; 3 Sticks → "Es fehlt dir etwas Hartes.").
+- Der wertvolle Fall (3 Items ohne gültige Kombination nennen das Merkmal) als echter pytest `test_three_same_items_no_blueprint` nach `tests/test_engine.py`.
+
+### Backlog
+- Lern-Signal als Idea eingetragen, ausdrücklich **nicht** als Vorgabe: misst, ob ein Spieler Feedback versteht (Trefferquote nach informativer Meldung) — im Gegensatz zu `feedback_quality`, das nur Reason↔Label-Konsistenz prüft und bei 1.0 steht. Option für den Explore-Job, kein Auftrag.
+
+### Verifikation
+- `python -m pytest` → **134 passed** (131 + 3 Probezeit-Tests, nach qa-Verschiebung erneut geprüft).
+- Scorecard deterministisch, Werte identisch zur letzten Messung (63 / 1.0 / 0.5 / 0.315 / 1.0 / 0.667 / 24 / discovery_gap 0.5).
+- `cron/OVERVIEW.md` auf 5 Jobs aktualisiert.
+
+### Wartet auf Peter
+- Nichts — Constitution ist freigegeben. Das System kann laufen.
+
+---
 ## 2026-08-03 — [Fix] Spieler-Feedback ehrlich + discovery_gap eingeführt
 
 ### Freigabe

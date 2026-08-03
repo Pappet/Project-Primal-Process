@@ -500,6 +500,19 @@ METRICS = [
 METRIC_VERSIONS = {m["key"]: m["version"] for m in METRICS}
 
 
+def _probation_label(m):
+    """Optional: '(Probe bis TT.MM.)' für neue Metriken in Probezeit."""
+    until = m.get("probation_until")
+    if not until:
+        return ""
+    try:
+        from datetime import datetime
+        d = datetime.strptime(until, "%Y-%m-%d")
+        return f" (Probe bis {d.strftime('%d.%m.')})"
+    except ValueError:
+        return f" (Probe bis {until})"
+
+
 def _collapse(result):
     if result is None:
         return None
@@ -635,7 +648,7 @@ def build_table(data, prev):
             dir_txt = "niedriger"
         else:
             dir_txt = "höher"
-        lines.append(f"| {key} (v{version}) | {val_txt} | {delta} | {dir_txt} | {m['desc']}{warn} |")
+        lines.append(f"| {key} (v{version}){_probation_label(m)} | {val_txt} | {delta} | {dir_txt} | {m['desc']}{warn} |")
     lines.append("")
     return "\n".join(lines)
 

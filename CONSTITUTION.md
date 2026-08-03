@@ -1,9 +1,10 @@
 # Constitution — Project Primal Process
 
-> STATUS: Entwurf — wartet auf Freigabe durch Peter
+> STATUS: Gültig — freigegeben von Peter am 2026-08-03
 
 ## Identität
 Ein tiefes, tag-basiertes Primitive-Technology-Discovery-Game. Vom Steinzeit-Überleben zur Eisenzeit-Zivilisation — durch Experimentieren, nicht durch Rezeptbuch. Der Spieler entdeckt Mechaniken durch Kombinatorik, nicht durch Anleitung.
+Neue Mechaniken sind ausdrücklich erwünscht, solange sie das Entdecken vertiefen statt es abzukürzen. Das Spiel darf wachsen — in Systemen, nicht nur in Inhalten.
 
 ## Nicht-Ziele
 Das System soll nie in Richtungen driften, die das Entdecken ersticken: Content-Menge als Selbstzweck (mehr Items ohne das Spiel besser zu machen), Refactoring ohne Metrik-Bezug, eine GUI, die das Textinterface ersetzt, oder Kampf als Kernmechanik statt als Randphänomen.
@@ -11,7 +12,7 @@ Das System soll nie in Richtungen driften, die das Entdecken ersticken: Content-
 ## Harte Constraints
 - Python 3, Textinterface (CLI).
 - Tag-basiertes Crafting ist der Kern — bleibt erhalten.
-- Keine festen Rezepte; Entdeckung durch Experimentieren.
+- Keine vorgegebenen Rezepte; Entdeckung durch Experimentieren. Dass der Spieler festhält, was er **selbst** entdeckt hat — Entdeckungsjournal, Hinweise, Experimentiergedächtnis — ist ausdrücklich erlaubt und kein Widerspruch dazu.
 - Spiel startet in unter einer Sekunde.
 - Keine schweren Abhängigkeiten (kein numpy/torch etc.); stdlib + minimal. **Ausnahme: pydantic** (bereits von `data/loader.py` genutzt, bleibt erlaubt).
 

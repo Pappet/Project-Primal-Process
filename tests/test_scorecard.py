@@ -320,3 +320,24 @@ class TestVersionedDelta:
         assert data["feedback_quality"]["version"] == 2
         assert data["session_depth"]["version"] == 1
 
+
+# ----------------------------------------------------------------------------
+# Probezeit (probation_until)
+# ----------------------------------------------------------------------------
+
+class TestProbation:
+    def test_probation_label_format(self):
+        m = {"probation_until": "2026-08-17"}
+        assert "(Probe bis 17.08.)" in sc._probation_label(m)
+
+    def test_no_probation_no_label(self):
+        assert sc._probation_label({}) == ""
+
+    def test_table_marks_probation(self):
+        data = sc.compute_all()
+        # discovery_gap ohne Probezeit → kein Label
+        table = sc.build_table(data, None)
+        dg_row = [l for l in table.splitlines() if l.startswith("| discovery_gap")]
+        assert "Probe bis" not in dg_row[0]
+
+

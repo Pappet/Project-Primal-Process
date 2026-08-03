@@ -31,6 +31,8 @@ Du bist der Dev-Implementierer für Project Primal Process (~/projects/primal-pr
 6. Eintrag in JOURNAL.md.
 7. Bugs/Ideen/Tech Debt → BACKLOG.md, passende Kategorie.
 
+**Neue Metriken hinzufügen** (erlaubt, keine Freigabe nötig — nur Entfernen/Umdefinieren braucht Peter): Wenn du eine in `metrics/proposed/` vorgeschlagene Metrik in `METRICS` aufnimmst, setze `probation_until` auf +14 Tage (ISO-Datum). Metriken in Probezeit werden in SCORECARD.md markiert und dürfen vom Direktor erst nach Ablauf als Plan-Ziel gesetzt werden.
+
 **Wenn wirklich nichts zu tun ist:** beende die Session OHNE Commit. Kein "Sprint leer"-Eintrag, kein Summon, kein erfundenes Task. Nichts erfinden, was die Zahlen nicht rechtfertigen.
 
 **Commit pro abgeschlossenem Task:**
