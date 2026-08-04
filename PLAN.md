@@ -17,6 +17,7 @@ Das Spiel startet in Sekundenbruchteilen und läuft stabil: 130 Tests grün, Tag
 
 - [ ] **SPEC-001 — Prozess-System aktivieren.** `execute_process` in Engine, `[p]rocess` im CLI, `reeds` eine Quelle geben. Akzeptanz: `make_sharp_stone`, `create_tinder`, `start_fire` von frischem Start erreichbar; `cooked_meat` aus `raw_meat` das Koch-Prozess; Tests grün.
 - [ ] **SPEC-002 — Blueprint-Familien + Discovery-Feedback.** Tag-Familien-Slots, 2–3 Varianten pro Werkzeug-Typ, kategorisierte Fehlschlags-Meldungen. Akzeptanz: ≥ 3 Werkzeugtypen mit je ≥ 2 Varianten; Fehlschlag mit bekanntem Tag nennt Grund; Tests grün.
+- [ ] **SPEC-003 — Partielle Match-Erkennung (Discovery).** `discovery_gap` liegt bei 0.5 (obere Bandkante), `naive_discovery_rate` p25=0.0 — halbe Naiv-Läufe finden nichts. Beinahe-Treffer (≥2/3 Slots eines unbekannten Blueprints) bestätigen dem Spieler, dass seine Teilmenge stimmt, ohne das Rezept zu verraten. Akzeptanz: NEAR_MISS-Reason ohne Tag-Nennung; Einmaligkeit; naive p25 > 0.0; Tests grün.
 - [ ] **Rückwärtsprüfung verankern (Fix-Session 03.08.).** `skill_spread` (0.298→0.315) und `session_depth` (16→24) stiegen durch die Zählweisen- und Median-Umstellung, ohne Spielerlebnis-Änderung. Nicht stillschweigend stehen lassen: beim nächsten Play-Lauf prüfen, dass diese Werte echte Spielerfahrung abbilden, sonst Metrik-Version bumpen.
 - [ ] **Baseline verankern.** Scorecard-Lauf einmal pro Woche via Play-Job; `discovery_gap`/`session_depth`/`content_reachable` als Ziel-Metriken fahren.
 

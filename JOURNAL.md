@@ -5,7 +5,30 @@
 
 ---
 
-## 2026-08-03 — [Finalisierung] Constitution gültig + Research explorativ geöffnet
+## 2026-08-04 — [Research] SPEC-003: Partielle Match-Erkennung (discovery_gap)
+
+### Metrik-Anker
+Schwächste/stagnierende Metrik laut Scorecard 2026-08-03: **`discovery_gap` = 0.5**, an der oberen Kante des Bands (0.2–0.6) — nahe „unentdeckbar". Zerlegung: `blueprint_reachability`=1.0 (Orakel), `naive_discovery_rate`=0.5, aber **`naive_p25`=0.0** — die untere Hälfte der naiven Läufe findet in 150 Aktionen *gar keinen* Blueprint. Der Median verdeckt den Schwanz. SPEC-001/002 decken Vielfalt/Content/Feedback ab, aber keine Mechanik senkt die Lücke selbst.
+
+### Spec
+`specs/SPEC-003-partial-match-recognition.md`. Mechanik aus Don't Starve (Prototypen-Maschine) + Ancestors (neuronales Entdeckungssystem), adaptiert als **partielle Match-Erkennung**: Fehlschlag mit ≥2/3 Slots eines unbekannten Blueprints → Reason `NEAR_MISS:<bp_id>`, generischer Bestätigungstext („gehören zusammen, es fehlt noch etwas") **ohne** Rezept-/Tag-Leak. Einmalig via `Player.near_misses` (Experimentiergedächtnis, von der Constitution gedeckt). Konvergiert naive Spieler, schenkt aber nichts — wer die Materialien nicht selbst hat, bekommt keinen Hinweis.
+
+### Constitution-Check
+- Kein vorgegebenes Rezept — nur Bestätigung einer gehaltenen Teilmenge.
+- Hinweis/Experimentiergedächtnis ausdrücklich erlaubt.
+- CI: CLI, stdlib, keine neue Metrik, keine Abschwächung bestehender Metriken.
+
+### Erwartete Wirkung
+- `discovery_gap`: 0.5 → ~0.3–0.4 (Mitte des Bands; bleibt >0.2, weil der Hinweis erst nach eigenem Besitz von ≥2 passenden Tags feuert).
+- `naive_discovery_rate` p25: 0.0 → >0.0 („findet nichts"-Schwanz geschlossen).
+- Nebeneffekt `session_depth` steigend.
+
+### Änderungen
+- `specs/SPEC-003-*.md` (neu)
+- `PLAN.md` — SPEC-003 als offener Task
+
+---
+
 
 ### Autorisierung
 **Peter autorisiert in dieser Session ausschließlich die drei in Abschnitt 1 des Auftrags wörtlich spezifizierten Änderungen an CONSTITUTION.md.** Alles darüber hinaus bleibt ihm vorbehalten. Vermerkt hier.
