@@ -16,7 +16,7 @@ def main():
         print(f"Umgebung: {amb_temp:.1f}°C | Körper: {p.body_temp:.1f}°C")
         print(f"HP: {int(p.hp)}/100 | ENERGIE: {int(p.energy)}/1000 | Survival: {p.stats['survival']:.1f}")
         print("-" * 50)
-        print("[g]ather, [e]xperiment, [f]eed, [k]nowledge, [i]nventory, [t]ravel, [q]uit")
+        print("[g]ather, [e]xperiment, [p]rocess, [f]eed, [k]nowledge, [i]nventory, [t]ravel, [q]uit")
 
         if p.hp <= 0:
             print("\n!!! DU BIST VERHUNGERT. GAME OVER !!!")
@@ -60,6 +60,23 @@ def main():
             for bid in p.known_blueprints:
                 bp = game.blueprints[bid]
                 print(f"- {bp.result_name} ({list(bp.slots.values())})")
+            input("\nWeiter...")
+
+        elif cmd == 'p':
+            print("\n--- VERFÜGBARE PROZESSE ---")
+            procs = game.available_processes()
+            if not procs:
+                print("Keine Prozesse möglich (Materialien oder Werkzeug fehlen).")
+            else:
+                for i, pid in enumerate(procs):
+                    pr = game.processes[pid]
+                    print(f"[{i}] {pr.name}")
+                try:
+                    idx = int(input("Prozess > "))
+                    res = game.execute_process(procs[idx])
+                    print(f"\n{res['message']}")
+                except Exception:
+                    print("Ungültig.")
             input("\nWeiter...")
 
         elif cmd == 't':

@@ -22,5 +22,14 @@
     "tools": ["KINDLING"],
     "outputs": {"fire_pit": 1},
     "duration_ticks": 5
+  },
+  {
+    "id": "cook_meat",
+    "name": "Fleisch braten",
+    "inputs": {"raw_meat": 1},
+    "tools": [],
+    "outputs": {"cooked_meat": 1},
+    "duration_ticks": 3,
+    "required_tag_in_env": "HEAT_SOURCE"
   }
 ]

@@ -1,6 +1,6 @@
 # SPEC-001 — Prozess-System aktivieren (Craft-Varietät & Content)
 
-STATUS: offen · angelegt 2026-08-03 · Quelle: Baseline-Scorecard
+STATUS: erledigt (Dev 2026-08-04) · angelegt 2026-08-03 · Quelle: Baseline-Scorecard
 
 ## Problem
 **Metrik:** `craft_variety` = 1 (nur 1 erfolgreicher Craft-Typ in 100 Aktionen), `session_depth` = 16, `content_reachable` = 0.667.

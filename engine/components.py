@@ -73,3 +73,4 @@ class Player:
         self.body_temp = 37.0  # Celsius
         
         self.known_blueprints: Set[str] = set()
+        self.known_processes: Set[str] = set()

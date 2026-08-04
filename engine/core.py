@@ -7,8 +7,9 @@ import itertools
 from typing import List, Dict, Any
 from engine.components import Player, Item, ToolBlueprint
 from data.locations import get_all_locations
-from data.items import create_item
+from data.items import create_item, TEMPLATE_DB
 from data.blueprints import get_all_blueprints
+from data.processes import get_all_processes
 
 # Spielersprachliche Labels für Tags — die Brücke von internem Reason zu Text.
 # Vollständig für alle im Spiel vorkommenden Tags (Konsistenz-Wächter in Tests).
@@ -56,6 +57,7 @@ class GameEngine:
         self.player = Player("Survivor")
         self.locations = {loc.id: loc for loc in get_all_locations()}
         self.blueprints = {bp.id: bp for bp in get_all_blueprints()}
+        self.processes = {p.id: p for p in get_all_processes()}
         self.current_location_id = "forest_edge"
         self.tick_counter = 36  # 6 Uhr morgens (36 Ticks), Tagesstart statt Mitternacht
         
@@ -240,6 +242,7 @@ class GameEngine:
                         tags={"DURABILITY": dur_attr}, attributes={"durability": dur_attr, "power": power},
                         template_id=bp.id)
         if bp.id == "axe": new_tool.tags["CHOPPING"] = power
+        if bp.id == "knife": new_tool.tags["CUTTING"] = power
         for c in comp.values():
             if c.quantity > 1: c.quantity -= 1
             else: self.player.inventory.items.remove(c)
@@ -247,6 +250,82 @@ class GameEngine:
         return {"success": True, "message": f"Hergestellt: {name}",
                 "reason": "SUCCESS", "blueprint_id": bp.id,
                 "result_template_id": bp.id}
+
+    # ------------------------------------------------------------------
+    # Prozess-System — Transformationen mit Umgebungs-/Werkzeug-Kontext
+    # ------------------------------------------------------------------
+
+    def _count_template(self, template_id: str) -> int:
+        """Gesamtmenge eines Items über alle Stacks (nach template_id)."""
+        return sum(it.quantity for it in self.player.inventory.items
+                   if it.template_id == template_id)
+
+    def _consume_template(self, template_id: str, qty: int):
+        """Entfernt qty eines Items (über mehrere Stacks, falls nötig)."""
+        remaining = qty
+        for it in list(self.player.inventory.items):
+            if it.template_id != template_id or remaining <= 0:
+                continue
+            take = min(it.quantity, remaining)
+            it.quantity -= take
+            remaining -= take
+            if it.quantity <= 0:
+                self.player.inventory.items.remove(it)
+        return remaining == 0
+
+    def _item_name(self, template_id: str) -> str:
+        t = TEMPLATE_DB.get(template_id)
+        return t.name if t else template_id
+
+    def available_processes(self) -> List[str]:
+        """Prozesse, deren Inputs und Werkzeug-Anforderungen derzeit erfüllt sind."""
+        avail = []
+        for pid, proc in self.processes.items():
+            if any(self._count_template(i) < q for i, q in proc.inputs.items()):
+                continue
+            if any(not self.player.inventory.find_item_by_tag(t) for t in proc.tools):
+                continue
+            avail.append(pid)
+        return avail
+
+    def execute_process(self, process_id: str) -> Dict[str, Any]:
+        """Führt einen Prozess aus: konsumiert Inputs, nutzt Werkzeuge, erzeugt Outputs.
+
+        `required_tag_in_env` wird bewusst weich behandelt (SPEC-001: vorerst
+        optional, kein neues Tag zwangsgeprüft) — harte Standort-Gates folgen
+        später, sobald Locations selbst Tags tragen.
+        """
+        proc = self.processes.get(process_id)
+        if not proc:
+            return {"success": False, "message": "Unbekannter Prozess.",
+                    "reason": "UNKNOWN_PROCESS"}
+
+        for item_id, qty in proc.inputs.items():
+            if self._count_template(item_id) < qty:
+                return {"success": False,
+                        "message": f"Es fehlt dir {self._item_name(item_id)}.",
+                        "reason": f"MISSING_INPUT:{item_id}"}
+
+        for tag in proc.tools:
+            if not self.player.inventory.find_item_by_tag(tag):
+                return {"success": False,
+                        "message": f"Es fehlt dir {_label_for(tag)} als Werkzeug.",
+                        "reason": f"MISSING_TOOL:{tag}"}
+
+        # Inputs verbrauchen, dann Zeit/Energie kosten (wie Crafting anstrengend)
+        for item_id, qty in proc.inputs.items():
+            self._consume_template(item_id, qty)
+        self._advance_time(proc.duration_ticks, effort_multiplier=2.0)
+
+        for item_id, qty in proc.outputs.items():
+            self.player.inventory.add(create_item(item_id, qty))
+
+        if process_id not in self.player.known_processes:
+            self.player.known_processes.add(process_id)
+            self.player.stats["survival"] += 0.1
+
+        return {"success": True, "message": f"Prozess ausgeführt: {proc.name}",
+                "reason": "SUCCESS", "process_id": process_id}
 
     def travel(self, tid: str):
         if tid not in self.locations: return "Unbekannt."

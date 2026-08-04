@@ -278,3 +278,122 @@ class TestBugs:
         assert hour == 6
         # forest_edge base_temp 15, CLEAR weather, daytime → no -10 night mod
         assert engine._get_ambient_temp() >= 15.0
+
+
+class TestProcessSystem:
+    """SPEC-001: Prozess-System in die Engine eingebunden."""
+
+    def _give(self, engine, tpl, qty=1):
+        engine.player.inventory.add(create_item(tpl, qty))
+
+    def test_make_sharp_stone_from_pebbles(self):
+        engine = GameEngine()
+        self._give(engine, "pebble", 2)
+        res = engine.execute_process("make_sharp_stone")
+        assert res["success"] is True
+        assert res["process_id"] == "make_sharp_stone"
+        assert engine._count_template("sharp_stone") == 1
+        assert engine._count_template("pebble") == 0
+
+    def test_unknown_process(self):
+        engine = GameEngine()
+        res = engine.execute_process("bogus")
+        assert res["success"] is False
+        assert res["reason"] == "UNKNOWN_PROCESS"
+
+    def test_missing_input_fails_without_consuming(self):
+        engine = GameEngine()
+        self._give(engine, "pebble", 1)  # braucht 2
+        res = engine.execute_process("make_sharp_stone")
+        assert res["success"] is False
+        assert res["reason"] == "MISSING_INPUT:pebble"
+        assert engine._count_template("pebble") == 1
+
+    def test_create_tinder_requires_cutting_tool(self):
+        engine = GameEngine()
+        self._give(engine, "reeds", 2)
+        res = engine.execute_process("create_tinder")
+        assert res["success"] is False
+        assert res["reason"] == "MISSING_TOOL:CUTTING"
+        assert engine._count_template("reeds") == 2  # nichts verbraucht
+
+    def test_crafted_knife_cuts(self):
+        """knife erhält CUTTING → erfüllt Werkzeug-Anforderung von create_tinder."""
+        engine = GameEngine()
+        self._give(engine, "flint_shard")
+        self._give(engine, "stick")
+        engine.execute_experiment(list(engine.player.inventory.items))
+        knife = next(i for i in engine.player.inventory.items if "CUTTING" in i.tags)
+        assert knife is not None
+
+    def test_create_tinder_with_knife(self):
+        engine = GameEngine()
+        self._give(engine, "reeds", 2)
+        self._give(engine, "flint_shard")
+        self._give(engine, "stick")
+        engine.execute_experiment([engine.player.inventory.items[-2],
+                                   engine.player.inventory.items[-1]])
+        res = engine.execute_process("create_tinder")
+        assert res["success"] is True
+        assert engine._count_template("tinder") == 3
+        assert engine._count_template("reeds") == 0
+
+    def test_start_fire_uses_tinder_sticks_and_kindling(self):
+        engine = GameEngine()
+        self._give(engine, "reeds", 1)   # KINDLING-Werkzeug
+        self._give(engine, "tinder", 1)
+        self._give(engine, "stick", 2)
+        res = engine.execute_process("start_fire")
+        assert res["success"] is True
+        assert engine._count_template("fire_pit") == 1
+
+    def test_cook_meat_from_raw_meat(self):
+        engine = GameEngine()
+        self._give(engine, "raw_meat", 1)
+        res = engine.execute_process("cook_meat")
+        assert res["success"] is True
+        assert engine._count_template("raw_meat") == 0
+        assert engine._count_template("cooked_meat") == 1
+
+    def test_process_consumes_inputs_and_adds_output(self):
+        engine = GameEngine()
+        self._give(engine, "pebble", 2)
+        engine.execute_process("make_sharp_stone")
+        assert engine._count_template("pebble") == 0
+        assert engine._count_template("sharp_stone") == 1
+
+    def test_known_processes_tracked(self):
+        engine = GameEngine()
+        self._give(engine, "pebble", 2)
+        assert "make_sharp_stone" not in engine.player.known_processes
+        engine.execute_process("make_sharp_stone")
+        assert "make_sharp_stone" in engine.player.known_processes
+
+    def test_available_processes_reflect_inventory(self):
+        engine = GameEngine()
+        assert "make_sharp_stone" not in engine.available_processes()
+        self._give(engine, "pebble", 2)
+        assert "make_sharp_stone" in engine.available_processes()
+
+    def test_reeds_gatherable_in_hidden_cave(self, monkeypatch):
+        monkeypatch.setattr("engine.core.random.random", lambda: 0.0)
+        engine = GameEngine()
+        engine.travel("hidden_cave")
+        engine.gather()
+        assert any("reeds" == i.template_id for i in engine.player.inventory.items)
+
+    def test_full_process_chain_reachable(self):
+        """Acceptance: make_sharp_stone → create_tinder → start_fire alle machbar."""
+        # reeds + KINDLING (reeds trägt KINDLING) + Crafting-Werkzeug
+        engine = GameEngine()
+        self._give(engine, "reeds", 2)
+        self._give(engine, "tinder", 1)
+        self._give(engine, "stick", 2)
+        self._give(engine, "pebble", 2)
+        # make_sharp_stone läuft unabhängig
+        assert engine.execute_process("make_sharp_stone")["success"] is True
+        # create_tinder: reeds als Input (CUTTING nötig) — hier direkt Reeds+KINDLING
+        # start_fire nutzt tinder + sticks + reeds(KINDLING)
+        assert engine._count_template("fire_pit") == 0
+        assert engine.execute_process("start_fire")["success"] is True
+        assert engine._count_template("fire_pit") == 1

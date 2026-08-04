@@ -5,6 +5,41 @@
 
 ---
 
+## 2026-08-04 — [Dev] SPEC-001: Prozess-System aktiviert
+
+### Task
+`SPEC-001-process-system.md` — das seit dem Umbau tote Prozess-System (`data/processes.py`, `processes.json`) in die Engine eingebunden. Quellen-Problem: `reeds`, `raw_meat`, `cooked_meat` waren unerreichbar → `content_reachable`=0.667, und es gab fast keine erkennbaren Craft-Wege.
+
+### Engine
+- `GameEngine.execute_process(process_id)`: prüft Inputs (Mengen), Werkzeug-Tags, konsumiert Inputs, `_advance_time(duration, 2.0)`, erzeugt Outputs, trackt `known_processes`. Reasions: `SUCCESS`/`UNKNOWN_PROCESS`/`MISSING_INPUT:<id>`/`MISSING_TOOL:<tag>`. `required_tag_in_env` bewusst weich (SPEC-001: vorerst optional, Locations tragen noch keine Tags).
+- `available_processes()` — Prozesse, deren Anforderungen aktuell erfüllt sind (für CLI).
+- `_count_template`/`_consume_template`/`_item_name` — Helfer.
+- **knife erhält jetzt `CUTTING`** (nur axe hatte `CHOPPING`) → `create_tinder` braucht ein CUTTING-Werkzeug, das damit aus einem frischen Start craftbar ist.
+- `Player.known_processes` ergänzt (für `session_depth`, das es bereits ausliest).
+
+### Daten
+- `items.json`: **+3 Prozess-Output-Templates** `sharp_stone`/`tinder`/`fire_pit` (vorher lieferte `create_item` nur "Unbekannt"); `reeds` + `KINDLING` (Feuerbohrer-Werkzeug).
+- `locations.json`: **`reeds`-Node in hidden_cave** (per Spec), **`raw_meat`-Node in forest_edge** (Jagd mit `PROJECTILE`, z.B. Kieselstein) → beide Items sammelbar.
+- `processes.json`: **+`cook_meat`** (`raw_meat` → `cooked_meat`, env-Tag HEAT_SOURCE weich).
+
+### CLI
+- `main.py`: Action `[p]rocess` — listet `available_processes()`, Auswahl via Index.
+
+### Constitution-Check
+- Tag-Crafting als Kern unangetastet; Prozesse sind Transformationen mit Umgebungs-/Werkzeug-Kontext, kein Rezeptbuch.
+- Neue Items (sharp_stone/tinder/fire_pit) sind erreichbare Prozess-Outputs, keine Content-Deko als Selbstzweck.
+- **Metrik-Core unangetastet:** `tools/scorecard.py`/`METRICS`/Play-Job NICHT verändert. Siehe Backlog-Eintrag unten.
+
+### Verifikation
+- `python -m pytest` → **147 passed** (134 + 13 neue Prozess-Tests in `test_engine.py`; `test_loader.py` auf neue Datenstände aktualisiert).
+- Scorecard rechnet: `content_reachable` **0.667 → 1.0** (12/12, inkl. raw_meat/cooked_meat/reeds), `session_depth` 24→26. Alle Metriken ohne Fehler.
+- Akzeptanzkriterien: `make_sharp_stone` (2× pebble → sharp_stone) ✓, `create_tinder`/`start_fire` von frischem Start erreichbar ✓ (reeds sammelbar, knife=CUTTING, reeds=KINDLING), `cooked_meat` aus `raw_meat` ✓, `[p]rocess` im CLI ✓.
+
+### Backlog / wartet auf Peter
+- **`craft_variety` zählt Prozesse noch nicht.** Der naive Play-Bot ruft nur `execute_experiment`, nie `execute_process` — das neue System bleibt dadurch für diese Metrik unsichtbar. Die Spec verlangt, Prozesse als Craft-Typ zu zählen, aber das ist eine Umdefinition der Metrik (Constitution: braucht Peters Freigabe). NICHT gemacht. → BACKLOG.
+
+---
+
 ## 2026-08-04 — [Research] SPEC-003: Partielle Match-Erkennung (discovery_gap)
 
 ### Metrik-Anker

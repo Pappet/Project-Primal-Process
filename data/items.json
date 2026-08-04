@@ -20,7 +20,7 @@
   "reeds": {
     "name": "Schilfrohr",
     "weight": 0.1,
-    "tags": {"RIGID": true, "FIBER": true},
+    "tags": {"RIGID": true, "FIBER": true, "KINDLING": true},
     "attributes": {"durability": 0.1}
   },
   "berries": {
@@ -48,5 +48,23 @@
     "weight": 0.05,
     "tags": {"STONE": true, "PROJECTILE": true},
     "attributes": {"durability": 0.2}
+  },
+  "sharp_stone": {
+    "name": "Scharfer Stein",
+    "weight": 0.3,
+    "tags": {"HARD": true, "SHARP": true, "STONE": true},
+    "attributes": {"sharpness": 0.7, "durability": 0.6}
+  },
+  "tinder": {
+    "name": "Zunder",
+    "weight": 0.05,
+    "tags": {"KINDLING": true, "FIBER": true},
+    "attributes": {"durability": 0.1}
+  },
+  "fire_pit": {
+    "name": "Feuergrube",
+    "weight": 2.0,
+    "tags": {"KINDLING": true},
+    "attributes": {"durability": 1.0}
   }
 }

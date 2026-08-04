@@ -37,6 +37,14 @@
         "chance": 1.0,
         "req_perception": 0.0,
         "req_tool_tag": "CHOPPING"
+      },
+      {
+        "result_template_id": "raw_meat",
+        "min_qty": 1,
+        "max_qty": 1,
+        "chance": 0.3,
+        "req_perception": 0.0,
+        "req_tool_tag": "PROJECTILE"
       }
     ]
   },
@@ -72,6 +80,14 @@
     "base_temp": 10.0,
     "exposure": 0.1,
     "nodes": [
+      {
+        "result_template_id": "reeds",
+        "min_qty": 1,
+        "max_qty": 4,
+        "chance": 0.7,
+        "req_perception": 0.0,
+        "req_tool_tag": null
+      },
       {
         "result_template_id": "clay_lump",
         "min_qty": 1,

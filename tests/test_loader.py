@@ -25,7 +25,11 @@ class TestLoadItems:
         assert "flint_shard" in items
         assert "berries" in items
         assert "pebble" in items
-        assert len(items) == 9
+        # SPEC-001: Prozess-Output-Templates (sharp_stone, tinder, fire_pit)
+        assert "sharp_stone" in items
+        assert "tinder" in items
+        assert "fire_pit" in items
+        assert len(items) == 12
 
     def test_template_has_correct_fields(self):
         items = load_items()
@@ -76,7 +80,7 @@ class TestLoadLocations:
         assert forest.name == "Waldrand"
         assert forest.base_temp == 15.0
         assert forest.exposure == 0.5
-        assert len(forest.nodes) == 4
+        assert len(forest.nodes) == 5  # + raw_meat (SPEC-001)
 
     def test_resource_node_has_fields(self):
         locs = load_locations()
@@ -98,11 +102,12 @@ class TestLoadLocations:
 class TestLoadProcesses:
     def test_loads_all_processes(self):
         procs = load_processes()
-        assert len(procs) == 3
+        assert len(procs) == 4
         ids = [p.id for p in procs]
         assert "make_sharp_stone" in ids
         assert "create_tinder" in ids
         assert "start_fire" in ids
+        assert "cook_meat" in ids  # SPEC-001: Koch-Prozess
 
     def test_process_has_correct_fields(self):
         procs = load_processes()
@@ -130,7 +135,7 @@ class TestLoadProcesses:
         """Public API builds ProcessDef objects from JSON (no hardcoded defs)."""
         from data.processes import get_all_processes, ProcessDef
         procs = get_all_processes()
-        assert len(procs) == 3
+        assert len(procs) == 4
         assert all(isinstance(p, ProcessDef) for p in procs)
         sharp = next(p for p in procs if p.id == "make_sharp_stone")
         assert sharp.inputs == {"pebble": 2}
@@ -191,7 +196,7 @@ class TestLoaderRoundtrip:
         assert items["flint_shard"].tags == {"HARD": True, "SHARP": True}
         assert items["flint_shard"].attributes["sharpness"] == 0.9
 
-        assert items["reeds"].tags == {"RIGID": True, "FIBER": True}
+        assert items["reeds"].tags == {"RIGID": True, "FIBER": True, "KINDLING": True}
 
         assert items["berries"].tags["EDIBLE"] == 50
 
