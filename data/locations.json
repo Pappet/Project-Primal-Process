@@ -103,6 +103,14 @@
         "chance": 0.7,
         "req_perception": 1.0,
         "req_tool_tag": null
+      },
+      {
+        "result_template_id": "bone",
+        "min_qty": 1,
+        "max_qty": 2,
+        "chance": 0.5,
+        "req_perception": 1.0,
+        "req_tool_tag": null
       }
     ]
   }

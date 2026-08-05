@@ -148,7 +148,10 @@ result2 = game7.execute_experiment([flint2, stick2])
 check(result2["success"] == True, f"execute_experiment() knife craft: {result2}")
 check("Hergestellt" in result2["message"], f"Knife message: {result2['message']}")
 
-# Failed experiment with wrong items (3 sticks)
+# 3 Sticks => Holzspeer (SPEC-002: Speer-Familie, Familien-Slot SHARP_OR_RIGID)
+# Früher war 3× Stick ein Fehlschlag ("Nichts passiert.") — seit SPEC-002 ist
+# ein dritter harter Stab ein gültiger Speer. "Nichts passiert." existiert nicht
+# mehr (bannend per feedback-Qualität).
 game8 = GameEngine()
 s1 = create_item("stick", 1)
 s2 = create_item("stick", 1)
@@ -158,8 +161,8 @@ game8.player.inventory.add(s2)
 game8.player.inventory.add(s3)
 
 result3 = game8.execute_experiment([s1, s2, s3])
-check(result3["success"] == False, f"execute_experiment() with 3 sticks fails: {result3}")
-check("Nichts passiert" in result3["message"], f"Fail message: {result3['message']}")
+check(result3["success"] == True, f"execute_experiment() 3 sticks -> spear craft: {result3}")
+check("Speer" in result3["message"], f"Spear message: {result3['message']}")
 
 print(f"\n{'='*60}")
 print(f"  SMOKE-TEST RESULTS: {results['pass']} passed, {results['fail']} failed")

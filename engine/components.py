@@ -29,6 +29,7 @@ class ToolBlueprint:
     slots: Dict[str, str]
     base_efficiency: float
     min_survival_req: float = 0.0
+    tool_tags: List[str] = field(default_factory=list)
 
 @dataclass
 class Inventory:

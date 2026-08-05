@@ -8,7 +8,7 @@
   "flint_shard": {
     "name": "Feuersteinsplitter",
     "weight": 0.4,
-    "tags": {"HARD": true, "SHARP": true},
+    "tags": {"HARD": true, "SHARP": true, "FLINT": true},
     "attributes": {"sharpness": 0.9, "durability": 0.4}
   },
   "plant_fiber": {
@@ -48,6 +48,12 @@
     "weight": 0.05,
     "tags": {"STONE": true, "PROJECTILE": true},
     "attributes": {"durability": 0.2}
+  },
+  "bone": {
+    "name": "Knochen",
+    "weight": 0.3,
+    "tags": {"BONE": true, "HARD": true},
+    "attributes": {"sharpness": 0.6, "durability": 0.4}
   },
   "sharp_stone": {
     "name": "Scharfer Stein",

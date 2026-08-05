@@ -32,6 +32,7 @@ class BlueprintData(BaseModel):
     slots: Dict[str, str]
     base_efficiency: float = 1.0
     min_survival_req: float = 0.0
+    tool_tags: List[str] = []
 
 
 class ResourceNodeData(BaseModel):

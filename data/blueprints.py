@@ -14,6 +14,7 @@ def get_all_blueprints():
             slots=bp.slots,
             base_efficiency=bp.base_efficiency,
             min_survival_req=bp.min_survival_req,
+            tool_tags=list(bp.tool_tags),
         )
         for bp in load_blueprints()
     ]

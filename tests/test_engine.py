@@ -17,7 +17,7 @@ class TestEngineCrafting:
         result = engine.execute_experiment(items)
 
         assert result["success"] is True
-        assert "Axt" in result["message"]
+        assert "axt" in result["message"].lower()  # "Feuersteinaxt"
         assert engine.player.stats["survival"] > 1.0  # Skill gain
 
     def test_knife_crafting_success(self):
@@ -30,7 +30,7 @@ class TestEngineCrafting:
         result = engine.execute_experiment(items)
 
         assert result["success"] is True
-        assert "Messer" in result["message"]
+        assert "messer" in result["message"].lower()  # "Feuersteinmesser"
         assert engine.player.stats["survival"] > 1.0
 
     def test_crafting_consumes_ingredients(self):
@@ -114,6 +114,95 @@ class TestEngineCrafting:
         assert engine.player.stats["survival"] == survival_after_first
 
 
+class TestBlueprintFamilies:
+    """SPEC-002: Tag-Familien + Blueprint-Familien (3 Werkzeug-Typen, je 2+ Varianten)."""
+
+    def _give(self, engine, tpl, qty=1):
+        engine.player.inventory.add(create_item(tpl, qty))
+
+    def _craft(self, engine, tpls):
+        """Gibt genau die genannten Template-IDs als Auswahl und craftet."""
+        engine.player.inventory.items.clear()
+        for t in tpls:
+            self._give(engine, t)
+        return engine.execute_experiment(list(engine.player.inventory.items))
+
+    def test_three_tool_types_craftable(self):
+        """Axt, Messer, Speer — drei unterschiedliche Werkzeug-Typen craftbar."""
+        engine = GameEngine()
+        res_axe = self._craft(engine, ["flint_shard", "stick", "plant_fiber"])
+        assert res_axe["success"] is True and res_axe["blueprint_id"] == "axe"
+        res_knife = self._craft(engine, ["flint_shard", "stick"])
+        assert res_knife["success"] is True and res_knife["blueprint_id"] == "knife"
+        # Speer braucht 2 Feste — via zwei DISTINKTE Materialien (Schilfrohr+Ast),
+        # weil im Inventar gleichnamige Items zu einem Stack verschmelzen.
+        res_spear = self._craft(engine, ["reeds", "stick"])
+        assert res_spear["success"] is True and res_spear["blueprint_id"] == "spear"
+
+    def test_axe_family_has_three_variants(self):
+        """Axt-Familie: Feuerstein-, Knochen- und Stein-Variante, je eigener Tag-Kombi."""
+        engine = GameEngine()
+        assert self._craft(engine, ["flint_shard", "stick", "plant_fiber"])["blueprint_id"] == "axe"
+        assert self._craft(engine, ["bone", "stick", "plant_fiber"])["blueprint_id"] == "axe_bone"
+        assert self._craft(engine, ["sharp_stone", "stick", "plant_fiber"])["blueprint_id"] == "axe_stone"
+
+    def test_knife_family_has_three_variants(self):
+        engine = GameEngine()
+        assert self._craft(engine, ["flint_shard", "stick"])["blueprint_id"] == "knife"
+        assert self._craft(engine, ["bone", "stick"])["blueprint_id"] == "knife_bone"
+        assert self._craft(engine, ["sharp_stone", "stick"])["blueprint_id"] == "knife_stone"
+
+    def test_spear_from_reeds_and_stick(self):
+        """Speer nutzt Familien-Slot SHARP_OR_RIGID: Schilfrohr + Ast genügen.
+
+        Zwei Feste müssen aus zwei distinkten Materialien kommen (Schilfrohr trägt
+        RIGID), weil gleichnamige Items im Inventar zu einem Stack verschmelzen.
+        """
+        engine = GameEngine()
+        res = self._craft(engine, ["reeds", "stick"])
+        assert res["success"] is True
+        assert res["blueprint_id"] == "spear"
+        # Speer trägt PIERCE (eigene funktionale Tag, nicht CHOPPING/CUTTING)
+        spear = next(i for i in engine.player.inventory.items if "PIERCE" in i.tags)
+        assert spear is not None
+
+    def test_spear_bound_is_second_variant(self):
+        """Gebundener Speer = 2. Variante (2 RIGID + FIBER) mit eigener ID."""
+        engine = GameEngine()
+        res = self._craft(engine, ["reeds", "stick", "plant_fiber"])
+        assert res["success"] is True
+        assert res["blueprint_id"] == "spear_bound"
+
+    def test_family_slot_matching_with_flint(self):
+        """flint_shard (HARD+SHARP) füllt Familien-Slot SHARP_OR_RIGID als Spitze."""
+        engine = GameEngine()
+        res = self._craft(engine, ["flint_shard", "stick"])
+        # 2 Items → Messer (FLINT-Klinge) hat Vorrang vor dem Speer
+        assert res["blueprint_id"] == "knife"
+
+    def test_discovery_feedback_is_categorized(self):
+        """Fehlschlag mit bekanntem Ziel-Tag nennt konkretes Merkmal, nie generisch."""
+        engine = GameEngine()
+        # Spieler hat ein Festes + Faseriges (RIGID + FIBER), aber keine harte Klinge.
+        engine.player.inventory.items.clear()
+        self._give(engine, "stick")
+        self._give(engine, "stick")
+        self._give(engine, "plant_fiber")
+        res = engine.execute_experiment(list(engine.player.inventory.items))
+        assert res["success"] is False
+        assert res["reason"].startswith("MISSING_TAG:")
+        assert "fehlt" in res["message"]
+        assert "Nichts passiert" not in res["message"]
+
+    def test_bone_gatherable_in_hidden_cave(self, monkeypatch):
+        """Knochen (BONE) ist als Materialquelle erreichbar → BONE-Varianten machbar."""
+        monkeypatch.setattr("engine.core.random.random", lambda: 0.0)
+        engine = GameEngine()
+        engine.travel("hidden_cave")
+        engine.gather()
+        assert any(i.template_id == "bone" for i in engine.player.inventory.items)
+
+
 class TestEngineCore:
     def test_engine_init(self):
         engine = GameEngine()
@@ -121,7 +210,7 @@ class TestEngineCore:
         assert engine.player.name == "Survivor"
         assert engine.current_location_id == "forest_edge"
         assert len(engine.locations) == 3
-        assert len(engine.blueprints) == 2
+        assert len(engine.blueprints) == 8
 
     def test_current_location(self):
         engine = GameEngine()
@@ -243,7 +332,7 @@ class TestBugs:
         fiber = next(it for it in engine.player.inventory.items if "FIBER" in it.tags)
         result = engine.execute_experiment([hard, rigid, fiber])
         assert result["success"] is True
-        assert "Axt" in result["message"]
+        assert "axt" in result["message"].lower()
 
     def test_b03_perception_gates_reachable_at_start(self):
         """B03: berries/mushroom/flint reachable at start perception, no grind."""

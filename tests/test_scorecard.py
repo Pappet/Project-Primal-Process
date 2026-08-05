@@ -134,11 +134,14 @@ class TestFeedbackLabelConsistency:
         from data.items import TEMPLATE_DB
         from data.blueprints import get_all_blueprints
         from data.locations import get_all_locations
+        from engine.core import TAG_FAMILIES
         tags = set()
         for tid, t in TEMPLATE_DB.items():
             tags.update(t.tags)
         for bp in get_all_blueprints():
-            tags.update(bp.slots.values())
+            for slot_value in bp.slots.values():
+                # Familien-Namen (SPEC-002) lösen sich in ihre Mitglieds-Tags auf.
+                tags.update(TAG_FAMILIES.get(slot_value, {slot_value}))
         for loc in get_all_locations():
             for node in loc.nodes:
                 if node.req_tool_tag:

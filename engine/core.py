@@ -16,6 +16,8 @@ from data.processes import get_all_processes
 TAG_LABELS = {
     "SHARP": "etwas Scharfes",
     "HARD": "etwas Hartes",
+    "FLINT": "etwas aus Feuerstein",
+    "BONE": "etwas aus Knochen",
     "FIBER": "etwas Faseriges",
     "RIGID": "etwas Festes",
     "STONE": "etwas Steinernes",
@@ -23,10 +25,35 @@ TAG_LABELS = {
     "EDIBLE": "etwas Essbares",
     "CHOPPING": "etwas zum Schneiden",
     "CUTTING": "etwas zum Schneiden",
+    "PIERCE": "etwas zum Stechen",
     "KINDLING": "etwas zum Feuermachen",
     "SHOVEL": "etwas zum Graben",
     "DURABILITY": "etwas Haltbares",
 }
+
+# Tag-Familien (SPEC-002): Eine Slot-Anforderung kann ein Familienname sein,
+# der mehrere Tags subsumiert (Layer über den Einzel-Tags). Ein Item genügt der
+# Familie, wenn es irgendeinen der Mitglieds-Tags trägt — so kann flint_shard
+# (SHARP+HARD) oder ein harter Stab (RIGID) mehrere Rollen füllen.
+TAG_FAMILIES = {
+    "SHARP_OR_HARD": {"SHARP", "HARD"},
+    "SHARP_OR_RIGID": {"SHARP", "RIGID"},
+    "RIGID_OR_FIBER": {"RIGID", "FIBER"},
+}
+
+
+def _slot_satisfied(item_tags, slot_value: str) -> bool:
+    """Prüft, ob die Tags eines Items einen Slot erfüllen (Familie o. Einzel-Tag).
+
+    `item_tags` ist typischerweise ein Dict (Item.tags) oder ein Set (z.B. die
+    ge-sammelte Tag-Menge in _no_match_reason). `&` zwischen set und dict wirft
+    einen TypeError, daher Keywords explizit auslesen.
+    """
+    tags = item_tags.keys() if isinstance(item_tags, dict) else item_tags
+    family = TAG_FAMILIES.get(slot_value)
+    if family:
+        return bool(family & set(tags))
+    return slot_value in tags
 
 
 def _label_for(tag: str) -> str:
@@ -182,16 +209,34 @@ class GameEngine:
         }
 
     def _no_match_reason(self, selected_items):
-        """Bestimmt den konkretesten Reason für einen Fehlschlag."""
+        """Bestimmt den konkretesten Reason für einen Fehlschlag.
+
+        Wählt den Blueprint (passender Slot-Anzahl), dem der Spieler am nächsten
+        ist, und nennt daraus genau ein fehlendes Merkmal. Familien-Slots werden
+        auf ihren fehlenden Mitglieds-Tag aufgelöst, damit die Meldung ein
+        verständliches Label trägt (nie ein leeres Null-Feedback).
+        """
         available = set()
         for it in selected_items:
             available.update(it.tags)
+
+        best = None  # (Nähe-Score, fehlender Tag fürs Label)
         for bp in self.blueprints.values():
             if len(bp.slots) != len(selected_items):
                 continue
-            for _slot, tag in bp.slots.items():
-                if tag not in available:
-                    return f"MISSING_TAG:{tag}"
+            missing = []
+            for slot_value in bp.slots.values():
+                required = set(TAG_FAMILIES.get(slot_value, {slot_value}))
+                if not (required & available):
+                    # Repräsentant fürs Label: der Ziel-Tag, der am nächsten liegt.
+                    missing.append(next(iter(required)))
+            if not missing:
+                continue  # Volltreffer wäre schon im Haupt-Loop gefangen worden
+            score = len(bp.slots) - len(missing)
+            if best is None or score > best[0]:
+                best = (score, missing[0])
+        if best:
+            return f"MISSING_TAG:{best[1]}"
         return "NO_MATCH"
 
     def execute_experiment(self, selected_items: List[Item]) -> Dict[str, Any]:
@@ -221,7 +266,7 @@ class GameEngine:
                 mapping = {}
                 match = True
                 for i, slot in enumerate(bp.slots.keys()):
-                    if bp.slots[slot] not in p[i].tags:
+                    if not _slot_satisfied(p[i].tags, bp.slots[slot]):
                         match = False; break
                     mapping[slot] = p[i]
                 
@@ -241,11 +286,19 @@ class GameEngine:
         new_tool = Item(name=name, base_weight=sum(c.base_weight for c in comp.values()),
                         tags={"DURABILITY": dur_attr}, attributes={"durability": dur_attr, "power": power},
                         template_id=bp.id)
-        if bp.id == "axe": new_tool.tags["CHOPPING"] = power
-        if bp.id == "knife": new_tool.tags["CUTTING"] = power
+        for t in bp.tool_tags:
+            new_tool.tags[t] = power
         for c in comp.values():
-            if c.quantity > 1: c.quantity -= 1
-            else: self.player.inventory.items.remove(c)
+            # Robust: verbrauche nur Stacks, die wirklich im Inventar liegen. Ein
+            # Item-Objekt kann mehrfach selektiert (derselbe Stack) oder in einem
+            # anderen Stack zusammengeführt worden sein — kein blindes remove(),
+            # sonst ValueError. (Fix: 3-Sticks-Speer, Doppel-Selektion.)
+            if c not in self.player.inventory.items:
+                continue
+            if c.quantity > 1:
+                c.quantity -= 1
+            else:
+                self.player.inventory.items.remove(c)
         self.player.inventory.add(new_tool)
         return {"success": True, "message": f"Hergestellt: {name}",
                 "reason": "SUCCESS", "blueprint_id": bp.id,

@@ -1,6 +1,6 @@
 # SPEC-002 — Blueprint-Familien + Discovery-Feedback (Craft-Varietät)
 
-STATUS: offen · angelegt 2026-08-03 · Quelle: Baseline-Scorecard
+STATUS: erledigt (Dev 2026-08-05) · angelegt 2026-08-03 · Quelle: Baseline-Scorecard
 
 ## Problem
 **Metrik:** `craft_variety` = 1, `session_depth` = 16.

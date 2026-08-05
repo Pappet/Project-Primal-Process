@@ -1,16 +1,66 @@
 [
   {
     "id": "axe",
-    "result_name": "Axt",
-    "slots": {"head": "HARD", "handle": "RIGID", "binding": "FIBER"},
+    "result_name": "Feuersteinaxt",
+    "slots": {"head": "FLINT", "handle": "RIGID", "binding": "FIBER"},
     "base_efficiency": 1.0,
-    "min_survival_req": 0.0
+    "min_survival_req": 0.0,
+    "tool_tags": ["CHOPPING"]
+  },
+  {
+    "id": "axe_bone",
+    "result_name": "Knochenaxt",
+    "slots": {"head": "BONE", "handle": "RIGID", "binding": "FIBER"},
+    "base_efficiency": 0.9,
+    "min_survival_req": 0.0,
+    "tool_tags": ["CHOPPING"]
+  },
+  {
+    "id": "axe_stone",
+    "result_name": "Steinaxt",
+    "slots": {"head": "STONE", "handle": "RIGID", "binding": "FIBER"},
+    "base_efficiency": 0.85,
+    "min_survival_req": 0.0,
+    "tool_tags": ["CHOPPING"]
   },
   {
     "id": "knife",
-    "result_name": "Messer",
-    "slots": {"blade": "SHARP", "handle": "RIGID"},
+    "result_name": "Feuersteinmesser",
+    "slots": {"blade": "FLINT", "handle": "RIGID"},
+    "base_efficiency": 0.9,
+    "min_survival_req": 0.0,
+    "tool_tags": ["CUTTING"]
+  },
+  {
+    "id": "knife_bone",
+    "result_name": "Knochenmesser",
+    "slots": {"blade": "BONE", "handle": "RIGID"},
     "base_efficiency": 0.8,
-    "min_survival_req": 0.0
+    "min_survival_req": 0.0,
+    "tool_tags": ["CUTTING"]
+  },
+  {
+    "id": "knife_stone",
+    "result_name": "Steinmesser",
+    "slots": {"blade": "STONE", "handle": "RIGID"},
+    "base_efficiency": 0.7,
+    "min_survival_req": 0.0,
+    "tool_tags": ["CUTTING"]
+  },
+  {
+    "id": "spear",
+    "result_name": "Gespitzter Holzspeer",
+    "slots": {"tip": "SHARP_OR_RIGID", "shaft": "RIGID"},
+    "base_efficiency": 0.6,
+    "min_survival_req": 0.0,
+    "tool_tags": ["PIERCE"]
+  },
+  {
+    "id": "spear_bound",
+    "result_name": "Gebundener Holzspeer",
+    "slots": {"tip": "SHARP_OR_RIGID", "shaft": "RIGID", "binding": "RIGID_OR_FIBER"},
+    "base_efficiency": 0.9,
+    "min_survival_req": 0.0,
+    "tool_tags": ["PIERCE"]
   }
 ]

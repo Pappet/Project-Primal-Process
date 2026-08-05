@@ -29,7 +29,9 @@ class TestLoadItems:
         assert "sharp_stone" in items
         assert "tinder" in items
         assert "fire_pit" in items
-        assert len(items) == 12
+        # SPEC-002: Knochen als Werkstoff-Variante (BONE-Axt/Messer)
+        assert "bone" in items
+        assert len(items) == 13
 
     def test_template_has_correct_fields(self):
         items = load_items()
@@ -52,17 +54,21 @@ class TestLoadItems:
 class TestLoadBlueprints:
     def test_loads_all_blueprints(self):
         bps = load_blueprints()
-        assert len(bps) == 2
+        assert len(bps) == 8
         ids = [bp.id for bp in bps]
         assert "axe" in ids
         assert "knife" in ids
+        # SPEC-002: 3 Werkzeug-Typen (axt/messer/speer), je ≥ 2 Varianten
+        assert "spear" in ids
+        assert "spear_bound" in ids
 
     def test_blueprint_has_correct_slots(self):
         bps = load_blueprints()
         axe = next(bp for bp in bps if bp.id == "axe")
-        assert axe.result_name == "Axt"
-        assert axe.slots == {"head": "HARD", "handle": "RIGID", "binding": "FIBER"}
+        assert axe.result_name == "Feuersteinaxt"
+        assert axe.slots == {"head": "FLINT", "handle": "RIGID", "binding": "FIBER"}
         assert axe.base_efficiency == 1.0
+        assert axe.tool_tags == ["CHOPPING"]
 
 
 class TestLoadLocations:
@@ -193,7 +199,7 @@ class TestLoaderRoundtrip:
         assert items["stick"].tags == {"RIGID": True}
         assert items["stick"].attributes == {"durability": 0.8}
 
-        assert items["flint_shard"].tags == {"HARD": True, "SHARP": True}
+        assert items["flint_shard"].tags == {"HARD": True, "SHARP": True, "FLINT": True}
         assert items["flint_shard"].attributes["sharpness"] == 0.9
 
         assert items["reeds"].tags == {"RIGID": True, "FIBER": True, "KINDLING": True}
@@ -202,12 +208,12 @@ class TestLoaderRoundtrip:
 
     def test_blueprints_identical_to_old_data(self):
         bps = load_blueprints()
-        assert len(bps) == 2
+        assert len(bps) == 8
         axe = next(bp for bp in bps if bp.id == "axe")
         knife = next(bp for bp in bps if bp.id == "knife")
 
-        assert axe.slots == {"head": "HARD", "handle": "RIGID", "binding": "FIBER"}
-        assert knife.slots == {"blade": "SHARP", "handle": "RIGID"}
+        assert axe.slots == {"head": "FLINT", "handle": "RIGID", "binding": "FIBER"}
+        assert knife.slots == {"blade": "FLINT", "handle": "RIGID"}
 
     def test_locations_have_three_nodes(self):
         locs = load_locations()

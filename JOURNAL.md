@@ -5,6 +5,40 @@
 
 ---
 
+## 2026-08-05 — [Dev] SPEC-002: Blueprint-Familien + Discovery-Feedback
+
+### Task
+`SPEC-002-blueprint-families.md` — Craft-Varietät (`craft_variety`=1.0) heben, indem statt 2 Einzel-Blueprints (Axt/Messer) **Tag-Familien-Slots + 3 Werkzeug-Familien mit je 2–3 Varianten** existieren und Fehlschläge kategorisiertes Feedback geben.
+
+### Mechanik
+- **Tag-Familien-Layer:** `TAG_FAMILIES` (`SHARP_OR_HARD`, `SHARP_OR_RIGID`, `RIGID_OR_FIBER`) + `_slot_satisfied()` — Slot-Anforderungen können Familien-Namen sein, die mehrere Tags subsumieren. Werte sind EITHER Familie ODER Einzel-Tag.
+- **3 Werkzeug-Familien (je eigene Tag-Kombination):**
+  - Axt (CHOPPING): `axe`(FLINT) / `axe_bone`(BONE) / `axe_stone`(STONE)
+  - Messer (CUTTING): `knife`(FLINT) / `knife_bone`(BONE) / `knife_stone`(STONE)
+  - Speer (PIERCE): `spear` (Familie SHARP_OR_RIGID) / `spear_bound` (+RIGID_OR_FIBER)
+  - Material-Determinismus: jede Variante verlangt ein anderes Material-Tag → je nach Fund ist die Route eindeutig (flint→Feuerstein-, bone→Knochen-, stone→Stein-Variante).
+- **Funktionale Tags datengetrieben:** `tool_tags`-Feld in BlueprintData/ToolBlueprint (statt hartkoddierter `if bp.id ==`).
+- **`_no_match_reason` verbessert:** wählt den Blueprint, dem der Spieler am nächsten ist (meiste erfüllte Slots), und nennt genau EIN fehlendes Merkmal. Familien-Slots werden auf einen Mitglieds-Tag aufgelöst. Nie generisches Null-Feedback.
+
+### Daten/Content
+- `items.json`: **+`bone`** (BONE+HARD, scharfe Knochen-Werkzeugkante), `flint_shard` + `FLINT`.
+- `locations.json`: **`bone`-Node in hidden_cave** (Knochen als Werkstoffquelle).
+- `blueprints.json`: 2 → **8 Blueprints** (3 Familien × je 2–3 Varianten).
+
+### Fixes (durch SPEC-002-Inhalte exponiert)
+- **Engine-Robustheit (Crash):** `_create_tool`-Verbrauch crashte (`ValueError: list.remove`) bei selektierten Stacks, die im Inventar zusammengeführt wurden oder doppelt referenziert sind — jetzt konsumiert nur, was wirklich im Inventar liegt. (Real erreichbar: Speer aus mehreren Festen / Doppel-Selektion im CLI.)
+- **Archiv-Smoke-Test aktualisiert:** `_smoke_test.py` erwartete noch das alte Spiel (`3× Stab = Fehlschlag`, `"Nichts passiert."` in Meldung). Beides ist bewusst obsolet (3 Feste = Holzspeer seit SPEC-002; Null-Feedback ist verbannt). Assertions auf den neuen Zustand gehoben.
+
+### Akzeptanz-Check
+- **3 Werkzeug-Typen × je ≥2 Varianten craftbar** (Tests: `TestBlueprintFamilies`) ✓
+- Fehlschlag mit bekanntem Ziel-Tag nennt konkreten Grund (`MISSING_TAG:` + Label), nie generisch ✓
+- `python -m pytest`: **155 passed** (vorher 147) ✓
+- `craft_variety` Median: **1.0 → 3.0** (p25 1→2, p75 2→4) inline gemessen; `content_reachable` 1.0 (13/13, bone erreichbar), `feedback_quality` 1.0 (unverändert).
+
+### Backlog-Triage
+- **NEU (Ideen):** Stack-Verschmelzung vs. Mehrfach-Slot-Inventar: gleichnamige Items verschmelzen im Inventar zu einem Stack → Items, die 2× dasselbe Material brauchen, sind nur über distinkte Materialien erreichbar (Speer = reeds+Ast statt 2×Ast). Kein Bug, eine echte Design-Spannung (Mengen-bewusstes Matching wäre der saubere Fix). → BACKLOG 🟡 Ideen.
+- **SPEC-003 aussetzen:** aktuelle Scorecard zeigt `discovery_gap`=0.25 (Unterkante), `naive_p25`=0.5 — SPEC-003-Ziel (Gap-unter-0.2 / Schwanz schließen) ist bereits eingetreten; Umsetzung riskt Überführung. An Direktor delegiert (Plan-Neufassung So). NICHT blind implementiert.
+
 ## 2026-08-04 — [Dev] SPEC-001: Prozess-System aktiviert
 
 ### Task
