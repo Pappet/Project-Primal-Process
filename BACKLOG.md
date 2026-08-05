@@ -34,6 +34,16 @@ Dinge die kaputt sind und gefixt werden müssen.
 > **Triage 2026-08-02:** Keine neuen Bugs seit 01.08. — 5/5 unverändert im KW-32-Sprint (B01–B05). Bestätigt.
 >
 > **Triage 2026-08-03:** Alle 5 🔴 Bugs (B01–B05) in der Dev-Session vom 03.08. gefixt (siehe PLAN.md). Zu archivieren beim nächsten Review.
+>
+> **Triage 2026-08-05:** 2 neue 🔴 Bugs (B06–B07) aus Play-Session — beide gefühlt [Play]. Nicht gebündelt.
+
+---
+
+### 🔴 B06 — `log_oak` liefert "Unbekannt" (dangling Node-Template)
+- [2026-08-05] (Play) **`log_oak`-Node (forest_edge, braucht CHOPPING/Axt) referenziert ein Template, das es in `items.json` nicht gibt.** Mit der frisch gebauten Axt Holz fällen → `Gefunden: 1x Unbekannt` (Müll-Item ohne Nutzen). Kernversprechen "Axt bauen, um Holz zu sammeln" bricht in der Hand. **Fix-Richtung:** `log_oak` als echtes Template anlegen oder aus dem Node entfernen.
+
+### 🔴 B07 — `clay_lump` doppelt tot (fehlendes Werkzeug + fehlendes Template)
+- [2026-08-05] (Play) **`clay_lump`-Node (hidden_cave, braucht `SHOVEL`)**: kein Item trägt das Tag `SHOVEL` → unerreichbar; zusätzlich fehlt das Template in `items.json`. Doppelt toter Content-Pfad. **Fix-Richtung:** SHOVEL-Werkzeug (z.B. Axt/Stab als Grabwerkzeug) einführen und Template anlegen, oder Node entfernen.
 
 ---
 
@@ -41,6 +51,9 @@ Dinge die kaputt sind und gefixt werden müssen.
 Mechaniken, Features, Verbesserungen — nicht akut, aber wertvoll.
 
 <!-- Session-Einträge hier drunter -->
+- [2026-08-05] (Play) **`content_reachable` blind gegen dangling Node-Referenzen** — zählt nur TEMPLATE_DB-Keys, verpasst Nodes auf nicht-definierte Templates (`log_oak`, `clay_lump` → B06/B07). **Metrik-Änderung → braucht Peters Freigabe** (Constitution). Vorschlag: auch Nodes prüfen, deren `result_template_id` nicht in der DB existiert (würde beide Bugs sofort als Defizit sichtbar machen).
+- [2026-08-05] (Play) **Craft-Bottleneck: beide Blueprints brauchen `HARD`/`SHARP`, das nur `flint_shard` trägt** — `pebble` ist STONE/PROJECTILE, nicht HARD → jeder Tool-Pfad funnelt durch den mountain_peak, ohne Leitfaden dorthin. Naive Spieler ohne flint → 0 Werkzeuge, Frust. Idee: mehr HARD/SHARP-Quellen (Knapping als handwerklicher Prozess, harter Splitter/Holz) oder `pebble` HARD geben. → trifft `discovery_gap`/`session_depth`.
+- [2026-08-05] (Play) **SPEC-003-Konflikt:** `discovery_gap` ist bereits 0.25 (untere Bandkante) und `naive_p25` 0.0→0.5 — beide Effekte, die SPEC-003 liefern sollte (Gap senken, Schwanz schließen), sind **ohne** SPEC-003 schon eingetreten (von SPEC-001/Content). Setzt SPEC-003 jetzt um, droht die Gap unter 0.2 (Überführung). Vor Umsetzung neu prüfen, ob/mit welcher Kraft SPEC-003 noch gebraucht wird. → an Direktor (Plan-Neufassung So).
 - [2026-08-04] (Dev) **`craft_variety` zählt Prozesse noch nicht.** Der naive Play-Bot ruft nur `execute_experiment`, nie `execute_process` → das neue Prozess-System (SPEC-001) bleibt für die Metrik unsichtbar. Prozesse als Craft-Typ zählen = Umdefinition der Metrik → **braucht Peters Freigabe** (Constitution). Dev hat Spielseite gebaut, Metrik absichtlich NICHT angefasst.
 - [2026-08-03] (Direktor) **Lern-Signal messen**: steigt die Trefferquote eines naiven Spielers nach einer informativen Fehlermeldung? Misst, ob der Spieler das Feedback *versteht* — im Gegensatz zu `feedback_quality`, das nur die Konsistenz zwischen Reason-Code und Meldung prüft und konstruktionsbedingt bei 1.0 steht. **Option für den Explore-Job, kein Auftrag** — der wählt sein Thema selbst.
 - [2026-07-28] (Research) Body-Part-System: Lokalisierte Verletzungen pro Körperteil (URW-Referenz) — M2.4 Gesundheitssystem → **später (Phase 2)**

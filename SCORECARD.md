@@ -6,29 +6,29 @@
 
 | Metrik | Wert | Δ Vorwoche | Richtung | Beschreibung |
 |--------|------|-----------|----------|--------------|
-| actions_to_first_craft (v1) | 63 | — (Baseline) | niedriger | Aktionen bis zum ersten erfolgreichen Craft (naiv) |
-| blueprint_reachability (v1) | 1.000 | — (Baseline) | höher | Anteil erreichbarer Blueprints (N=50) |
-| craft_variety (v1) | 0.500 | — (Baseline) | höher | Unterschiedliche Craft-Typen in 100 Aktionen |
-| skill_spread (v1) | 0.315 | — (Baseline) | höher | Überlebens-Spanne optimal vs. zufällig |
-| feedback_quality (v2) | 1.000 | — (Baseline) | höher | Anteil informativer Rückmeldungen (Label-Stimmt) |
-| content_reachable (v1) | 0.667 | — (Baseline) | höher | Anteil sammelbarer definierter Items |
-| session_depth (v1) | 24.000 | — (Baseline) | höher | Aktionen bis nichts Neues passiert |
-| discovery_gap (v1) | 0.500 | — (Baseline) | im Band | Abstand erreichbar vs. tatsächlich gefunden |
+| actions_to_first_craft (v1) | 62 | -1.000 ↑ besser | niedriger | Aktionen bis zum ersten erfolgreichen Craft (naiv) |
+| blueprint_reachability (v1) | 1.000 | ±0 | höher | Anteil erreichbarer Blueprints (N=50) |
+| craft_variety (v1) | 1.000 | +0.500 ↑ besser | höher | Unterschiedliche Craft-Typen in 100 Aktionen |
+| skill_spread (v1) | 0.259 | -0.056 ↓ schlechter | höher | Überlebens-Spanne optimal vs. zufällig |
+| feedback_quality (v2) | 1.000 | ±0 | höher | Anteil informativer Rückmeldungen (Label-Stimmt) |
+| content_reachable (v1) | 1.000 | +0.333 ↑ besser | höher | Anteil sammelbarer definierter Items |
+| session_depth (v1) | 26.000 | +2.000 ↑ besser | höher | Aktionen bis nichts Neues passiert |
+| discovery_gap (v1) | 0.250 | -0.250 | im Band | Abstand erreichbar vs. tatsächlich gefunden |
 
 ## discovery_gap — Zielband
 
-**Band: 0.2 – 0.6.** Keine Richtung (kein "höher = besser"). Unter 0.2 nimmt das Spiel den Spieler an die Hand; über 0.6 ist es faktisch unentdeckbar. `blueprint_reachability` (1.0) misst, was ein Orakel erreichen kann; `naive_discovery_rate` (0.5) was ein Spieler wirklich findet. Der Abstand dazwischen ist das eigentliche Spiel.
+**Band: 0.2 – 0.6.** Keine Richtung (kein "höher = besser"). Unter 0.2 nimmt das Spiel den Spieler an die Hand; über 0.6 ist es faktisch unentdeckbar. `blueprint_reachability` (1.0) misst, was ein Orakel erreichen kann; `naive_discovery_rate` (0.75) was ein Spieler wirklich findet. Der Abstand dazwischen ist das eigentliche Spiel.
 
 
-## Details (2026-08-03)
+## Details (2026-08-05)
 
 ```json
 {
   "actions_to_first_craft": {
-    "value": 63,
-    "p25": 41,
-    "p75": 118,
-    "n_runs": 17,
+    "value": 62,
+    "p25": 37,
+    "p75": 93,
+    "n_runs": 15,
     "version": 1
   },
   "blueprint_reachability": {
@@ -40,16 +40,16 @@
     "version": 1
   },
   "craft_variety": {
-    "value": 0.5,
-    "p25": 0,
-    "p75": 1,
+    "value": 1.0,
+    "p25": 1,
+    "p75": 2,
     "n_runs": 20,
     "version": 1
   },
   "skill_spread": {
-    "value": 0.315,
-    "p25": 0.289,
-    "p75": 0.386,
+    "value": 0.259,
+    "p25": 0.213,
+    "p75": 0.288,
     "n_runs": 20,
     "version": 1
   },
@@ -61,36 +61,38 @@
     "version": 2
   },
   "content_reachable": {
-    "value": 0.667,
-    "reachable_count": 6,
-    "defined_count": 9,
+    "value": 1.0,
+    "reachable_count": 12,
+    "defined_count": 12,
     "reachable": [
       "berries",
+      "cooked_meat",
+      "fire_pit",
       "flint_shard",
       "mushroom",
       "pebble",
       "plant_fiber",
-      "stick"
-    ],
-    "unreachable": [
-      "cooked_meat",
       "raw_meat",
-      "reeds"
+      "reeds",
+      "sharp_stone",
+      "stick",
+      "tinder"
     ],
+    "unreachable": [],
     "version": 1
   },
   "session_depth": {
-    "value": 24.0,
-    "p25": 19,
-    "p75": 30,
+    "value": 26.0,
+    "p25": 21,
+    "p75": 33,
     "n_runs": 20,
     "version": 1
   },
   "discovery_gap": {
-    "value": 0.5,
+    "value": 0.25,
     "blueprint_reachability": 1.0,
-    "naive_discovery_rate": 0.5,
-    "naive_p25": 0.0,
+    "naive_discovery_rate": 0.75,
+    "naive_p25": 0.5,
     "naive_p75": 1.0,
     "band": [
       0.2,

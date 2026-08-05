@@ -40,6 +40,28 @@
 
 ---
 
+## 2026-08-05 — [Play] Scorecard + Playtest (cron)
+
+### Scorecard (vs 03.08.)
+`content_reachable` 0.667→**1.0** (Ziel ≥0.8 erreicht, 12/12), `craft_variety` 0.5→1.0, `session_depth` 24→26, `actions_to_first_craft` 63→62, `feedback_quality` 1.0, `blueprint_reachability` 1.0, `skill_spread` 0.315→**0.259** (↓). `discovery_gap` 0.5→**0.25** — im Band, aber an der **unteren** Kante; naive_discovery_rate 0.5→0.75, **naive_p25 0.0→0.5**.
+
+### Wichtigster Befund — Langeweile-Stelle (session_depth)
+Die komplette Entdeckungsmenge ist **2 Blueprints + 4 Prozesse + ~12 Templates**. Eine geführte Session (TDD-Play) hat ALLES in ~40 Aktionen geleert (knife, axe, tinder, fire, cooked_meat); danach gibt es kein weiteres Ziel — `session_depth`=26 misst es, gefühlt ist es schärfer: das Discovery-Spiel ist nach Minuten fertig, übrig bleibt sinnloses Sammeln. Das ist die Stelle, an der nichts Interessantes mehr passiert.
+
+### Zwei konträre Enden, eine Leerstelle
+- **Guided:** entleert den Kuchen in ~40 Aktionen → zu wenig Inhalt.
+- **Naive (seed 7, 11):** 0 Blueprints, nur `MISSING_TAG:SHARP`, Langeweile bei Aktion 13/24. **Beide Tools brauchen `HARD`/`SHARP` = nur `flint_shard`** (pebble ist STONE, nicht HARD); flint nur am mountain_peak → einzelner Ort wird Hard-Gate ohne Leitfaden.
+
+### Bugs (→ BACKLOG 🔴)
+- **B06 `log_oak`:** Node referenziert Template nicht in items.json → fällen mit frischer Axt gibt "Unbekannt".
+- **B07 `clay_lump`:** braucht `SHOVEL` (existiert nirgends) + Template fehlt → doppelt tot.
+`content_reachable`=1.0 ist gegen beide **blind** (zählt nur TEMPLATE_DB-Keys) → Metrik-Blindspot (🟡 Backlog, Peters Freigabe für Metrik-Änderung).
+
+### SPEC-003-Konflikt (→ an Direktor)
+`discovery_gap` untere Ecke + `naive_p25` 0.5 — genau die Wirkung, die SPEC-003 liefern sollte, ist ohne SPEC-003 eingetreten (durch SPEC-001/Content). Neuerliche Umsetzung von SPEC-003 droht die Gap **unter 0.2** (Überführung) zu drücken. Priorität/Schärfe von SPEC-003 vor Umsetzung neu prüfen. `craft_variety`-Prozess-Umdefinition weiterhin offen (Peters Freigabe).
+
+---
+
 ## 2026-08-04 — [Research] SPEC-003: Partielle Match-Erkennung (discovery_gap)
 
 ### Metrik-Anker
