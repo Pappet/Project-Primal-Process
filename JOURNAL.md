@@ -5,6 +5,31 @@
 
 ---
 
+## 2026-08-06 — [Research-Explore] SPEC-004: Ressourcenerschöpfung & Regeneration
+
+### Auftrag
+Explorations-Modus — freie Suche nach System-Vertiefung, **kein** Metrik-Anker. Kontext: CONSTITUTION.md, Scorecard 2026-08-05, Play-Report 2026-08-05 gelesen.
+
+### Befund (die System-Schwäche)
+Play 05.08. nennt die Langeweile-Stelle schärfer als jede Metrik: nach ~40 Aktionen ist die Entdeckungsmenge (2 Familien + 4 Prozesse + ~12 Templates) geleert, übrig bleibt "sinnloses Sammeln". **Ursache hinter dem Symptom:** `GameEngine.gather()` wirft bei jedem Aufruf gegen eine feste `node.chance` — Nodes sind **unendlich und kostenlos**. Kein Grund für Ortswechsel, Zeit ohne Sammel-Wert, keine Rückkehrmotivation. Terrain/Zeit/Wetter existieren, sind aber fürs Sammeln bedeutungslos. Eine System-Leere, die keine Metrik verlangt, aber `session_depth` strukturell kurz hält.
+
+### Mechanik
+**Vorratsbasierte Nodes mit Erschöpfung + zeitbasierter Regeneration** (URW: selbsterhaltende Welt/Rotation; Vintage Story/Zomboid: Depletion + Respawn). Ernte reduziert `stock`; Erfolg skaliert `chance * stock/max_stock`; Regen läuft über `_advance_time` → Ort und Zeit werden zu echten Ressourcen. Erzwingt Rotation + Rückkehr statt unendlichem Melken desselben Nodes. Vertieft Entdecken, **ohne** neuen Content (gegen "Content-Menge als Selbstzweck").
+
+### Metrik-Wirkung (ehrlich)
+`session_depth` **steigend** (primärer Effekt, gegen die Langeweile-Stelle) — aber nur wenn Agenten Regen tatsächlich nutzen, sonst Reibung. **Keine** beabsichtigte Änderung an `discovery_gap`/`craft_variety`/`content_reachable`/`feedback_quality` — bewusst eine Mechanik, die keine bestehende Metrik bewegt. Konform zur Constitution: nur **neue** Metrik ergänzt, keine entfernt/abgeschwächt.
+
+### Artefakte
+- `specs/SPEC-004-resource-depletion.md` (neu)
+- `metrics/proposed/forage_pressure.md` (neu) — Band 0.1–0.5, misst ob Knappheit *gefühlt* wird, nicht trivial zu heben (echte Node-Dynamik über Agent-Sequenzen)
+- `PLAN.md` — SPEC-004 als offener Task
+- `JOURNAL.md` — dieser Eintrag
+
+### Constitution-Check
+Kein Rezeptbuch; CLI-Text bleibt; stdlib only; Metrik-Core unangetastet (nur Ergänzung). Verstoß nicht gefunden.
+
+---
+
 ## 2026-08-05 — [Dev] SPEC-002: Blueprint-Familien + Discovery-Feedback
 
 ### Task
