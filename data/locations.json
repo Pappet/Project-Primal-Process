@@ -12,7 +12,9 @@
         "max_qty": 3,
         "chance": 0.8,
         "req_perception": 0.0,
-        "req_tool_tag": null
+        "req_tool_tag": null,
+        "max_stock": 30.0,
+        "regen_per_tick": 0.15
       },
       {
         "result_template_id": "plant_fiber",
@@ -20,7 +22,9 @@
         "max_qty": 3,
         "chance": 0.4,
         "req_perception": 0.0,
-        "req_tool_tag": null
+        "req_tool_tag": null,
+        "max_stock": 25.0,
+        "regen_per_tick": 0.12
       },
       {
         "result_template_id": "berries",
@@ -28,7 +32,9 @@
         "max_qty": 5,
         "chance": 0.6,
         "req_perception": 1.0,
-        "req_tool_tag": null
+        "req_tool_tag": null,
+        "max_stock": 15.0,
+        "regen_per_tick": 0.08
       },
       {
         "result_template_id": "log_oak",
@@ -36,7 +42,9 @@
         "max_qty": 1,
         "chance": 1.0,
         "req_perception": 0.0,
-        "req_tool_tag": "CHOPPING"
+        "req_tool_tag": "CHOPPING",
+        "max_stock": 10.0,
+        "regen_per_tick": 0.05
       },
       {
         "result_template_id": "raw_meat",
@@ -44,7 +52,9 @@
         "max_qty": 1,
         "chance": 0.3,
         "req_perception": 0.0,
-        "req_tool_tag": "PROJECTILE"
+        "req_tool_tag": "PROJECTILE",
+        "max_stock": 5.0,
+        "regen_per_tick": 0.03
       }
     ]
   },
@@ -61,7 +71,9 @@
         "max_qty": 2,
         "chance": 0.4,
         "req_perception": 1.0,
-        "req_tool_tag": null
+        "req_tool_tag": null,
+        "max_stock": 6.0,
+        "regen_per_tick": 0.03
       },
       {
         "result_template_id": "pebble",
@@ -69,7 +81,9 @@
         "max_qty": 4,
         "chance": 0.8,
         "req_perception": 0.0,
-        "req_tool_tag": null
+        "req_tool_tag": null,
+        "max_stock": 30.0,
+        "regen_per_tick": 0.15
       }
     ]
   },
@@ -86,7 +100,9 @@
         "max_qty": 4,
         "chance": 0.7,
         "req_perception": 0.0,
-        "req_tool_tag": null
+        "req_tool_tag": null,
+        "max_stock": 20.0,
+        "regen_per_tick": 0.10
       },
       {
         "result_template_id": "clay_lump",
@@ -94,7 +110,9 @@
         "max_qty": 2,
         "chance": 0.5,
         "req_perception": 0.0,
-        "req_tool_tag": "SHOVEL"
+        "req_tool_tag": "SHOVEL",
+        "max_stock": 10.0,
+        "regen_per_tick": 0.05
       },
       {
         "result_template_id": "mushroom",
@@ -102,7 +120,9 @@
         "max_qty": 3,
         "chance": 0.7,
         "req_perception": 1.0,
-        "req_tool_tag": null
+        "req_tool_tag": null,
+        "max_stock": 12.0,
+        "regen_per_tick": 0.06
       },
       {
         "result_template_id": "bone",
@@ -110,7 +130,9 @@
         "max_qty": 2,
         "chance": 0.5,
         "req_perception": 1.0,
-        "req_tool_tag": null
+        "req_tool_tag": null,
+        "max_stock": 6.0,
+        "regen_per_tick": 0.03
       }
     ]
   }

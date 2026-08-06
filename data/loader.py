@@ -42,6 +42,12 @@ class ResourceNodeData(BaseModel):
     chance: float
     req_perception: float = 0.0
     req_tool_tag: Optional[str] = None
+    # Vorratsbasierte Nodes (SPEC-004): max_stock = Fassungsvermögen,
+    # regen_per_tick = Regeneration pro verstrichenem Tick, harvest_cost =
+    # Vorrat, den eine erfolgreiche Ernte kostet.
+    max_stock: float = 10.0
+    regen_per_tick: float = 0.05
+    harvest_cost: float = 1.0
 
 
 class LocationData(BaseModel):

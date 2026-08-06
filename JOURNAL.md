@@ -5,6 +5,34 @@
 
 ---
 
+## 2026-08-06 — [Dev] SPEC-004: Ressourcenerschöpfung & Regeneration (Foraging)
+
+### Task
+`SPEC-004-resource-depletion.md` — vorratsbasierte Nodes: Ernte reduziert `stock`, Erfolg skaliert `chance * stock/max_stock`, Regeneration über `_advance_time`. Gegen die Langeweile-Stelle (Play 05.08.): Rotation/Rückkehr erzwingen, statt unendlichem Melken desselben Nodes. Metrik-Vorschlag `forage_pressure` als Probezeit-Metrik aufgenommen.
+
+### Mechanik (implementiert)
+- **`data/locations.py`/`loader.py` — `ResourceNode` erweitert:** `max_stock` (default 10), `regen_per_tick` (default 0.05), `harvest_cost` (default 1), veränderlicher `stock` + `depleted`-Flag. Fresh pro Engine-Instanz (kein Cross-Session-Bleed, deterministisch pro Seed).
+- **`locations.json` — pro-Node-Balance:** Flaggschiffe knapp/langsam (`flint_shard`, `bone`: max_stock 6, regen 0.03), Grundstoffe großzügig (`stick`/`pebble`: 30, regen 0.15). Knappheit gezielt auf den bestehenden flint-Bottleneck gelegt, nicht flächig.
+- **`engine/core.py::gather()`:** `eff_chance = chance * (stock/max_stock)`; Vorrat um `harvest_cost` reduziert; erschöpfter Node → neuer Reason `DEPLETED` + `_feedback_message("DEPLETED")` = *"Diese Stelle ist erschöpft. Komm später zurück."* (nie stilles "nichts").
+- **`_advance_time()`:** regeneriert alle Nodes über verstrichene Ticks; `depleted` erholt sich erst, wenn genug Zeit eine Ernte-Portion aufgefüllt hat. Andere Orte regenerieren, während man unterwegs ist.
+- **Design-Verfeinerung:** `depleted`-Flag nötig, weil ein einzelner Gather-Tick sonst eine homöopathische Regeneration nachschiebt und der Node nie ehrlich "erschöpft" melden würde. Generöse Grundstoffe oscilieren kurz an der Schwelle (gewollt — sollen kein Gate sein), knappe Flaggschiffe bleiben stabil erschöpft (gewollt).
+
+### Metrik — `forage_pressure` (Probe bis 20.08.)
+In `METRICS` aufgenommen (Band 0.1–0.5, keine Richtung, `probation_until=2026-08-20`). **Erstwert 0.71 (über Band)** — siehe BACKLOG: Definition `stock < max_stock` ist ein sehr sensibler Schwellenwert; Erstwert deutet auf Grind-Gefühl oder Kalibrierungs-Missmatch. Bewusst im Probezeit-Netz gelassen, statt still nachzujustieren.
+
+### Akzeptanz-Check
+- Wiederholtes Sammeln → Erschöpfung mit `DEPLETED`-Meldung, nie stilles "nichts" ✓
+- `_advance_time(N)` regeneriert bis `max_stock`; erschöpfter Node wieder erntbar nach Zeit ✓
+- Erfolg skaliert mit `stock/max_stock` ✓
+- `DEPLETED` hat Label in `_feedback_message` (Label-Vollständigkeit bleibt grün) ✓
+- `python -m pytest`: **165 passed** (vorher 158) ✓
+- Metrik-Werte gehalten: `session_depth` 24→25, `discovery_gap` 0.375 (im Band), `content_reachable` 1.0, `feedback_quality` 1.0; `forage_pressure` 0.71 (Probe, über Band).
+
+### Constitution-Check
+Kein Rezeptbuch geändert; CLI-Text bleibt; stdlib only; keine bestehende Metrik entfernt/umdefiniert — nur neue `forage_pressure` in Probezeit ergänzt (erlaubt, keine Freigabe nötig). Vertieft Entdecken (lebende Welt, Rotations-Entscheidung), kein Content-Selbstzweck.
+
+---
+
 ## 2026-08-06 — [Research-Explore] SPEC-004: Ressourcenerschöpfung & Regeneration
 
 ### Auftrag

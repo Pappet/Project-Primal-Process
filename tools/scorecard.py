@@ -453,6 +453,50 @@ def metric_session_depth():
 
 
 # ----------------------------------------------------------------------------
+# Metrik 9 — forage_pressure (Knappheit wird gefühlt) — SPEC-004, Probezeit
+# ----------------------------------------------------------------------------
+
+def _run_forage_pressure(seed, actions=200):
+    """Anteil der Gather-Versuche an einem nicht-vollen Node (Knappheit greift).
+
+    Fixe naive Policy: immer der erste erntbare Node am aktuellen Ort, mit
+    gelegentlichem Ortswechsel (Rotation). Zählt, ob eine Sammel-Aktion auf
+    lokale Knappheit trifft (stock < max_stock) — der Entscheidungsdruck,
+    den SPEC-004 bewusst erzeugen will.
+    """
+    random.seed(seed)
+    rng = random.Random(seed)
+    game = GameEngine()
+    locs = list(game.locations.keys())
+    n_attempts, n_underperform = 0, 0
+    for _ in range(actions):
+        if _drain_check(game):
+            break
+        node = None
+        for n in game.current_location.nodes:
+            if game.player.stats["perception"] < n.req_perception:
+                continue
+            if n.req_tool_tag and not game.player.inventory.find_item_by_tag(n.req_tool_tag):
+                continue
+            node = n
+            break
+        if node is None:
+            break
+        n_attempts += 1
+        if node.stock < node.max_stock:
+            n_underperform += 1
+        game.gather()
+        if rng.random() < 0.2:
+            _travel_or_fail(game, locs[rng.randrange(len(locs))])
+    return n_underperform / max(1, n_attempts)
+
+
+def metric_forage_pressure():
+    """Anteil der Sammel-Versuche an einem nicht-vollen Node (Band-Metrik)."""
+    return _aggregate(lambda s: _run_forage_pressure(s))
+
+
+# ----------------------------------------------------------------------------
 # Aggregation über Seeds (Median + p25/p75)
 # ----------------------------------------------------------------------------
 
@@ -495,6 +539,7 @@ METRICS = [
     {"key": "content_reachable", "desc": "Anteil sammelbarer definierter Items", "fn": metric_content_reachable, "direction": "höher = besser", "version": 1},
     {"key": "session_depth", "desc": "Aktionen bis nichts Neues passiert", "fn": metric_session_depth, "direction": "höher = besser", "version": 1},
     {"key": "discovery_gap", "desc": "Abstand erreichbar vs. tatsächlich gefunden", "fn": metric_discovery_gap, "direction": None, "version": 1, "band": (0.2, 0.6)},
+    {"key": "forage_pressure", "desc": "Anteil Sammel-Versuche an nicht-volem Node (Knappheit)", "fn": metric_forage_pressure, "direction": None, "version": 1, "band": (0.1, 0.5), "probation_until": "2026-08-20"},
 ]
 
 METRIC_VERSIONS = {m["key"]: m["version"] for m in METRICS}

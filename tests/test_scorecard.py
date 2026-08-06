@@ -299,6 +299,26 @@ class TestDiscoveryGap:
         assert "höher" not in row[0].split("|")[4]
 
 
+class TestForagePressure:
+    """forage_pressure (SPEC-004, Probezeit) — Band-Metrik + Registrierung."""
+
+    def test_value_in_range(self):
+        m = sc.metric_forage_pressure()
+        assert 0 <= m["value"] <= 1
+        assert "p25" in m and "p75" in m
+
+    def test_registered_with_band_and_probation(self):
+        entry = next(m for m in sc.METRICS if m["key"] == "forage_pressure")
+        assert entry["band"] == (0.1, 0.5)
+        assert entry["direction"] is None
+        assert entry["probation_until"] == "2026-08-20"  # +14 Tage ab 06.08.
+
+    def test_table_shows_probation_label(self):
+        table = sc.build_table(sc.compute_all(), None)
+        row = [l for l in table.splitlines() if l.startswith("| forage_pressure")]
+        assert row and "Probe bis" in row[0]
+
+
 # ----------------------------------------------------------------------------
 # Versionierte Deltas
 # ----------------------------------------------------------------------------

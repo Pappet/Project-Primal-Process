@@ -486,3 +486,93 @@ class TestProcessSystem:
         assert engine._count_template("fire_pit") == 0
         assert engine.execute_process("start_fire")["success"] is True
         assert engine._count_template("fire_pit") == 1
+
+
+class TestSpec004ResourceDepletion:
+    """SPEC-004: vorratsbasierte Nodes — Erschöpfung, Regeneration, Chance."""
+
+    def test_fresh_engine_nodes_start_full_stock(self):
+        """Engine-Zustand ist pro-Instanz: jeder Node startet auf max_stock."""
+        engine = GameEngine()
+        for loc in engine.locations.values():
+            for node in loc.nodes:
+                assert node.stock == node.max_stock
+
+    def test_depleted_node_reports_instead_of_silent_nothing(self, monkeypatch):
+        """Erschöpfter Node → ehrliche DEPLETED-Meldung, nie stilles \"nichts\"."""
+        monkeypatch.setattr("engine.core.random.random", lambda: 0.0)
+        engine = GameEngine()
+        for node in engine.current_location.nodes:
+            node.stock = 0.0
+            node.depleted = True
+        before = len(engine.player.inventory.items)
+        logs = engine.gather()
+        assert logs  # Gather liefert Feedback, kein Leerlauf
+        assert any("erschöpft" in l for l in logs)
+        assert len(engine.player.inventory.items) == before  # nichts gesammelt
+        assert all(n.depleted for n in engine.current_location.nodes)
+
+    def test_repeated_gather_depletes_node(self, monkeypatch):
+        """Über-Ernten eines Ortes hungert ihn aus und meldet das ehrlich."""
+        from data.locations import ResourceNode
+        monkeypatch.setattr("engine.core.random.random", lambda: 0.0)
+        engine = GameEngine()
+        # Synthetischer KNAPPER Node (wie flint/bone): Regen so klein, dass
+        # Erschöpfung stabil bleibt (generöse Grundstoffe oscilieren nur kurz).
+        node = ResourceNode("stick", 1, 1, chance=1.0, max_stock=3.0,
+                            regen_per_tick=0.01, harvest_cost=1.0)
+        engine.current_location.nodes = [node]
+        for _ in range(10):
+            engine.gather()
+        assert node.depleted is True
+        assert node.stock < node.harvest_cost
+        logs = engine.gather()
+        assert any("erschöpft" in l for l in logs)
+
+    def test_regeneration_restores_stock_and_harvest(self, monkeypatch):
+        """Zeit regeneriert Nodes; erschöpfter Node wird wieder erntbar."""
+        monkeypatch.setattr("engine.core.random.random", lambda: 0.0)
+        engine = GameEngine()
+        for node in engine.current_location.nodes:
+            node.stock = 0.0
+            node.depleted = True
+        engine._advance_time(200)  # genug verstrichene Zeit
+        stick = next(n for n in engine.current_location.nodes
+                     if n.result_template_id == "stick")
+        assert stick.depleted is False  # erholt über die Zeit
+        assert stick.stock > 0
+        assert stick.stock <= stick.max_stock
+        engine.gather()
+        assert any(i.template_id == "stick" for i in engine.player.inventory.items)
+
+    def test_regeneration_caps_at_max_stock(self):
+        """Regeneration übersteigt max_stock nie."""
+        engine = GameEngine()
+        node = next(n for n in engine.current_location.nodes
+                    if n.result_template_id == "stick")
+        node.stock = node.max_stock - 1.0
+        engine._advance_time(1000)
+        assert node.stock == node.max_stock
+
+    def test_success_chance_scales_with_stock(self, monkeypatch):
+        """eff_chance = chance * (stock/max_stock): halbe Stelle, halbe Chance."""
+        engine = GameEngine()
+        stick = next(n for n in engine.current_location.nodes
+                     if n.result_template_id == "stick")  # chance 0.8
+        for n in engine.current_location.nodes:
+            if n is not stick:
+                n.stock = 0.0
+        # Halber Vorrat → eff 0.4; random 0.6 > 0.4 → Fehlschlag trotz hoher Basis
+        stick.stock = stick.max_stock / 2.0
+        monkeypatch.setattr("engine.core.random.random", lambda: 0.6)
+        engine.gather()
+        assert not any(i.template_id == "stick" for i in engine.player.inventory.items)
+        # Volle Stelle → eff 0.8; random 0.6 <= 0.8 → Treffer
+        stick.stock = stick.max_stock
+        engine.gather()
+        assert any(i.template_id == "stick" for i in engine.player.inventory.items)
+
+    def test_depleted_has_label_in_feedback_message(self):
+        """DEPLETED hat ein Label in _feedback_message (feedback_quality-Zweig)."""
+        from engine.core import _feedback_message
+        assert "erschöpft" in _feedback_message("DEPLETED")

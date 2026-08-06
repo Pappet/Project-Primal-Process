@@ -76,6 +76,8 @@ def _feedback_message(reason: str, broken_names: "List[str] | None" = None) -> s
         return f"{names} ist zerbrochen und kann nicht verwendet werden."
     if reason == "NO_MATCH":
         return "Die Kombination ergibt nichts."
+    if reason == "DEPLETED":
+        return "Diese Stelle ist erschöpft. Komm später zurück."
     return "Das geht so nicht."  # UNKNOWN-Fallback — nie eine generische Leer-Meldung
 
 
@@ -119,7 +121,20 @@ class GameEngine:
         """Simuliert Zeit, Hunger und Thermodynamik."""
         self.tick_counter += ticks
         self._update_weather()
-        
+
+        # 0. Ressourcen-Regeneration (SPEC-004): Vorrat wächst über die
+        # verstrichene Spielzeit, nicht über Aktionen. Dadurch regenerieren
+        # sich auch andere Orte, während man unterwegs handelt — die Zeit
+        # zwischen zwei Besuchen bestimmt den Füllstand.
+        for loc in self.locations.values():
+            for node in loc.nodes:
+                node.stock = min(node.max_stock, node.stock
+                                 + node.regen_per_tick * ticks)
+                # Ein erschöpfter Node erholt sich erst, wenn genug Zeit
+                # vergangen ist, um mindestens eine Ernte-Portion aufzufüllen.
+                if node.depleted and node.stock >= node.harvest_cost:
+                    node.depleted = False
+
         logs = []
         
         # 1. Hunger-Simulation
@@ -162,11 +177,24 @@ class GameEngine:
                 used_tool = self.player.inventory.find_item_by_tag(node.req_tool_tag)
                 if not used_tool: continue
 
-            if random.random() <= node.chance:
+            # Vorratsbasierter Node (SPEC-004): erschöpft → ehrliche Meldung,
+            # nie stilles "nichts". Bleibt erschöpft, bis Regeneration ihn
+            # über die Zeit wieder auf mindestens eine Ernte-Portion hebt.
+            if node.stock <= 0 or node.depleted:
+                logs.append(_feedback_message("DEPLETED"))
+                continue
+
+            # Erfolgswahrscheinlichkeit skaliert mit dem Vorratsanteil:
+            # voller Vorrat = node.chance, geleerter = 0.
+            eff_chance = node.chance * (node.stock / node.max_stock)
+            if random.random() <= eff_chance:
                 qty = random.randint(node.min_qty, node.max_qty)
                 item = create_item(node.result_template_id, qty)
                 if self.player.inventory.add(item):
                     logs.append(f"Gefunden: {qty}x {item.name}")
+                    node.stock = max(0.0, node.stock - node.harvest_cost)
+                    if node.stock < node.harvest_cost:
+                        node.depleted = True
                     if used_tool:
                         wear = 0.05 / used_tool.get_attr("durability", 0.5)
                         used_tool.condition = max(0, used_tool.condition - round(wear, 2))
