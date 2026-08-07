@@ -5,6 +5,27 @@
 
 ---
 
+## 2026-08-07 — [Play] Langeweile-Stelle bleibt; discovery_gap war unterschätzt
+
+### Headline-Befund
+Die Entdeckungs-Leere ist unverändert die Langeweile-Stelle: 8 Blueprints + 4 Prozesse + 13 Templates, eine geführte Session leert alles in ~40 Aktionen (tick ~96). `session_depth`=25 — SPEC-004 hob das p75 (33→43), aber nicht die Entdeckungs-Tiefe.
+
+### Wichtigste neue Erkenntnis — Reachability-Zählfehler
+`scorecard.py::_pair_slots` kann Tag-Familien (`SHARP_OR_RIGID`, `RIGID_OR_FIBER`) nicht auflösen → meldet `spear`/`spear_bound` als unreachable, obwohl die Engine beide craftet (alle 8 Blueprints SUCCESS, verifiziert). Gemeldete reachability 0.75, wahr 1.0 → **wahrer `discovery_gap` ≈ 0.625 (über Band), nicht 0.375.** Der gemeldete "komfortable" Gap war ein Artefakt. Kein Spiel-Bug; Metrik-Berechnung → braucht Peters Freigabe.
+
+### SPEC-003-Konflikt — neu bewertet
+Bisher: Gap bei 0.25→0.375, "nah an Überführung, SPEC-003 aussetzen". Mit korrigiertem Zähler liegt der wahre Gap eher über dem Band (0.625). Damit ist SPEC-003-Aussetzung weiterhin richtig, aber aus dem anderen Grund: nicht Überführung, sondern Unsicherheit über den wahren Wert. **Erst Reachability-Zähler kalibrieren, dann über Discovery-Mechaniken entscheiden.**
+
+### Verbessert seit 05.08.
+- flint-Funnel entschärft (SPEC-002): naive Sessions bauen knife_bone/knife_stone/axe_stone/spear. `craft_variety` 1.0→3.0.
+- `actions_to_first_craft` 62→34.5 — erster Craft landet früher.
+
+### Offen bestätigt
+- B06 `log_oak` ("Unbekannt"×2 in geführter Session), B07 `clay_lump` (SHOVEL-Tag ohne Träger) — beide unverändert.
+- forage_pressure 0.707 über Band, Kalibrierung bis 20.08.
+
+---
+
 ## 2026-08-06 — [Dev] SPEC-004: Ressourcenerschöpfung & Regeneration (Foraging)
 
 ### Task
