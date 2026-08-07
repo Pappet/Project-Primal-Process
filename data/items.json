@@ -5,6 +5,12 @@
     "tags": {"RIGID": true},
     "attributes": {"durability": 0.8}
   },
+  "log_oak": {
+    "name": "Eichenstamm",
+    "weight": 3.0,
+    "tags": {"RIGID": true, "WOOD": true},
+    "attributes": {"durability": 0.9}
+  },
   "flint_shard": {
     "name": "Feuersteinsplitter",
     "weight": 0.4,
@@ -48,6 +54,12 @@
     "weight": 0.05,
     "tags": {"STONE": true, "PROJECTILE": true},
     "attributes": {"durability": 0.2}
+  },
+  "clay_lump": {
+    "name": "Tonklumpen",
+    "weight": 0.8,
+    "tags": {"CLAY": true},
+    "attributes": {"durability": 0.5}
   },
   "bone": {
     "name": "Knochen",

@@ -5,6 +5,28 @@
 
 ---
 
+## 2026-08-07 — [Dev] B06 + B07: dangling Node-Templates gefixt (log_oak, clay_lump)
+
+### Task
+Kein offener, implementierbarer PLAN-Task (SPEC-003 suspendiert bis Direktor; Rückwärtsprüfung/Baseline = Play-Job). Stattdessen die beiden 🔴 Content-Bugs aus BACKLOG (B06/B07, von zwei Play-Sessions bestätigt): Nodes referenzieren Templates, die es nicht gibt → Spieler bekommt "Unbekannt"-Müll statt eines echten Items. Direkt `content_reachable` (15/15) und die Kern-Verheißung "Axt bauen, um Holz/Ton zu sammeln".
+
+### Fix (Content-only, verfassungskonform)
+- **B06 `log_oak`:** Template in `items.json` angelegt ("Eichenstamm", RIGID+WOOD). War: Node existierte, Template nicht → "Unbekannt". Jetzt fällt die Axt (CHOPPING) einen echten Eichenstamm.
+- **B07 `clay_lump`:** Template angelegt ("Tonklumpen", CLAY) **und** die Axt als Grabwerkzeug gedacht: `axe`/`axe_bone`/`axe_stone` tragen jetzt zusätzlich das funktionale Tag `SHOVEL` (BACKLOG-Fixrichtung: "Axt als Grabwerkzeug", kein neues Werkzeug nötig). Damit ist der vorher doppelt-tote Ton-Pfad (fehlendes Werkzeug + fehlendes Template) erreichbar.
+- `TAG_LABELS` um `WOOD`/`CLAY` ergänzt (Label-Vollständigkeits-Test bleibt grün).
+
+### Akzeptanz-Check
+- `log_oak`/`clay_lump` als Templates geladen (kein "Unbekannt") ✓
+- Axt fällt Eichenstamm im Waldrand ✓; Axt gräbt Ton in der Höhle ✓
+- `python -m pytest`: **170 passed** (vorher 165) — inkl. 5 neuer Regressionstests
+- Metrik-Idempotenz: `content_reachable` 1.0 (15/15, vorher 13/13 mit 2 dangling, die gar nicht zählten), `discovery_gap` 0.375, `session_depth` 25, `craft_variety` 3.0 — keine Verschiebung.
+- Keine Metrik umdefiniert/entfernt — nur Content ergänzt (freigegeben).
+
+### Constitution-Check
+Content/Items/Tags hinzugefügt — ausdrücklich frei (keine Freigabe nötig). Keine Metrik-Berechnung angefasst. Tag-basiertes Crafting unverändert. Vertieft Entdecken (zwei vorher tote Rohstoffe sind jetzt echte Funde), kein Content-Selbstzweck.
+
+---
+
 ## 2026-08-07 — [Play] Langeweile-Stelle bleibt; discovery_gap war unterschätzt
 
 ### Headline-Befund

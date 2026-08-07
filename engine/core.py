@@ -29,6 +29,8 @@ TAG_LABELS = {
     "KINDLING": "etwas zum Feuermachen",
     "SHOVEL": "etwas zum Graben",
     "DURABILITY": "etwas Haltbares",
+    "WOOD": "etwas aus Holz",
+    "CLAY": "etwas aus Ton",
 }
 
 # Tag-Familien (SPEC-002): Eine Slot-Anforderung kann ein Familienname sein,

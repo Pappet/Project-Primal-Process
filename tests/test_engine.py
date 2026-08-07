@@ -369,6 +369,65 @@ class TestBugs:
         assert engine._get_ambient_temp() >= 15.0
 
 
+class TestBugB06B07DanglingTemplates:
+    """B06/B07 (BACKLOG 05.08., erneut bestätigt 07.08.): Nodes referenzieren
+    Templates, die es in items.json nicht gibt → 'Unbekannt'-Müll. Fix: echte
+    Templates + SHOVEL-Träger (Axt als Grabwerkzeug)."""
+
+    def test_b06_log_oak_template_exists(self):
+        """log_oak hat jetzt ein echtes Template — kein 'Unbekannt' mehr."""
+        from data.items import create_item, TEMPLATE_DB
+        assert "log_oak" in TEMPLATE_DB
+        item = create_item("log_oak")
+        assert item.name != "Unbekannt"
+        assert "RIGID" in item.tags
+
+    def test_b06_log_oak_gatherable_with_axe(self, monkeypatch):
+        """Axt (CHOPPING) fällt im Waldrand Eichenstamm — die Kern-Verheißung."""
+        monkeypatch.setattr("engine.core.random.random", lambda: 0.0)
+        engine = GameEngine()
+        engine.player.inventory.add(create_item("flint_shard"))
+        engine.player.inventory.add(create_item("stick"))
+        engine.player.inventory.add(create_item("plant_fiber"))
+        res = engine.execute_experiment(list(engine.player.inventory.items))
+        assert res["success"] is True  # Axt bauen
+        engine.gather()  # Waldrand: log_oak braucht CHOPPING → Axt gräbt/fällt
+        assert any(i.template_id == "log_oak" for i in engine.player.inventory.items)
+
+    def test_b07_clay_lump_template_exists(self):
+        """clay_lump hat jetzt ein echtes Template — kein 'Unbekannt' mehr."""
+        from data.items import create_item, TEMPLATE_DB
+        assert "clay_lump" in TEMPLATE_DB
+        item = create_item("clay_lump")
+        assert item.name != "Unbekannt"
+        assert "CLAY" in item.tags
+
+    def test_b07_axe_carries_shovel(self):
+        """Axt trägt SHOVEL → kann Ton graben (BACKLOG-Fixrichtung: Axt als
+        Grabwerkzeug, kein neues Werkzeug nötig)."""
+        engine = GameEngine()
+        engine.player.inventory.add(create_item("flint_shard"))
+        engine.player.inventory.add(create_item("stick"))
+        engine.player.inventory.add(create_item("plant_fiber"))
+        engine.execute_experiment(list(engine.player.inventory.items))
+        axe = next(i for i in engine.player.inventory.items if "CHOPPING" in i.tags)
+        assert "SHOVEL" in axe.tags
+
+    def test_b07_clay_lump_gatherable_in_hidden_cave(self, monkeypatch):
+        """Mit Axt (SHOVEL) ist der Ton in der Höhle erreichbar — toter Pfad lebt."""
+        from data.locations import ResourceNode
+        monkeypatch.setattr("engine.core.random.random", lambda: 0.0)
+        engine = GameEngine()
+        # Axt samt SHOVEL beschaffen
+        engine.player.inventory.add(create_item("flint_shard"))
+        engine.player.inventory.add(create_item("stick"))
+        engine.player.inventory.add(create_item("plant_fiber"))
+        engine.execute_experiment(list(engine.player.inventory.items))
+        engine.travel("hidden_cave")
+        engine.gather()
+        assert any(i.template_id == "clay_lump" for i in engine.player.inventory.items)
+
+
 class TestProcessSystem:
     """SPEC-001: Prozess-System in die Engine eingebunden."""
 

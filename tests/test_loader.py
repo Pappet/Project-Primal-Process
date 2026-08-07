@@ -31,7 +31,10 @@ class TestLoadItems:
         assert "fire_pit" in items
         # SPEC-002: Knochen als Werkstoff-Variante (BONE-Axt/Messer)
         assert "bone" in items
-        assert len(items) == 13
+        # B06/B07: log_oak (Waldrand, CHOPPING) + clay_lump (Höhle, SHOVEL)
+        assert "log_oak" in items
+        assert "clay_lump" in items
+        assert len(items) == 15
 
     def test_template_has_correct_fields(self):
         items = load_items()
@@ -68,7 +71,8 @@ class TestLoadBlueprints:
         assert axe.result_name == "Feuersteinaxt"
         assert axe.slots == {"head": "FLINT", "handle": "RIGID", "binding": "FIBER"}
         assert axe.base_efficiency == 1.0
-        assert axe.tool_tags == ["CHOPPING"]
+        # B07: Axt trägt SHOVEL → kann Ton graben (Grabwerkzeug, kein neuer Tool)
+        assert axe.tool_tags == ["CHOPPING", "SHOVEL"]
 
 
 class TestLoadLocations:

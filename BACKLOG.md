@@ -40,10 +40,10 @@ Dinge die kaputt sind und gefixt werden müssen.
 ---
 
 ### 🔴 B06 — `log_oak` liefert "Unbekannt" (dangling Node-Template)
-- [2026-08-05] (Play) **`log_oak`-Node (forest_edge, braucht CHOPPING/Axt) referenziert ein Template, das es in `items.json` nicht gibt.** Mit der frisch gebauten Axt Holz fällen → `Gefunden: 1x Unbekannt` (Müll-Item ohne Nutzen). Kernversprechen "Axt bauen, um Holz zu sammeln" bricht in der Hand. **Fix-Richtung:** `log_oak` als echtes Template anlegen oder aus dem Node entfernen.
+- ~~[2026-08-05] (Play) **`log_oak`-Node (forest_edge, braucht CHOPPING/Axt) referenziert ein Template, das es in `items.json` nicht gibt.** Mit der frisch gebauten Axt Holz fällen → `Gefunden: 1x Unbekannt` (Müll-Item ohne Nutzen). Kernversprechen "Axt bauen, um Holz zu sammeln" bricht in der Hand. **Fix-Richtung:** `log_oak` als echtes Template anlegen oder aus dem Node entfernen.~~ — **✅ erledigt** in Dev-Session 2026-08-07 (Template "Eichenstamm" angelegt, RIGID+WOOD; Axt fällt echten Stamm).
 
 ### 🔴 B07 — `clay_lump` doppelt tot (fehlendes Werkzeug + fehlendes Template)
-- [2026-08-05] (Play) **`clay_lump`-Node (hidden_cave, braucht `SHOVEL`)**: kein Item trägt das Tag `SHOVEL` → unerreichbar; zusätzlich fehlt das Template in `items.json`. Doppelt toter Content-Pfad. **Fix-Richtung:** SHOVEL-Werkzeug (z.B. Axt/Stab als Grabwerkzeug) einführen und Template anlegen, oder Node entfernen.
+- ~~[2026-08-05] (Play) **`clay_lump`-Node (hidden_cave, braucht `SHOVEL`)**: kein Item trägt das Tag `SHOVEL` → unerreichbar; zusätzlich fehlt das Template in `items.json`. Doppelt toter Content-Pfad. **Fix-Richtung:** SHOVEL-Werkzeug (z.B. Axt/Stab als Grabwerkzeug) einführen und Template anlegen, oder Node entfernen.~~ — **✅ erledigt** in Dev-Session 2026-08-07 (Template "Tonklumpen" + Axt trägt jetzt SHOVEL → Ton erreichbar).
 
 ---
 
@@ -107,3 +107,5 @@ Vom Review aussortierte Einträge landen hier. Wird beim nächsten Review geleer
 - 🔵 create_dynamic_item-Refactor → erledigt in TASK-M03
 - 5 neue Research Leads → M0.2-Pipeline, siehe PLAN.md + ⚪ oben
 - *(2026-08-02)* Keine neuen Archiveinträge — alles Backlog trägt bereits Sprint-/Phase-Ziel
+- 🔴 B06 (`log_oak` dangling Template) → erledigt in Dev 2026-08-07 (Template + Axt fällt Holz)
+- 🔴 B07 (`clay_lump` doppelt tot) → erledigt in Dev 2026-08-07 (Template + Axt trägt SHOVEL)
