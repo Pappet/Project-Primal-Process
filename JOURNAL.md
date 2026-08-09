@@ -5,7 +5,48 @@
 
 ---
 
-## 2026-08-07 — [Dev] B06 + B07: dangling Node-Templates gefixt (log_oak, clay_lump)
+## 2026-08-09 — [Direktor] Plan-Neufassung, Triage, Kalibrierungs-Priorität
+
+### Scorecard-Verlauf (Trajektorie 03.08. → 05.08. → 07.08.)
+| Metrik | 03.08 | 05.08 | 07.08 | Lesart |
+|--------|-------|-------|-------|--------|
+| actions_to_first_craft | 63 | 62 | 34.5 | ↑ deutlich vorwärts (flint-Funnel weg) |
+| craft_variety | 0.5 | 1.0 | 3.0 | ↑ vorwärts (SPEC-002) |
+| content_reachable | 0.667 | 1.0 | 1.0 | ↑ geschlossen (13/13, danach 15/15) |
+| session_depth | 24 | 26 | 25 | ↔ stagniert — die Langeweile-Stelle |
+| skill_spread | 0.315 | 0.259 | 0.216 | ↓ fallend — klären |
+| feedback_quality | 1.0 | 1.0 | 1.0 | – Decke, konstruktionsbedingt |
+| discovery_gap | 0.5 | 0.25 | 0.375 | ⚠️ untertrieben (Zählfehler) |
+| forage_pressure | – | – | 0.707 | Probezeit, kein Ziel |
+
+**Was vorwärts geht:** Einstieg deutlich besser — erste Craft viel früher, dreifach mehr Craft-Varianten, inhaltlich alles erreichbar. **Was stagniert:** `session_depth`~25 — die Entdeckungs-Leere. **Was fällt:** `skill_spread` 0.315→0.216 (muss erklärt werden). **Schärfste Erkenntnis:** `discovery_gap` ist wegen eines Reachability-Zählfehlers unterschätzt; wahrer Wert ≈0.625 statt 0.375.
+
+### Metrik-Erkenntnis (Kernbefund der Woche)
+`scorecard.py::_pair_slots` löst Tag-Familien (`SHARP_OR_RIGID`, `RIGID_OR_FIBER`) nicht literal auf → `spear`/`spear_bound` fälschlich unreachable. Gemeldet `blueprint_reachability` 0.75, wahr 1.0 → wahrer `discovery_gap` ≈ 0.625 (über Band 0.6), nicht 0.375. Kein Spiel-Bug, Zählfehler. **Kalibrierung hat Vorrang vor jeder neuen Discovery-Mechanik** → REC-001 (braucht Peters Freigabe nach Constitution), SPEC-003 bleibt suspendiert.
+
+### Entscheidungen / Triage
+- **BACKLOG:** B06/B07 (beide in Dev 07.08. gefixt) → zu „✅ Triaged" verschoben. Stack-Verschmelzung → **SPEC-005 promotet**. Reachability-/content_reachable-/craft_variety-Metrik-Änderungen → konsolidiert als Metrik-Anfrage an Peter (REC-001). forage_pressure bleibt Probezeit bis 20.08.
+- **PLAN.md neu:** 3 Ziele — (1) Entdeckungs-Tiefe `session_depth` steigern, (2) Craft-Tiefe `craft_variety`/`session_depth` verbreitern, (3) Messung kalibrieren `discovery_gap` (Peter). Tasks: REC-001 (Kalibrierung, braucht Freigabe), SPEC-005 (Mengen-Matching), skill_spread-Regress klären, SPEC-003 (suspendiert), forage_pressure (beobachtend).
+- **specs/SPEC-005-stack-multi-slot.md** angelegt (Stack mit quantity N füllt N identische Slots — schließt die 2×-Ast/Craft-Lücke, Hand-feeling-Fix ohne Content).
+
+### Constitution-Check
+Kein Metrik-Core angefasst (`tools/scorecard.py`, `METRICS`, Scorecard-Dateien unverändert) — nur als Freigabe-Bedarf an Peter gehalten. Kein Rezeptbuch geändert; keine Metrik entfernt/umdefiniert/abgeschwächt. Konform.
+
+### Self-Modification (Cron-Jobs)
+**Keine Cron-Änderungen diese Woche.** Rollen/Play/Measurement bleiben unangetastet; die gesetzten Tasks passen in die bestehenden Dev-Slots. „CONSTITUTION.md ist unantastbar" bleibt in allen Prompts.
+
+### Artefakte
+- `PLAN.md` (komplett neu)
+- `BACKLOG.md` (Triage, Archive, Annotationen)
+- `specs/SPEC-005-stack-multi-slot.md` (neu)
+- `JOURNAL.md` (dieser Eintrag)
+
+### Nächste Schritte
+- **Peter:** Freigabe/Feedback zu REC-001 (Reachability-Zähler) + den drei konsolidierten Metrik-Änderungen (craft_variety-zählt-Prozesse, content_reachable-dangling-Nodes, skill_spread-Neuinterpretation).
+- **Dev:** SPEC-005 zuerst, dann skill_spread-Regress; REC-001 erst nach Peters Freigabe berühren.
+- **Play (Mo 10.08.):** nächste Scorecard — prüft zugleich, ob B06/B07-Fix `content_reachable` konstant hält.
+
+---
 
 ### Task
 Kein offener, implementierbarer PLAN-Task (SPEC-003 suspendiert bis Direktor; Rückwärtsprüfung/Baseline = Play-Job). Stattdessen die beiden 🔴 Content-Bugs aus BACKLOG (B06/B07, von zwei Play-Sessions bestätigt): Nodes referenzieren Templates, die es nicht gibt → Spieler bekommt "Unbekannt"-Müll statt eines echten Items. Direkt `content_reachable` (15/15) und die Kern-Verheißung "Axt bauen, um Holz/Ton zu sammeln".
