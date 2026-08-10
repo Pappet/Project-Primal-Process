@@ -73,6 +73,8 @@ def _feedback_message(reason: str, broken_names: "List[str] | None" = None) -> s
         return f"Es fehlt dir {_label_for(tag)}."
     if reason == "TOO_FEW_ITEMS":
         return "Dafür brauchst du mindestens zwei Dinge."
+    if reason == "NOT_ENOUGH_QUANTITY":
+        return "Dafür brauchst du mehr von demselben Material."
     if reason == "BROKEN_ITEM":
         names = ", ".join(broken_names or [])
         return f"{names} ist zerbrochen und kann nicht verwendet werden."
@@ -287,6 +289,21 @@ class GameEngine:
         if len(selected_items) < min_count:
             return self._result(False, _feedback_message("TOO_FEW_ITEMS"),
                                 "TOO_FEW_ITEMS")
+
+        # Menge-Validierung (SPEC-005): Derselbe Stack kann N identische Slots
+        # füllen, aber nur solange quantity >= N. Taucht ein Stack-Objekt mehrfach
+        # in selected_items auf, ohne dass die Menge das deckt, würde _create_tool
+        # sonst ein Item aus dem Nichts erzeugen (Fehlstart). Stattdessen: ehrliches
+        # Feedback. Distinkte Stacks (zwei separate Ast-Stacks) bleiben unberührt —
+        # die Zählung geht über die Objekt-Identität, nicht den Namen.
+        seen = {}
+        for it in selected_items:
+            n = seen.get(id(it), 0) + 1
+            seen[id(it)] = n
+            if n > it.quantity:
+                return self._result(False,
+                                    _feedback_message("NOT_ENOUGH_QUANTITY"),
+                                    "NOT_ENOUGH_QUANTITY")
 
         for bp_id, bp in self.blueprints.items():
             if len(selected_items) != len(bp.slots): continue

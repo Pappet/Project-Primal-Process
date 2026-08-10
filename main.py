@@ -47,7 +47,10 @@ def main():
             input("\nWeiter...")
 
         elif cmd == 'e':
-            idx_str = input("IDs (z.B. 0,1,2) > ")
+            print("\n--- INVENTAR (fürs Experiment) ---")
+            for i, it in enumerate(p.inventory.items):
+                print(f"[{i}] {it.quantity}x {it.name} ({int(it.condition*100)}%)")
+            idx_str = input("IDs (z.B. 0,1,2; gleiches Item mehrmals für Mengen) > ")
             try:
                 sel = [p.inventory.items[int(i)] for i in idx_str.split(",")]
                 res = game.execute_experiment(sel)

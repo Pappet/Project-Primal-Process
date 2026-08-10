@@ -5,6 +5,24 @@
 
 ---
 
+## 2026-08-10 — [Dev] SPEC-005: Mengen-basiertes Mehrfach-Slot-Crafting (cron)
+
+### Was
+`Inventory.add` verschmilzt gleichnamige Items zu einem Stack (`quantity N`). Ein Blueprint, dessen zwei Slots dasselbe Tag-Profil verlangen (Speer 2× RIGID), war deshalb nicht aus einem einzigen 2×-Stack craftbar — der Spieler musste zwei distinkte Materialien kombinieren (reeds+Ast statt 2×Ast), obwohl er genug Stöcke besass.
+
+### Befund beim Einstieg
+Die Engine (Permutations-Loop + `_create_tool`) unterstützte Mehrfach-Nutzung desselben Stack-Objekts bereits: `spear` aus `[stick, stick]` (qty=2) craftete fehlerfrei, Verbrauch korrekt (qty=3 → qty=1). **Echte Lücke war die Mengen-Grenze:** Stack qty=1, zweimal selektiert, craffete den Speer trotzdem — `_create_tool` entfernt den Stack beim ersten Durchlauf und `continue`t ihn beim zweiten, ohne Abbruch. Ergebnis: Item aus dem Nichts erzeugt (Fehlstart), 1 Verbrauch statt 2.
+
+### Fix
+- `engine/core.py::execute_experiment`: Menge-Validierung vor der Blueprint-Schleife. Taucht ein Stack-Objekt N-mal in `selected_items` auf, muss `quantity >= N` sein, sonst `NOT_ENOUGH_QUANTITY`-Feedback (kein Fehlstart). Zählung über Objekt-Identität (`id`) — zwei distinkte Stacks bleiben unberührt.
+- `_feedback_message`: neues Label `NOT_ENOUGH_QUANTITY` → „Dafür brauchst du mehr von demselben Material." (kein Rezept-Leak).
+- `main.py` Experiment-Command: listet Inventar mit Mengen (`[i] Nx Name`), damit der Spieler einen Stack mehrfach auswählen kann.
+
+### Verifikation
+`python -m pytest`: **176 passed** (vorher 170; +6 neue Tests in `TestStackMultiSlot`: 2×-Stack craftbar, Verbrauch qty=3→1, unzureichende Menge → Feedback ohne Verbrauch, distinkte Kontrolle, Messer-Kontrolle, Label). Bestehende Pfade (distinkte Materialien) unverändert grün. Kein Metrik-Code angefasst, stdlib only, kein Rezeptbuch geändert — Constitution-konform. Erwartete Wirkung: `craft_variety`/`session_depth` leicht stützend (mehr legale Kombinationen pro Materialsortiment).
+
+---
+
 ## 2026-08-10 — [Play] Langeweile-Stelle präzise vermessen; Fixes bestätigt (cron)
 
 ### Headline-Befund

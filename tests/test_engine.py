@@ -635,3 +635,73 @@ class TestSpec004ResourceDepletion:
         """DEPLETED hat ein Label in _feedback_message (feedback_quality-Zweig)."""
         from engine.core import _feedback_message
         assert "erschöpft" in _feedback_message("DEPLETED")
+
+
+class TestStackMultiSlot:
+    """SPEC-005: Ein Stack mit quantity N kann N identische Blueprint-Slots füllen."""
+
+    def _stack(self, engine, tpl, qty=1):
+        engine.player.inventory.add(create_item(tpl, qty))
+        return next(it for it in engine.player.inventory.items if it.template_id == tpl)
+
+    def test_spear_from_single_stack_of_two_sticks(self):
+        """Speer (SHARP_OR_RIGID + RIGID) craftbar aus einem 2x-Stick-Stack — die
+        frühere 'zwei distinkte Materialien'-Zwangslösung ist damit überflüssig."""
+        engine = GameEngine()
+        stack = self._stack(engine, "stick", 2)
+        res = engine.execute_experiment([stack, stack])
+        assert res["success"] is True
+        assert res["blueprint_id"] == "spear"
+        # beide Stöcke verbraucht → nur noch der Speer im Inventar
+        names = [it.name for it in engine.player.inventory.items]
+        assert names == [res["message"].split(": ", 1)[-1]]
+
+    def test_consumption_leaves_remaining_quantity(self):
+        """2-Slot-Craft aus Stack qty=3 hinterlässt qty=1 — kein Doppel-Entfernen."""
+        engine = GameEngine()
+        stack = self._stack(engine, "stick", 3)
+        engine.execute_experiment([stack, stack])
+        remaining = [it for it in engine.player.inventory.items
+                     if it.template_id == "stick"]
+        assert len(remaining) == 1
+        assert remaining[0].quantity == 1
+
+    def test_insufficient_quantity_gives_feedback_no_fail_start(self):
+        """Stack qty=1 zweimal genutzt → verständliches Feedback statt Craft aus Nichts."""
+        engine = GameEngine()
+        stack = self._stack(engine, "stick", 1)
+        res = engine.execute_experiment([stack, stack])
+        assert res["success"] is False
+        assert res["reason"] == "NOT_ENOUGH_QUANTITY"
+        assert "mehr" in res["message"]
+        # nichts verbraucht, nichts erzeugt
+        assert [it.template_id for it in engine.player.inventory.items] == ["stick"]
+        assert engine.player.inventory.items[0].quantity == 1
+
+    def test_distinct_stacks_still_craft(self):
+        """Zwei getrennte Ast-Stacks (je qty=1) bleiben craftbar — Kontrolle."""
+        engine = GameEngine()
+        # direkte Objekte, da Inventory.add gleichnamige Items zu einem Stack
+        # verschmilzt — zwei getrennte Ast-Stacks entstehen so nicht über add().
+        engine.player.inventory.items.append(create_item("stick", 1))
+        engine.player.inventory.items.append(create_item("stick", 1))
+        items = list(engine.player.inventory.items)
+        assert len(items) == 2  # zwei distinkte Stack-Objekte
+        res = engine.execute_experiment(items)
+        assert res["success"] is True
+        assert res["blueprint_id"] == "spear"
+
+    def test_insufficient_quantity_only_for_duplicate_use(self):
+        """Einmalige Nutzung eines qty=1-Stacks bleibt erlaubt (z.B. Messer/Stiel)."""
+        engine = GameEngine()
+        engine.player.inventory.add(create_item("flint_shard", 1))
+        stack = self._stack(engine, "stick", 1)
+        items = list(engine.player.inventory.items)
+        res = engine.execute_experiment(items)
+        assert res["success"] is True
+        assert res["blueprint_id"] == "knife"
+
+    def test_not_enough_quantity_has_label(self):
+        """NOT_ENOUGH_QUANTITY hat ein Label in _feedback_message."""
+        from engine.core import _feedback_message
+        assert "mehr" in _feedback_message("NOT_ENOUGH_QUANTITY")
