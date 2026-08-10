@@ -5,6 +5,31 @@
 
 ---
 
+## 2026-08-10 — [Dev] skill_spread-Regress: Befund — kein echter Tiefen-Regress, sondern gehobene Einsteiger-Decke (cron)
+
+### Rückwärtsprüfung (nur Lese-Analyse, kein Metrik-Code angefasst)
+`skill_spread = (opt − rnd)/opt`, aktuell **0.216** (reproduziert, 20 Seeds). Zerlegt:
+- **opt** (bestes Überleben über alle Locations, dort bleiben+essen+sammeln) = **240.5** (hidden_cave). Weit unter HORIZON 500.
+- **rnd** (zufälliges Wandern) = **189.0**.
+- spread = (240.5−189)/240.5 = **0.216**.
+
+**Kernbefund — die Decke ist Ökonomie, nicht Regress:** Entfernt man die Ressourcen-Erschöpfung (SPEC-004) per Test-Harness (alle Nodes `max_stock=1e9`, nie depleted), ändert sich weder opt (bleibt 240.5) noch rnd (bleibt 189). Der optimale Spieler verhungert trotz unendlich viel Nahrung bei ~240 Ticks — die Überlebens-Decke ist **Energie-/Hungerwirtschaft** (Sammel-Energiekosten > Kalorien-Ertrag), ein System, das in den letzten Patches nicht angefasst wurde. Beim optimalen Lauf fällt HP exakt mit 1.0/Tick (HUNGER-SCHADEN), bodytemp ~26–27 °C, Inventar-Food leer — reine Hungerlinie, keine Entleerungs-Stelle.
+
+**Konsequenz:** Der Zähler (opt, die Experten-Decke) ist stabil und spieldesign-gebunden. Der Rückgang 0.315→0.216 kann also nicht aus einem *schlechter gewordenen* optimalen Spiel stammen, sondern aus dem **Nenner** — Zufalls-/Naive-Spiel überlebt näher an optimal. Das deckt sich exakt mit dem dokumentierten Einstiegs-Verlauf im selben Fenster: `actions_to_first_craft` 63→34.5, mehr Werkzeugpfade (SPEC-002, 3 Varianten je Axt/Messer), `naive_p25` 0.0→0.5, `naive_discovery_rate` 0.5→0.75.
+
+### Befund
+**0.216 bildet echte Spielerfahrung ab — aber nicht als „Tiefen-Regress".** Es spiegelt eine **gehobene Einsteiger-Decke**: unkundiges Spiel überlebt jetzt näher am Optimum, das Spiel ist weniger frustrierend für Neue. Die Experten-Decke (opt) ist unverändert. `direction="höher = besser"` labelt diesen Fall als Verschlechterung, obwohl es eine gewollte Einstiegs-Erleichterung ist (Plan-Hypothese „leichte Einstiege schrumpfen die optimale vs. zufällige Überlebensspanne" bestätigt sich).
+
+**Ehrliche Unsicherheit:** Historische opt/rnd-Werte liegen nicht getrennt in den Scorecard-Archiven (nur aggregierter Wert). Ich kann die Stabilität des Zählers **jetzt** zeigen (ökonomie-gebunden, Depletion-unabhängig), aber nicht über das 03.08→07.08-Fenster definitiv beweisen — die Einstiegs-Daten dort stützen die Nenner-Deutung jedoch klar.
+
+### Empfehlung an Peter (braucht Freigabe — Metrik unangetastet gelassen)
+Kein Korrektur-Bedarf am Spiel. Zwei Optionen für die **Metrik-Deutung** (nicht angewendet, Constitution):
+- **A (umdeuten):** Formel behalten, Bedeutung neu fassen — fallender skill_spread = Kindheit-der-Einstiege, kein Tiefenverlust. Richtungs-Label in SCORECARD müsste angepasst werden.
+- **B (anders messen):** Das Verhältnis vermischt zwei Dinge — Experten-Decke (opt) und Einsteiger-Kindness (Floor). Sauberer: opt separat ausweisen (Experten-Decke) statt als Ratio; wäre ein Metrik-Version-Bump (Schema 2→3), Peters Entscheidung.
+Nebenbefund (BACKLOG-Kandidat): auch das *optimum* kappt bei ~240 — die Survival-Decke und die Discovery-Leere (`session_depth`~25) sind zwei Erscheinungsformen derselben niedrigen System-Obergrenze; die „Langeweile-Stelle" ist nicht nur Content, sondern auch Ökonomie-Decke.
+
+---
+
 ## 2026-08-10 — [Dev] SPEC-005: Mengen-basiertes Mehrfach-Slot-Crafting (cron)
 
 ### Was
