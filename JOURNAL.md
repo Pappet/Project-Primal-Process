@@ -5,6 +5,27 @@
 
 ---
 
+## 2026-08-10 — [Play] Langeweile-Stelle präzise vermessen; Fixes bestätigt (cron)
+
+### Headline-Befund
+Die Langeweile-Stelle ist unverändert, aber diesmal **unter optimalem Spiel präzise vermessen**: Ein survival-sicherer Guided-Runner leert **alle 8 Blueprints + alle 4 Prozesse + alle Templates in ~25–37 Aktionen** (Seeds @28, @24, @37). Deckt sich mit `session_depth`=25. Danach existiert keine Neuheit mehr — das Discovery-Spiel ist nach ~halber Stunde fertig, Rest ist Sammel-Grinding. Kein Bug, die Content-/System-Obergrenze. Plan-Prioritäten (SPEC-005, REC-001, Entdeckungs-Tiefe) adressieren genau das.
+
+### Scorecard flach (±0 überall)
+Deterministische Seeds + keine Engine-Änderung seit 07.08. → identische Werte. Erwartet, kein Alarm. Kontext für Direktor: Play-Job erzeugt bei unveränderter Engine kein neues Signal.
+
+### Verbessert bestätigt
+- **B06/B07 sauber zu.** `content_reachable` 1.0 jetzt **real** (15/15): `log_oak` (Eichenstamm per Axt) und `clay_lump` (Ton per Axt/SHOVEL) korrekt sammelbar — kein "Unbekannt" mehr.
+- **Volle Prozess-Kette durchspielbar & lohnend:** knap → knife → tinder → fire → cook_meat (400 kcal vs 150 roh). Alle 4 Prozesse menschenerreichbar (letzte Woche suggerierte mein schwacher Bot irrtümlich nur make_sharp_stone).
+
+### Kein neuer Bug
+Nichts Neues reproduziert, kein Frustpfad. Bemerkung: guided-Wert trotz optimalem Spiel nicht > naive `session_depth` — die Zahl klebt an der Entdeckungs-Obergrenze, nicht an der Spieler-Unfähigkeit.
+
+### Offen (unverändert)
+- `discovery_gap` 0.375 (wahr ≈0.625) — REC-001 braucht Peters Freigabe. Vor SPEC-003.
+- `forage_pressure` 0.707 — Probezeit-Kalibrierung bis 20.08.
+
+---
+
 ## 2026-08-09 — [Direktor] Plan-Neufassung, Triage, Kalibrierungs-Priorität
 
 ### Scorecard-Verlauf (Trajektorie 03.08. → 05.08. → 07.08.)
