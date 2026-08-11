@@ -5,6 +5,35 @@
 
 ---
 
+## 2026-08-11 — [Dev] SPEC-006: Implementierung blockiert — Tool-Gated-Tier-2 regrediert `blueprint_reachability` (cron)
+
+### Aufgabe & Versuch
+Offene PLAN-Task SPEC-006 (oberste nicht-gates Abhängigkeit): Werkzeug-als-Zutat-System (Tier-2-Blueprints mit `tool_tag`-Slot + einmaliger `NEW_COMPONENT:<tag>`-Reveal) soll `session_depth` aus der ~25-Stall-Grenze heben. Vor Umsetzung gegen `tools/scorecard.py` validiert — und dabei ein **Spec-fataler Annahmefehler** gefunden.
+
+### Befund — SPEC-006-Annahme „reachability bleibt 1.0" ist falsch
+Der Spec behauptet: „Tier-2-Blueprints sind von Start an im `blueprint_reachability`-Zähler erreichbar (Reachability prüft nur, ob es eine legale Tag-Kombination gibt)." **Das implementierte `metric_reachability` tut das nicht.** Es sammelt nur Rohstoffe (3 Orte × 8× Gather), **baut nie ein Werkzeug**, und `_pair_slots` matcht Slot-Tags literal über `by_tag.get(tag)`. Ein Tier-2-Blueprint mit `CUTTING`/`CHOPPING`-Slot ist im Fresh-Gather-Lauf prinzipiell nie erfüllbar (kein Item trägt den Tag vor dem Toolbau) → zählt als **unreachable**.
+
+**Messung (n=20 reproduziert):** aktuell `blueprint_reachability` = **0.75** (8 Blueprints, nur 6 reachable — `spear`/`spear_bound` bereits family-bedingt unreachable; das ist exakt der REC-001-Zählfehler, wahr ~1.0). Ergänzt man die 3 vorgeschlagenen Tool-Gated-Tier-2-Blueprints (`rope`/`spear_cord`/`shelter_dry`), sinkt der Zähler auf:
+- +1 → **0.667**, +2 → **0.600**, +3 → **0.545**
+
+Ein klarer Regress auf einer geschützten Metrik (`höher = besser`, Version 1). Die Metrik zu kompensieren hieße `scorecard._pair_slots` anzufassen — **Peters Freigabe** (Constitution: scorecard.cpp + METRICS = unantastbarer Kern; das ist die REC-001-Gate-Familie).
+
+### Konsequenz
+**SPEC-006 in dieser Form ist nicht schadlos lieferbar.** Der zentrale Hebel (Tool-gated Tier-2) drückt die Metrik, die er nicht verändern soll. Und er reicht über REC-001 hinaus: selbst mit dem Familien-Fix blieben Tier-2 unreachable, weil der Zähler auch dann keine Werkzeuge *baut* — es braucht eine echte „tool-aware reachability" (Zähler modelliert Tool-Bau als Vorschritt). Beides = Metrik-Berechnung = Peters Entscheidung.
+
+Aus demselben Grund wurde **nichts** angefasst: auch der `NEW_COMPONENT`-Reveal ohne Tier-2-Blueprints wäre irreführend (Hinweis „lässt sich weiter verbinden", wenn nichts weiter verbindbar ist) — reiner Scaffolding-Code, YAGNI.
+
+### Empfehlung an Peter / Direktor
+1. **Auf Freigabe legen, nicht implizit implementieren.** SPEC-006 gehört in dieselbe Familie wie REC-001 (Metrik-seitige Freigabe nötig), nicht in die normale Dev-Linie.
+2. Optionen: **(A)** reachability zu „tool-aware" erweitern (Freigabe) → Tier-2 landet sauber, `session_depth` steigt wie beabsichtigt. **(B)** SPEC-006 zurückstellen, bis das REC-001-Gesamtpaket (Familien-Auflösung + tool-aware) entschieden ist. **(C)** Tier-2 *ohne* Tool-Gate als flache Items — nicht empfohlen (kaum `session_depth`-Gewinn, streift Nicht-Ziel „Content als Selbstzweck").
+3. `discovery_gap` bleibt ohnehin REC-001/SPEC-003 vorbehalten — jetzt gilt das auch für `blueprint_reachability` und damit für die ganze „tool as ingredient"-Schicht.
+
+**Ehrlichkeit:** Der Kern-Versuchswert von SPEC-006 (`session_depth` steigend) ist ohne Metrik-seitige Freigabe nicht lieferbar — die Erkenntnis „jedes Entdeckte kann Zutat sein" ist System-Tiefe, aber sie erfordert, dass der Fitness-Zähler das auch misst, sonst verlieren wir auf Metrik A, was wir auf Metrik B gewinnen wollen.
+
+Kein Spiel-/Metrik-Code geändert. Commit: nur JOURNAL/BACKLOG/PLAN-Dokumentation.
+
+---
+
 ## 2026-08-11 — [Research] SPEC-006: Zweite Entdeckungsschicht — Werkzeug als Zutat (`session_depth`)
 
 ### Metrik-Wahl (aus den Zahlen)
