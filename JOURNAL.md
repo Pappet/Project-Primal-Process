@@ -5,6 +5,26 @@
 
 ---
 
+## 2026-08-11 — [Research] SPEC-006: Zweite Entdeckungsschicht — Werkzeug als Zutat (`session_depth`)
+
+### Metrik-Wahl (aus den Zahlen)
+Schwächste/stagnierende Metrik: **`session_depth` = 25**, flach über vier Messungen (24→26→25→25), Richtung „höher besser“. Play 10.08. bestätigt präzise: alle 8 Blueprints + 4 Prozesse + 15 Templates sind in **~25–37 Aktionen geleert** (unter optimalem Spiel nicht höher als naiv) — danach verheißt nichts mehr eine neue Entdeckung; `_run_session_depth` stoppt am `stall_limit` bei unverändertem `_novelty_set`.
+
+**Warum nicht die anderen Band-/Schwächen-Metriken:** `discovery_gap` ist durch REC-001 unzuverlässig (wahr ≈0.625, Zählfehler) und braucht Peters Freigabe — kein verifizierbares Ziel bis dahin (SPEC-003 bleibt suspendiert). `forage_pressure` 0.707 ist Probe bis 20.08., definitionsabhängig hoch, keine Entscheidung vor Probeende. `session_depth` ist die sauberste, verifizierbare Langeweile-Metrik und PLAN-Priorität #1.
+
+### Mechanik (aus Spielen)
+Kernbefund: Alle Blueprints sind von Start an craftbar (nur Rohstoff-Slots, `min_survival_req=0`). Ein gebautes Werkzeug fügt Tags hinzu (`CHOPPING/CUTTING/PIERCE/SHOVEL`), aber **kein Blueprint nimmt ein Werkzeug als Komponente** — Discovery ist flach und endlich, Entdeckung zeugt keine Entdeckung. Quelle: **Little Alchemy** (Entdecktes wird selbst zur Zutat — selbstverstärkender Raum) + **Don't Starve / Prototyper** (Besitz einer Komponente schaltet Richtungswissen frei). Adaption: kleiner Tier-2-Blueprintsatz, dessen Slots ein `tool_tag` verlangen (Engine matcht das schon über `_slot_satisfied`), plus einmaliger `NEW_COMPONENT:<tag>`-Reveal pro neuem Werkzeug-Typ → Discovery wird gestuft statt flach, der stallende Runner bekommt nach der alten Erschöpfungsstelle ein neues Ziel.
+
+### Abgelegt
+- `specs/SPEC-006-second-order-crafting.md` — Problem/Mechanik/Adaption (Dateien: `blueprints.json`, `components.py`, `core.py`, `tests`)/Akzeptanz/Metrik-Wirkung.
+- PLAN.md Task ergänzt (offen, Dev von oben nach unten).
+- Constitution-geprüft: kein Rezept-Leak (Hinweis nennt weder Item noch fehlenden Tag), stdlib only, keine Metrik entfernt/abgeschwächt, Discovery vertieft statt abgekürzt. Kein Metrik-Code angefasst.
+
+### Risiko / Ehrlichkeit
+Effektgröße hängt am Tier-2-Umfang: nur 1–2 Blueprints ergeben wenig; 3 mit Werkzeug-Gate verschieben die Stall-Grenze realistisch von ~25 auf ~35+. `discovery_gap`: nicht beabsichtigt (bleibt REC-001/SPEC-003 vorbehalten). Der Spec definiert das System (Werkzeug-als-Zutat + Einmal-Reveal + gestufte Erreichbarkeit); Detail-Balance (exakte Tier-2-Items) entscheidet der Direktor/Dev.
+
+---
+
 ## 2026-08-10 — [Dev] skill_spread-Regress: Befund — kein echter Tiefen-Regress, sondern gehobene Einsteiger-Decke (cron)
 
 ### Rückwärtsprüfung (nur Lese-Analyse, kein Metrik-Code angefasst)
