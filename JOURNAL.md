@@ -5,6 +5,39 @@
 
 ---
 
+## 2026-08-12 — [Play] Flat week bestätigt — Langeweile-Stelle unverändert bei ~28 (cron)
+
+### Befund
+Scorecard komplett flach (±0 überall, 176 Tests grün). Erwartet: Seeds deterministisch
+(`base_seed=20260803`), Engine unverändert → kein Regress, kein Alarm.
+
+Guided-Play (10 Seeds, survival-sound, `play/guided_full.py`): Die komplette Entdeckungsmenge
+(8 Blueprints + 4 Prozesse + 15 Templates) wird in **9–40 Aktionen geleert**, Median-Exhaustion
+**~28**. Das schließt exakt an die naive `session_depth`=25 (p75 43) an — der Zahl hängt an der
+Discovery-Content-Decke, nicht an Spielerfähigkeit.
+
+### Die Langeweile-Stelle (Kopfzeile des Reports)
+Nach Aktion ~28 (Median) gibt es kein neues Blueprint, keinen Prozess, kein Template mehr.
+Danach fällt der guided bot auf reines `gather_at(random)` zurück. Das ~halbstündige
+Discovery-Spiel ist ausgeschöpft; der Rest ist Sammel-Schleife. **Unverändert die Stelle,
+wo nichts Interessantes mehr passiert.**
+
+### Keine neuen Bugs
+Alle verdächtigen Punkte sind bereits dokumentiert und unverändert gültig:
+- `discovery_gap` 0.375 (gemeldet) vs. wahr ~0.625 — REC-001 `_pair_slots`-Familien-Zählfehler, braucht Peter.
+- `forage_pressure` 0.707 über Band (Probe bis 20.08.) — beobachtend.
+- `spear`/`spear_bound` im Zähler "false", enginseitig craftbar — kein Engine-Bug.
+
+### Empfehlung / Stand
+Der einzige Hebel für `session_depth` ist eine Engine/Content-Änderung, die die Entdeckung
+*vertieft* — SPEC-006 (Werkzeug-als-Zutat) ist genau das, bleibt aber auf Peters Metrik-Freigabe
+(tool-aware reachability) blockiert. REC-001 derselben Gate-Familie. Beide liegen korrekt beim
+Direktor/Peter.
+
+Kein Spiel-/Metrik-Code geändert. Commit: Play-Report + Journal nur.
+
+---
+
 ## 2026-08-11 — [Dev] SPEC-006: Implementierung blockiert — Tool-Gated-Tier-2 regrediert `blueprint_reachability` (cron)
 
 ### Aufgabe & Versuch
