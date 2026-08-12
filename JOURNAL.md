@@ -5,6 +5,37 @@
 
 ---
 
+## 2026-08-12 — [Dev] REC-001 Patch-Entwurf geliefert — Reachability-Kalibrierung (cron)
+
+### Aufgabe
+PLAN-Task REC-001 (oberste offene): **Patch-Entwurf** für den Reachability-Zählfehler
+(`scorecard.py::_pair_slots` löst `TAG_FAMILIES` nicht auf) + **Wirkungsabschätzung** — als Vorschlag an
+Peter, **nicht angewendet/committet** (Constitution: Metrik-Berechnung unantastbar bis Freigabe).
+
+### Was geliefert wurde
+`proposals/REC-001-pair-slots-reachability-fix.md` — kompletter Patch-Entwurf (Familien auf
+Mitglieds-Tags auflösen, analog `engine.core._slot_satisfied`), Impact-Tabelle, Test-Skizze (nur für
+späteren Freigabe-Commit), Abgrenzung zu SPEC-006 (tool-aware reachability ist separat).
+
+### Verifizierte Wirkung (n=50, 20 Seeds, deterministisch — Scratch-Simulation, scorecard.py unangetastet)
+| | gemeldet (jetzt) | wahr (mit Patch) |
+|---|---|---|
+| `blueprint_reachability` | 0.75 | **1.0** |
+| `naive_discovery_rate` | 0.375 | 0.375 (Engine-consistent, unverändert) |
+| `discovery_gap` | 0.375 (im Band 0.2–0.6) | **0.625 (über Band 0.6)** |
+
+Einzige Detailänderung: `spear`, `spear_bound` `False → True`. Alle 6 anderen Blueprints schon `True`.
+**Der gemeldete "komfortable" Gap war ein Artefakt der Zählweise; die Discovery-Lücke ist real groß
+(naiv findet 0.375 von erreichbar 1.0).**
+
+### Status
+- REC-001 in PLAN auf `[x]` gesetzt (Lieferung des Entwurfs ist die Akzeptanz); **Anwendung/Commit der
+  Metrik-Änderung wartet auf Peters Freigabe** — unverändert Gatter für SPEC-003.
+- Kein Spiel-/Metrik-Code geändert. Commit: nur Vorschlag-Dokument + PLAN/JOURNAL/BACKLOG-Doku.
+- `python -m pytest` grün (176).
+
+---
+
 ## 2026-08-12 — [Play] Flat week bestätigt — Langeweile-Stelle unverändert bei ~28 (cron)
 
 ### Befund
