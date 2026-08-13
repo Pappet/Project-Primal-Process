@@ -497,6 +497,11 @@ class TestProcessSystem:
 
     def test_cook_meat_from_raw_meat(self):
         engine = GameEngine()
+        # SPEC-007: cook_meat braucht ein AKTIVES Location-Feuer (HEAT_SOURCE-Gate)
+        self._give(engine, "reeds", 1)   # KINDLING-Werkzeug
+        self._give(engine, "tinder", 1)
+        self._give(engine, "stick", 2)
+        assert engine.execute_process("start_fire")["success"] is True
         self._give(engine, "raw_meat", 1)
         res = engine.execute_process("cook_meat")
         assert res["success"] is True
@@ -705,3 +710,188 @@ class TestStackMultiSlot:
         """NOT_ENOUGH_QUANTITY hat ein Label in _feedback_message."""
         from engine.core import _feedback_message
         assert "mehr" in _feedback_message("NOT_ENOUGH_QUANTITY")
+
+
+class TestFireWarmthMechanic:
+    """SPEC-007: aktives Location-Feuer + Brennstoff + Isolation — die
+    Gegen-Schleife zur sonst unaufhaltsamen Unterkühlung.
+
+    Kernthese der Mechanik: Kälte bleibt eine spürbare Drohung, ist aber durch
+    eigenes Handeln (Feuer bauen, Brennstoff nachlegen, Kleidung herstellen)
+    abwendbar statt unvermeidbar.
+    """
+
+    def _give(self, engine, tpl, qty=1):
+        engine.player.inventory.add(create_item(tpl, qty))
+
+    def _light_fire(self, engine):
+        self._give(engine, "reeds", 1)   # KINDLING-Werkzeug
+        self._give(engine, "tinder", 1)
+        self._give(engine, "stick", 2)
+        return engine.execute_process("start_fire")
+
+    def test_start_fire_lights_location_fire(self):
+        """start_fire erzeugt nicht nur ein Item, sondern entzündet das Feuer AN
+        der Location (fire_active + Brennstoff)."""
+        engine = GameEngine()
+        loc = engine.current_location
+        assert loc.fire_active is False
+        res = self._light_fire(engine)
+        assert res["success"] is True
+        assert loc.fire_active is True
+        assert loc.fire_fuel > 0
+
+    def test_fire_contrast_at_cold_location(self):
+        """Feuer-Wärme-Kontrast: an kalter Location mit STORM+Nacht verliert man
+        mit Feuer deutlich weniger Körpertemperatur als ohne (Kontrolle)."""
+        loc_id = "mountain_peak"
+
+        def run(with_fire):
+            engine = GameEngine()
+            engine.travel(loc_id)
+            engine.current_weather = "STORM"
+            engine.tick_counter = 25  # Nacht (hour < 6) → kalt
+            if with_fire:
+                self._light_fire(engine)      # +5 Ticks Feuermachen
+            else:
+                engine._advance_time(5)       # gleiche Dauer ohne Feuer
+            for _ in range(20):
+                engine._advance_time(1, effort_multiplier=1.0)
+            return engine.player.body_temp
+
+        assert run(True) > run(False)
+
+    def test_cloak_adds_insulation_reduces_loss(self):
+        """Isolation (Fellumhang) senkt den Wärmeverlust am kalten Ort: gleiche
+        Kälte-Exposition, aber mit CLOTHING höhere Körpertemperatur."""
+        loc_id = "mountain_peak"
+
+        def run(with_cloak):
+            engine = GameEngine()
+            engine.travel(loc_id)
+            engine.current_weather = "STORM"
+            engine.tick_counter = 25
+            if with_cloak:
+                self._give(engine, "fur_cloak", 1)
+            for _ in range(30):
+                engine._advance_time(1, effort_multiplier=1.0)
+            return engine.player.body_temp
+
+        assert run(True) > run(False)
+        # Der Umhang selbst wirkt real: er addiert zur Gesamt-Isolation.
+        engine = GameEngine()
+        self._give(engine, "fur_cloak", 1)
+        assert engine.player.inventory.get_total_insulation() > 0
+
+    def test_fire_keeps_player_warm_with_clothing(self):
+        """Feuer + Kleidung zusammen verhindern effektiv die Unterkühlung — die
+        volle Loop. An einer kalten Location (Waldrand, STORM+Nacht) bleibt man
+        mit Feuer+Umhang (nahezu) bei voller HP, ohne bricht die Kälte herein."""
+        loc_id = "forest_edge"
+
+        def run(with_counter):
+            e = GameEngine()
+            e.travel(loc_id)
+            e.current_weather = "STORM"
+            if with_counter:
+                self._light_fire(e)
+                self._give(e, "fur_cloak", 1)
+            else:
+                e._advance_time(5)  # gleiche Dauer ohne Feuer
+            e.tick_counter = 25  # Nacht → kalt
+            for _ in range(15):
+                e._advance_time(1, effort_multiplier=1.0)
+            return e.player.hp
+        assert run(True) > run(False)
+
+    def test_fire_fuel_depletes_and_goes_out(self):
+        """Feuer brennt nur mit Brennstoff: fire_fuel sinkt pro Tick; bei 0
+        erlischt das Feuer mit FIRE_OUT-Meldung (nie still)."""
+        engine = GameEngine()
+        self._light_fire(engine)
+        loc = engine.current_location
+        assert loc.fire_active is True
+        fuel_start = loc.fire_fuel
+        assert fuel_start > 0
+        msg = engine._advance_time(int(fuel_start))
+        assert loc.fire_fuel == 0
+        assert loc.fire_active is False
+        assert msg and "FIRE_OUT" in msg
+
+    def test_stoke_fire_increases_fuel(self):
+        """Nachlegen (stoke_fire) erhöht den Brennstoff — Holz nachlegen hält
+        das Feuer am Leben (Long-Dark-Zyklus)."""
+        engine = GameEngine()
+        self._light_fire(engine)
+        self._give(engine, "reeds", 1)  # KINDLING-Brennstoff
+        fuel_before = engine.current_location.fire_fuel
+        res = engine.stoke_fire()
+        assert res["success"] is True
+        # Netto-Erhöhung (Nachlegen +8, minus 1 Tick Verbrennen)
+        assert engine.current_location.fire_fuel > fuel_before
+
+    def test_stoke_fire_requires_active_fire(self):
+        """Ohne aktives Feuer scheitert das Nachlegen ehrlich (NO_FIRE), ohne
+        Brennstoff zu verbrauchen."""
+        engine = GameEngine()
+        self._give(engine, "reeds", 1)
+        res = engine.stoke_fire()
+        assert res["success"] is False
+        assert res["reason"] == "NO_FIRE"
+        assert engine._count_template("reeds") == 1  # nichts verbraucht
+
+    def test_stoke_fire_requires_fuel_item(self):
+        """Feuer brennt, aber kein Brennstoff im Inventar → ehrliches Scheitern."""
+        engine = GameEngine()
+        engine._light_fire()  # Feuer direkt entzünden, Inventar bleibt leer
+        assert engine.current_location.fire_active is True
+        res = engine.stoke_fire()
+        assert res["success"] is False
+        assert res["reason"] == "MISSING_FUEL"
+
+    def test_cook_meat_requires_active_fire(self):
+        """required_tag_in_env ist HART: cook_meat (HEAT_SOURCE) klappt nur bei
+        aktivem Location-Feuer, sonst ehrlicher MISSING_ENV-Fehler."""
+        engine = GameEngine()
+        self._give(engine, "raw_meat", 1)
+        res = engine.execute_process("cook_meat")
+        assert res["success"] is False
+        assert res["reason"] == "MISSING_ENV:HEAT_SOURCE"
+        assert engine._count_template("raw_meat") == 1  # nichts verbraucht
+        # Mit Feuer klappt es
+        self._light_fire(engine)
+        res2 = engine.execute_process("cook_meat")
+        assert res2["success"] is True
+        assert engine._count_template("cooked_meat") == 1
+
+    def test_cook_meat_hidden_from_available_without_fire(self):
+        """available_processes blendet cook_meat ohne Feuer aus (Gate sichtbar)."""
+        engine = GameEngine()
+        self._give(engine, "raw_meat", 1)
+        assert "cook_meat" not in engine.available_processes()
+        self._light_fire(engine)
+        assert "cook_meat" in engine.available_processes()
+
+    def test_fur_cloak_makable_and_insulates(self):
+        """Fellumhang ist herstellbar (Prozess aus raw_meat+plant_fiber, CUTTING)
+        und trägt CLOTHING → die zuvor tote get_total_insulation lebt."""
+        engine = GameEngine()
+        # CUTTING-Werkzeug (Messer) herstellen
+        self._give(engine, "flint_shard")
+        self._give(engine, "stick")
+        engine.execute_experiment(list(engine.player.inventory.items))
+        self._give(engine, "raw_meat", 1)
+        self._give(engine, "plant_fiber", 2)
+        res = engine.execute_process("make_fur_cloak")
+        assert res["success"] is True
+        assert engine._count_template("fur_cloak") == 1
+        assert engine.player.inventory.get_total_insulation() > 0
+
+    def test_fire_out_and_no_fire_have_labels(self):
+        """Neue Reasons (FIRE_OUT, NO_FIRE, MISSING_FUEL, MISSING_ENV) haben
+        Labels in _feedback_message → feedback_quality bleibt konsistent."""
+        from engine.core import _feedback_message
+        assert "erlischt" in _feedback_message("FIRE_OUT")
+        assert "brennt kein Feuer" in _feedback_message("NO_FIRE")
+        assert "Brennholz" in _feedback_message("MISSING_FUEL")
+        assert "Wärmequelle" in _feedback_message("MISSING_ENV:HEAT_SOURCE")

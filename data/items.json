@@ -84,5 +84,11 @@
     "weight": 2.0,
     "tags": {"KINDLING": true},
     "attributes": {"durability": 1.0}
+  },
+  "fur_cloak": {
+    "name": "Fellumhang",
+    "weight": 1.5,
+    "tags": {"CLOTHING": true},
+    "attributes": {"insulation": 0.6}
   }
 }

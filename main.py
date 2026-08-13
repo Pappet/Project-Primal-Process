@@ -16,7 +16,7 @@ def main():
         print(f"Umgebung: {amb_temp:.1f}°C | Körper: {p.body_temp:.1f}°C")
         print(f"HP: {int(p.hp)}/100 | ENERGIE: {int(p.energy)}/1000 | Survival: {p.stats['survival']:.1f}")
         print("-" * 50)
-        print("[g]ather, [e]xperiment, [p]rocess, [f]eed, [k]nowledge, [i]nventory, [t]ravel, [q]uit")
+        print("[g]ather, [e]xperiment, [p]rocess, [f]eed, [k]nowledge, [i]nventory, [t]ravel, [w]ärmen, [q]uit")
 
         if p.hp <= 0:
             print("\n!!! DU BIST VERHUNGERT. GAME OVER !!!")
@@ -63,6 +63,11 @@ def main():
             for bid in p.known_blueprints:
                 bp = game.blueprints[bid]
                 print(f"- {bp.result_name} ({list(bp.slots.values())})")
+            input("\nWeiter...")
+
+        elif cmd == 'w':
+            res = game.stoke_fire()
+            print(f"\n{res['message']}")
             input("\nWeiter...")
 
         elif cmd == 'p':

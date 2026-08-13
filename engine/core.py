@@ -31,7 +31,16 @@ TAG_LABELS = {
     "DURABILITY": "etwas Haltbares",
     "WOOD": "etwas aus Holz",
     "CLAY": "etwas aus Ton",
+    "CLOTHING": "Kleidung",
+    "HEAT_SOURCE": "eine Wärmequelle",
 }
+
+# Wärmemanagement (SPEC-007): Kennzahlen des Location-Feuers. Balanciert das
+# System "aktives Feuer aus/tragbare Isolation" — die Gegen-Schleife zur sonst
+# unaufhaltsamen Unterkühlung. Detail-Balance in Peters Sinne liegt beim Dev.
+FIRE_HEAT = 40.0          # Wärmebeitrag des aktiven Feuers zur Umgebungstemperatur
+START_FIRE_FUEL = 24.0    # Brennstoff-Ticks beim Entzünden (≈ 4 In-Game-Stunden)
+STOKE_FUEL = 8.0          # Brennstoff-Ticks, die nachgelegtes Holz/Machtsgut bringt
 
 # Tag-Familien (SPEC-002): Eine Slot-Anforderung kann ein Familienname sein,
 # der mehrere Tags subsumiert (Layer über den Einzel-Tags). Ein Item genügt der
@@ -82,6 +91,15 @@ def _feedback_message(reason: str, broken_names: "List[str] | None" = None) -> s
         return "Die Kombination ergibt nichts."
     if reason == "DEPLETED":
         return "Diese Stelle ist erschöpft. Komm später zurück."
+    if reason == "FIRE_OUT":
+        return "Dein Feuer erlischt."
+    if reason == "NO_FIRE":
+        return "Hier brennt kein Feuer."
+    if reason == "MISSING_FUEL":
+        return "Es fehlt dir Brennholz zum Nachlegen."
+    if reason.startswith("MISSING_ENV:"):
+        tag = reason.split(":", 1)[1]
+        return f"Hier fehlt {_label_for(tag)} in der Umgebung."
     return "Das geht so nicht."  # UNKNOWN-Fallback — nie eine generische Leer-Meldung
 
 
@@ -148,13 +166,25 @@ class GameEngine:
             self.player.hp -= 2.0 * ticks
             logs.append("!!! HUNGER-SCHADEN !!!")
 
-        # 2. Thermodynamik
+        # 2. Thermodynamik (SPEC-007: aktives Location-Feuer hebt die effektive
+        # Umgebungstemperatur, verbraucht aber Brennstoff, der über Zeit brennt.
+        # Bei Brennstoff 0 erlischt das Feuer mit einer ehrlichen Meldung — nie
+        # still. Das macht Kälte abwendbar statt unvermeidbar.)
         ambient_temp = self._get_ambient_temp()
-        exposure = self.current_location.exposure * self.weather_types[self.current_weather]["exposure_mod"]
+        fire_warmth = 0.0
+        loc = self.current_location
+        if loc.fire_active and loc.fire_fuel > 0:
+            fire_warmth = FIRE_HEAT
+            loc.fire_fuel = max(0.0, loc.fire_fuel - ticks)
+            if loc.fire_fuel <= 0:
+                loc.fire_active = False
+                logs.append("!!! FIRE_OUT: " + _feedback_message("FIRE_OUT") + " !!!")
+        exposure = loc.exposure * self.weather_types[self.current_weather]["exposure_mod"]
         insulation = self.player.inventory.get_total_insulation()
-        
+        effective_ambient = ambient_temp + fire_warmth
+
         # Delta zwischen Körper und Umwelt, abgemildert durch Isolation und Schutz
-        temp_loss = (self.player.body_temp - ambient_temp) * 0.01 * exposure * (1.0 - min(0.9, insulation))
+        temp_loss = (self.player.body_temp - effective_ambient) * 0.01 * exposure * (1.0 - min(0.9, insulation))
         self.player.body_temp -= (temp_loss * ticks)
         
         # Auswirkungen der Körpertemperatur
@@ -377,13 +407,79 @@ class GameEngine:
         t = TEMPLATE_DB.get(template_id)
         return t.name if t else template_id
 
+    # ------------------------------------------------------------------
+    # Wärmemanagement (SPEC-007) — Feuer entzünden, hüten, nachlegen
+    # ------------------------------------------------------------------
+
+    def _light_fire(self):
+        """Setzt den Location-Feuerzustand (aktives Feuer + Brennstoff).
+
+        Wird von execute_process("start_fire") gerufen, sobald das Feuer
+        entzündet ist. Das Feuer existiert dann an der Location, nicht nur
+        als Inventar-Gegenstand.
+        """
+        loc = self.current_location
+        loc.fire_active = True
+        loc.fire_fuel = START_FIRE_FUEL
+
+    def _fire_lit(self) -> bool:
+        """Ein aktives Feuer mit Brennstoff brennt an der aktuellen Location."""
+        loc = self.current_location
+        return bool(loc.fire_active and loc.fire_fuel > 0)
+
+    def _env_satisfied(self, tag: str) -> bool:
+        """Ob die Location ein Umgebungs-Tag erfüllt (z.B. HEAT_SOURCE)."""
+        if tag == "HEAT_SOURCE":
+            return self._fire_lit()
+        return False
+
+    def _find_fuel_item(self):
+        """Brennstoff-Item fürs Nachlegen: Holz (WOOD) bevorzugt, sonst Zunder/
+        Reisig (KINDLING) — aber nie die Feuergrube selbst."""
+        for it in self.player.inventory.items:
+            if "WOOD" in it.tags and it.condition > 0:
+                return it
+        for it in self.player.inventory.items:
+            if ("KINDLING" in it.tags and it.template_id != "fire_pit"
+                    and it.condition > 0):
+                return it
+        return None
+
+    def stoke_fire(self) -> Dict[str, Any]:
+        """Legt Brennstoff nach: erhöht fire_fuel, kostet Zeit (Long-Dark-Zyklus).
+
+        Nur bei aktivem Feuer möglich — ohne Feuer keine Wärme, man muss Holz
+        sammeln und es nachlegen, um warm zu bleiben.
+        """
+        loc = self.current_location
+        if not loc.fire_active:
+            return {"success": False, "message": _feedback_message("NO_FIRE"),
+                    "reason": "NO_FIRE"}
+        fuel = self._find_fuel_item()
+        if fuel is None:
+            return {"success": False, "message": _feedback_message("MISSING_FUEL"),
+                    "reason": "MISSING_FUEL"}
+        name = fuel.name
+        if fuel.quantity > 1:
+            fuel.quantity -= 1
+        else:
+            self.player.inventory.items.remove(fuel)
+        loc.fire_fuel += STOKE_FUEL
+        # Nachlegen ist Arbeit und vergeht Zeit — Brennstoff brennt weiter.
+        time_msg = self._advance_time(1, effort_multiplier=1.0)
+        msg = f"Du legst {name} nach. "
+        msg += (time_msg if time_msg else "")
+        return {"success": True, "message": msg.strip(), "reason": "SUCCESS"}
+
     def available_processes(self) -> List[str]:
-        """Prozesse, deren Inputs und Werkzeug-Anforderungen derzeit erfüllt sind."""
+        """Prozesse, deren Inputs, Werkzeug- und Umgebungs-Anforderungen erfüllt sind."""
         avail = []
         for pid, proc in self.processes.items():
             if any(self._count_template(i) < q for i, q in proc.inputs.items()):
                 continue
             if any(not self.player.inventory.find_item_by_tag(t) for t in proc.tools):
+                continue
+            if proc.required_tag_in_env and not self._env_satisfied(proc.required_tag_in_env):
                 continue
             avail.append(pid)
         return avail
@@ -391,9 +487,10 @@ class GameEngine:
     def execute_process(self, process_id: str) -> Dict[str, Any]:
         """Führt einen Prozess aus: konsumiert Inputs, nutzt Werkzeuge, erzeugt Outputs.
 
-        `required_tag_in_env` wird bewusst weich behandelt (SPEC-001: vorerst
-        optional, kein neues Tag zwangsgeprüft) — harte Standort-Gates folgen
-        später, sobald Locations selbst Tags tragen.
+        Seit SPEC-007 ist `required_tag_in_env` HART: Ein Prozess, der eine
+        Umgebungs-Anforderung deklariert (z.B. `cook_meat` → `HEAT_SOURCE`),
+        läuft nur, wenn die aktuelle Location sie erfüllt (aktives Feuer).
+        Das aktiviert das zuvor tote Feld und macht das Feuer real nötig.
         """
         proc = self.processes.get(process_id)
         if not proc:
@@ -411,6 +508,17 @@ class GameEngine:
                 return {"success": False,
                         "message": f"Es fehlt dir {_label_for(tag)} als Werkzeug.",
                         "reason": f"MISSING_TOOL:{tag}"}
+
+        if proc.required_tag_in_env and not self._env_satisfied(proc.required_tag_in_env):
+            return {"success": False,
+                    "message": _feedback_message(f"MISSING_ENV:{proc.required_tag_in_env}"),
+                    "reason": f"MISSING_ENV:{proc.required_tag_in_env}"}
+
+        # SPEC-007: start_fire entzündet das Location-Feuer, BEVOR die
+        # Entzündungsdauer vergeht — ein frisch gebautes Feuer wärmt schon
+        # während seines Aufbaus, statt den Spieler in der Kälte warten zu lassen.
+        if process_id == "start_fire":
+            self._light_fire()
 
         # Inputs verbrauchen, dann Zeit/Energie kosten (wie Crafting anstrengend)
         for item_id, qty in proc.inputs.items():

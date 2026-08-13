@@ -24,8 +24,8 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(ROOT))
 
-from engine.core import GameEngine, _label_for, TAG_LABELS  # noqa: E402
-from data.items import TEMPLATE_DB              # noqa: E402
+from engine.core import GameEngine, _label_for, TAG_LABELS, FIRE_HEAT  # noqa: E402
+from data.items import TEMPLATE_DB, create_item  # noqa: E402
 from data.blueprints import get_all_blueprints  # noqa: E402
 from data.locations import get_all_locations    # noqa: E402
 from data.loader import load_processes          # noqa: E402
@@ -497,6 +497,83 @@ def metric_forage_pressure():
 
 
 # ----------------------------------------------------------------------------
+# Metrik 10 — warmth_stability (SPEC-007, Probezeit)
+# "Kälte ist spürbar, aber durch eigenes Handeln (Feuer/Isolation) abwendbar."
+# ----------------------------------------------------------------------------
+
+# Kälte-Stress = ein Tick, an dem die ROHEN Umgebungstemperatur (ohne Feuer)
+# unter der Komfortschwelle liegt — d.h. wo OHNE Gegenmechanik die Unterkühlung
+# Richtung 35°C drückte. "warm" = der Spieler hält body_temp trotzdem >= 35°C
+# (durch ein unterhaltenes Feuer + isolierende Kleidung). Abweichung von der
+# Vorschlagsskizze (die effektive Temp. inkl. Feuer zählte): so misst die Metrik
+# die tatsächlich erlebte Kälte-Bedrohung, nicht den Moment, in dem das Feuer sie
+# schon weggewärmt hat — sonst gäbe es bei funktionierendem Feuer gar keinen
+# Kälte-Stress-Tick mehr und der Wert wäre nichtssagend.
+WARMTH_COMFORT = 25.0      # rohe Umgebung < dem = Kälte-Stress-Tick
+WARMTH_HYPOTHERMIA = 35.0  # body_temp-Schwelle für "warm überlebt"
+WARMTH_HORIZON = 200
+WARMTH_SEEDS = tuple(BASE_SEED + 2000 + i for i in range(20))
+
+
+def _run_warmth_stability(seed, horizon=WARMTH_HORIZON):
+    """Anteil der Kälte-Stress-Ticks, in denen der Spieler warm bleibt.
+
+    Geführte, survival-sound Policy mit Mid-Game-Ausstattung (Spieler hat die
+    Gegenmechanik entdeckt): Messer (CUTTING) für Feueraufbau, Fell-Umhang
+    (Isolation), Brennholz. Bei Kälte wird das Feuer unterhalten (anzünden bzw.
+    nachlegen). Gemessen: wie oft bleibt body_temp trotz Kälte-Stress >= 35°C?
+    """
+    random.seed(seed)
+    rng = random.Random(seed)  # noqa: F841 — Seed-Vielfalt für Gather-Determinismus
+    game = GameEngine()
+    inv = game.player.inventory
+
+    def give(tpl, qty=1):
+        inv.add(create_item(tpl, qty))
+
+    # --- Geführte Mid-Game-Ausstattung ---
+    give("flint_shard"); give("stick")
+    game.execute_experiment(list(inv.items))          # Messer (CUTTING)
+    give("fur_cloak")                                  # Isolation
+    give("reeds", 5)                                   # KINDLING + Brennstoff
+    give("tinder", 5)                                  # start_fire Input (mehrfach)
+    give("stick", 10)                                  # start_fire Input
+    give("log_oak", 50)                                # Nachlege-Holz (WOOD)
+
+    # Kalte, aber abwendbare Location: Waldrand bei Sturm — Kälte-Stress entsteht
+    # v. a. nachts, ein unterhaltenes Feuer hält den Spieler warm.
+    game.travel("forest_edge")
+    game.current_weather = "STORM"
+
+    cold_ticks, warm_ticks = 0, 0
+    for i in range(horizon):
+        # Tag/Nacht-Zyklus: überwiegend Nacht, damit periodischer Kälte-Stress
+        # entsteht (nachts am kältesten).
+        game.tick_counter = 25 if (i % 4 < 3) else 40
+        loc = game.current_location
+        # Policy: Feuer unterhalten — anzünden, wenn aus; NACHLEGEN, BEVOR der
+        # Brennstoff zur Neige geht (sonst würde ein Feuer-Ende den Spieler in
+        # der Kälte kaltstellen, obwohl er Holz zum Nachlegen hätte).
+        if not (loc.fire_active and loc.fire_fuel > 0):
+            game.execute_process("start_fire")
+        elif loc.fire_fuel < 15:
+            game.stoke_fire()
+        # Roh-Umgebung (ohne Feuer) — die tatsächliche Kälte-Bedrohung
+        raw = game._get_ambient_temp()
+        game._advance_time(1, effort_multiplier=1.0)
+        if raw < WARMTH_COMFORT:
+            cold_ticks += 1
+            if game.player.body_temp >= WARMTH_HYPOTHERMIA:
+                warm_ticks += 1
+    return warm_ticks / max(1, cold_ticks)
+
+
+def metric_warmth_stability():
+    """Anteil der Kälte-Stress-Ticks mit body_temp >= 35°C (Band-Metrik)."""
+    return _aggregate(lambda s: _run_warmth_stability(s))
+
+
+# ----------------------------------------------------------------------------
 # Aggregation über Seeds (Median + p25/p75)
 # ----------------------------------------------------------------------------
 
@@ -540,6 +617,7 @@ METRICS = [
     {"key": "session_depth", "desc": "Aktionen bis nichts Neues passiert", "fn": metric_session_depth, "direction": "höher = besser", "version": 1},
     {"key": "discovery_gap", "desc": "Abstand erreichbar vs. tatsächlich gefunden", "fn": metric_discovery_gap, "direction": None, "version": 1, "band": (0.2, 0.6)},
     {"key": "forage_pressure", "desc": "Anteil Sammel-Versuche an nicht-volem Node (Knappheit)", "fn": metric_forage_pressure, "direction": None, "version": 1, "band": (0.1, 0.5), "probation_until": "2026-08-20"},
+    {"key": "warmth_stability", "desc": "Anteil Kälte-Stress-Ticks, die warm überstanden werden (Feuer/Isolation)", "fn": metric_warmth_stability, "direction": None, "version": 1, "band": (0.4, 0.9), "probation_until": "2026-08-27"},
 ]
 
 METRIC_VERSIONS = {m["key"]: m["version"] for m in METRICS}

@@ -31,5 +31,13 @@
     "outputs": {"cooked_meat": 1},
     "duration_ticks": 3,
     "required_tag_in_env": "HEAT_SOURCE"
+  },
+  {
+    "id": "make_fur_cloak",
+    "name": "Fellumhang nähen",
+    "inputs": {"raw_meat": 1, "plant_fiber": 2},
+    "tools": ["CUTTING"],
+    "outputs": {"fur_cloak": 1},
+    "duration_ticks": 4
   }
 ]

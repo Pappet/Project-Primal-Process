@@ -256,6 +256,14 @@ class TestMetricsProduceValues:
         assert "defined_count" in m
         assert 0 <= m["value"] <= 1
 
+    def test_content_reachable_is_full(self):
+        """Alle definierten Items sind erreichbar (Gather oder Prozess-Output) —
+        16/16 (SPEC-007: fur_cloak via make_fur_cloak-Prozess, keine dangling refs)."""
+        m = sc.metric_content_reachable()
+        assert m["defined_count"] == 16
+        assert m["reachable_count"] == 16
+        assert m["value"] == 1.0
+
     def test_baseline_written_with_schema(self):
         sc.SCORECARD_DIR.mkdir(exist_ok=True)
         import tempfile

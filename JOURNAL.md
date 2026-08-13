@@ -5,6 +5,53 @@
 
 ---
 
+## 2026-08-13 — [Dev] SPEC-007 implementiert: Feuer & Wärme — Gegen-Schleife zur Unterkühlung (cron)
+
+### Aufgabe
+PLAN-Task SPEC-007 (oberste offene, aus Research 13.08.): die tote Thermodynamik
+lebendig machen — aktives Location-Feuer mit Brennstoff, tragbare Isolation,
+hartes `required_tag_in_env`-Gate. Explizit additiv, kein Metrik-Core entfernt/
+abgeschwächt (CONSTITUTION-konform).
+
+### Umgesetzt
+- **Location-Feuer-Zustand** (`data/locations.py::LocationDef`): `fire_active`,
+  `fire_fuel` pro Instanz (kein Cross-Session-Bleed, analog `ResourceNode.stock`).
+- **Thermodynamik** (`engine/core.py::_advance_time`): aktives Feuer hebt die
+  effektive Umgebungstemperatur (`FIRE_HEAT=40`), Brennstoff sinkt pro Tick, bei
+  0 erlischt das Feuer mit `FIRE_OUT`-Meldung (nie still).
+- **Feuer entzünden/nachlegen**: `_light_fire` beim `start_fire`-Prozess (wärmt
+  schon während des Aufbaus), neue Methode `stoke_fire()` (Holz/Zunder verbraucht,
+  `[w]ärmen`-CLI-Action). Ohne Feuer kein Nachlegen, ohne Brennstoff keine Wärme.
+- **Tragbare Isolation**: neues `fur_cloak` (CLOTHING, insulation 0.6) über neuen
+  `make_fur_cloak`-Prozess (raw_meat + plant_fiber, CUTTING) — der zuvor tote
+  `get_total_insulation()`-Pfad lebt. content_reachable bleibt 1.0 (16/16).
+- **required_tag_in_env HART**: `cook_meat` (HEAT_SOURCE) braucht ein aktives
+  Location-Feuer, sonst ehrlicher `MISSING_ENV`-Fehler; `available_processes`
+  blendet es ohne Feuer aus. Das tote Feld aktiviert.
+- Feedback-Labels für `FIRE_OUT`/`NO_FIRE`/`MISSING_FUEL`/`MISSING_ENV`;
+  `TAG_LABELS` um `CLOTHING`/`HEAT_SOURCE` ergänzt (Konsistenz-Wächter grün).
+
+### Verifikation
+- 12 neue/aktualisierte Tests (Feuer-Wärme-Kontrast, Kälte abwendbar durch
+  Feuer+Kleidung, Brennstoff-Erlöschen, Stoke, Isolation, cook_meat-Gate,
+  content_reachable 1.0). **189 Tests grün.**
+- FIRE_HEAT-Balance: 25→40 (an extremer Kälte sonst kaum Wirkung); Probe zeigt
+  Berg+STORM+Nacht weiter brutal (→ Shelter suchen), Waldrand+STORM mit Feuer+
+  Umhang abwendbar.
+
+### Metrik: `warmth_stability` aufgenommen (additiv, erlaubt)
+Die Vorschlags-Metrik (`metrics/proposed/warmth_stability.md`) ist der von SPEC-007
+designierte Primär-Beweis → in `MERICS`/`tools/scorecard.py` aufgenommen
+(**Probezeit bis 27.08.**, +14 Tage, Richtung None, Band 0.4–0.9). Policy: geführte
+survival-sound Ausstattung (Messer/Umhang/Brennholz), Feuer unterhalten, Roh-
+Umgebungs-Kälte-Stress zählend. **Erstwert 0.460, deterministisch (p25=p75), im Band.**
+
+### Verzichtet / bewusst nicht
+- Kein Metrik-Core entfernt/umdefiniert (nur ergänzt). SPEC-006 bleibt blockiert
+  (Peters Freigabe). forage_pressure unangetastet.
+- Detail-Balance (FIRE_HEAT/Brennstoff/Band) bleibt laut Spec bei Dev/Direktor —
+  Erstwert dokumentiert, Kalibrierung in der Probezeit.
+
 ## 2026-08-13 — [Research] SPEC-007: Feuer & Wärme — Gegen-Schleife zur Unterkühlung (Explorations-Modus, cron)
 
 ### Auftrag

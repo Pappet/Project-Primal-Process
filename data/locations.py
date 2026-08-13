@@ -42,6 +42,12 @@ class LocationDef:
     base_temp: float
     exposure: float
     nodes: List[ResourceNode] = field(default_factory=list)
+    # Fire-Zustand (SPEC-007): veränderlich pro Instanz, analog ResourceNode.stock
+    # (kein Cross-Session-Bleed — jeder GameEngine baut frische LocationDefs).
+    # fire_active: ein Feuer brennt an dieser Location.
+    # fire_fuel:  Brennstoff in Ticks, sinkt pro _advance_time; bei 0 erlischt das Feuer.
+    fire_active: bool = False
+    fire_fuel: float = 0.0
 
 
 def _node_from_data(n: ResourceNodeData) -> ResourceNode:
