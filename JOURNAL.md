@@ -5,6 +5,32 @@
 
 ---
 
+## 2026-08-13 — [Research] SPEC-007: Feuer & Wärme — Gegen-Schleife zur Unterkühlung (Explorations-Modus, cron)
+
+### Auftrag
+Freier Explorations-Modus: Mechanik gesucht, die das Spiel als **System** vertieft — bewusst nicht an eine bestehende Metrik gebunden. Feld u.a.: Feuer und Wärme, Verletzung/Heilung, Wetter, Werkzeugverschleiß.
+
+### Befund: tote Thermodynamik ohne Hebel (empirisch verifiziert)
+`engine/core.py` rechnet eine komplette Thermodynamik (`_get_ambient_temp` mit base_temp+Wetter+Tag/Nacht, `temp_loss`, `body_temp`, Unterkühlung/Hitzschlag in `_advance_time`). **Aber es gibt keinen einzigen Gegenmechanismus:**
+- `get_total_insulation()` summiert `insulation` aller Items mit `CLOTHING`-Tag → **kein Item im Spiel trägt `CLOTHING`**, Isolation ist dauerhaft 0. Der Test `test_components.py::test_total_insulation` konstruiert ein Fell, das real nicht herstellbar ist.
+- `fire_pit` (Template) trägt nur `KINDLING` — **wärmt nicht**.
+- `cook_meat.required_tag_in_env: "HEAT_SOURCE"` ist weich/nie umgesetzt.
+- **Empirisch (Probe):** `mountain_peak` + STORM + Nacht → ambient ≈ −18°C, `body_temp` −1.6°C/tic, ab <35°C HP −1/tic, Tod nach ~80 Ticks **ohne jede Gegenwehr**.
+
+Das ist eine echte System-Schwäche: Die Druck-Schraube (Kälte) existiert, aber der Hebel (Feuer/Kleidung) wurde nie angeschlossen.
+
+### Warum dieses Thema (kein Metrik-Zwang)
+Die Constitution will "Wachstum in Systemen, nicht nur in Inhalten" und "Entdecken vertieft". Hier existiert eine ganze Überlebensschicht **kodiert, aber unspielbar** — sie zu verdrahten gibt dem Spieler echte Entscheidungen (Feuer bauen, Brennstoff nachlegen, Schutz suchen, Kleidung herstellen) jenseits des Kombinations-Craftings. Kein Metrik-Anker nötig, kein Metrik-Core berührt.
+
+### Geliefert
+- `specs/SPEC-007-fire-warmth.md` — aktives Location-Feuer mit Brennstoff + tragbarer Isolation + hartem `required_tag_in_env`-Gate; Quelle: Long Dark (Brennstoff), UnReal World/Vintage Story (Kleidung/Isolation). Kein Freigabe-Gate (additiv).
+- `metrics/proposed/warmth_stability.md` — neue Metrik: Anteil der Kälte-Stress-Ticks mit `body_temp >= 35°C`, Band 0.4–0.9. Misst, ob Kälte durch die Mechanik wirklich *abwendbar* ist.
+- `PLAN.md`: SPEC-007 als offener Task.
+- Warum die Discovery-Metriken (`session_depth`/`skill_spread`) nur als Nebeneffekt berührt sind: Sie sind nicht Ziel dieses Modus — der Primär-Beweis liegt in der neuen Metrik.
+
+### Verzichtet
+Keine bestehende Metrik wurde angefasst. SPEC-006 bleibt blockiert (braucht weiter Peters Freigabe). Kein Kommando/keine Datei im Metrik-Core geändert.
+
 ## 2026-08-12 — [Dev] REC-001 Patch-Entwurf geliefert — Reachability-Kalibrierung (cron)
 
 ### Aufgabe
