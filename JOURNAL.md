@@ -5,6 +5,68 @@
 
 ---
 
+## 2026-08-14 — [Freigabe] REC-001 angewendet + DECISIONS.md für Peter
+
+### Freigabe (Peter)
+- **REC-001 freigegeben am 14.08.** und angewendet. Der Rest der freigabepflichtigen Punkte wurde in `DECISIONS.md` zusammengefasst, damit Peter sie in Ruhe durchlesen und einzeln entscheiden kann.
+
+### REC-001 angewendet (Reachability-Zähler kalibriert)
+- `tools/scorecard.py::_pair_slots` löst jetzt Tag-Familien (`SHARP_OR_RIGID`, `RIGID_OR_FIBER`, `SHARP_OR_HARD`) wie die Engine auf. Nur Zählweise korrigiert, kein Spielverhalten.
+- Verifizierte Wirkung (n=50 / 20 Seeds, deterministisch): `blueprint_reachability` 0.75→**1.0** (alle 8 Blueprints erreichbar), `discovery_gap` 0.375→**0.625** (über Band 0.6).
+- **Der "komfortable" Gap war ein Artefakt.** Wahr: naive Spieler findet (0.375) deutlich weniger als erreichbar wäre (1.0). Die Discovery-Lücke ist real groß.
+- Neue Tests: `_pair_slots` löst Familien auf, `metric_reachability()==1.0`, `discovery_gap > 0.6`.
+- `python -m pytest` → **192 passed**.
+- SPEC-003 ist damit verifizierbar, bleibt aber bewusst suspendiert (Gap über Band → weitere Discovery-Mechaniken könnten ihn Richtung Überführung drücken).
+
+### DECISIONS.md (Entscheidungsliste für Peter)
+Offene freigabepflichtige Punkte, je mit Optionen + Empfehlung:
+1. **skill_spread**-Neuinterpretation (A umdeuten / B umformen / C belassen).
+2. **craft_variety** zählt Prozesse (v2) + **content_reachable** dangling-Nodes (v2) — zwei unabhängige Ehrlichmacher.
+3. **SPEC-006** Werkzeug-als-Zutat (metrik-seitig blockiert; A tool-aware reachability / B aufschieben / C temporär unrealibel).
+4. **forage_pressure** (Probe bis 20.08.) + **warmth_stability** (Probe bis 27.08.) — beobachtend, kein Ziel.
+
+Wartet nichts, was das System anhält — der Direktor läuft weiter, Dev versorgt sich, neue Metriken in Probezeit. Die Liste ist für Qualitäts-Entscheide, nicht zum Freigeben eines Stillstands.
+
+---
+## 2026-08-14 — [Dev] Guided-Bot-Screening repariert: Wärme statt Erfrier-Tod (cron)
+
+### Aufgabe
+Alle PLAN-Tasks sind erledigt oder auf Peters Freigabe blockiert (REC-001, SPEC-006,
+SPEC-003 = Metrik-Core). Kein offener, implementierbarer PLAN-Task. Stattdessen das
+einzige konkrete, offene Tech-Debt aus Play 14.08. (🔵): `play/guided_full.py` ist seit
+SPEC-007 veraltet — das rekommendierte Guided-Screening friert sich tot und unterschätzt
+die Entdeckungsdecke. Reines Play-Messwerkzeug, kein Metrik-Core (CONSTITUTION-konform).
+
+### Befund (beim Einstieg reproduziert)
+`guided_full` erfror in fast jedem Seed mitten in der Discovery: `make_fur_cloak` fehlte
+in der Prozessliste (→ Stopp bei 4 statt 5 Prozessen), und der Bot legte nie Feuer nach
+(`stoke_fire`) → HP-negativ, Ketten brachen ab, die Entdeckungsmenge wurde unterschätzt.
+Nach SPEC-007 ist Kälte real: ohne Wärme-Infrastruktur stirbt naives Sammeln am Gipfel
+(exposure 1.0) vor der Entdeckung.
+
+### Fix (nur `play/guided_full.py`, Messwerkzeug)
+- **`_warmup`:** baut am warmen Waldrand (base_temp 15) die Wärme-Kette Knochen-Messer
+  (CUTTING) → Zunder → Feuer; holt kurz einen Kiesel am Gipfel (PROJECTILE, tool-frei)
+  fürs rohe Fleisch und näht den Fell-Umhang (Isolation 0.6) — die dokumentierte
+  Gegen-Schleife aus Play 14.08.
+- **`_fire_at`:** hält am Arbeits-Ort ein aktives Feuer (nachlegen unter `fire_fuel < 15`).
+- **`_warm_here`/`eat`:** Feuer am Ort unterhalten, bei Kälte kurzer Rückzug an den
+  Waldrand; isst gezielt gegen HP-Blut (Kälte kostet HP unter 35°C).
+- **Prozessliste** um `make_fur_cloak` ergänzt (5 statt 4 Prozesse erreichbar).
+
+### Verifikation
+- `python -m pytest`: **189 passed** (kein Engine-Code angefasst).
+- Screening auf 15 Seeds: **12/15 leeren volle 8/8 Blueprints** (vorher meist
+  Erfrier-Tod bei 4–5), `make_fur_cloak` + `start_fire` werden entdeckt; `last_new` 14–36
+  auf den primären Seeds. Restliche 3 seeds erfrieren noch in der kalten Gipfel-Sammel-Phase
+  (extreme exposure 1.0) — deutlich besser, nicht perfekt.
+- Kein Metrik-/Spiel-Code geändert. CONSTITUTION: Messwerkzeug frei; nichts entfernt/umdefiniert.
+
+### BACKLOG
+- 🔵 `guided_full.py`-Eintrag auf ✅ erledigt gesetzt.
+
+---
+
 ## 2026-08-14 — [Play] Scorecard + Playtest: Langeweile-Stelle unverändert, Kälte als Wartungsloop (cron)
 
 ### Befund (headline)

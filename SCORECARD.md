@@ -7,19 +7,19 @@
 | Metrik | Wert | Δ Vorwoche | Richtung | Beschreibung |
 |--------|------|-----------|----------|--------------|
 | actions_to_first_craft (v1) | 34.500 | ±0 | niedriger | Aktionen bis zum ersten erfolgreichen Craft (naiv) |
-| blueprint_reachability (v1) | 0.750 | ±0 | höher | Anteil erreichbarer Blueprints (N=50) |
+| blueprint_reachability (v1) | 1.000 | +0.250 ↑ besser | höher | Anteil erreichbarer Blueprints (N=50) |
 | craft_variety (v1) | 3.000 | ±0 | höher | Unterschiedliche Craft-Typen in 100 Aktionen |
 | skill_spread (v1) | 0.216 | ±0 | höher | Überlebens-Spanne optimal vs. zufällig |
 | feedback_quality (v2) | 1.000 | ±0 | höher | Anteil informativer Rückmeldungen (Label-Stimmt) |
 | content_reachable (v1) | 1.000 | ±0 | höher | Anteil sammelbarer definierter Items |
 | session_depth (v1) | 25.000 | ±0 | höher | Aktionen bis nichts Neues passiert |
-| discovery_gap (v1) | 0.375 | ±0 | im Band | Abstand erreichbar vs. tatsächlich gefunden |
+| discovery_gap (v1) | 0.625 | +0.250 | über Band | Abstand erreichbar vs. tatsächlich gefunden |
 | forage_pressure (v1) (Probe bis 20.08.) | 0.707 | ±0 | über Band | Anteil Sammel-Versuche an nicht-volem Node (Knappheit) |
 | warmth_stability (v1) (Probe bis 27.08.) | 0.460 | — (Baseline) | im Band | Anteil Kälte-Stress-Ticks, die warm überstanden werden (Feuer/Isolation) |
 
 ## discovery_gap — Zielband
 
-**Band: 0.2 – 0.6.** Keine Richtung (kein "höher = besser"). Unter 0.2 nimmt das Spiel den Spieler an die Hand; über 0.6 ist es faktisch unentdeckbar. `blueprint_reachability` (0.75) misst, was ein Orakel erreichen kann; `naive_discovery_rate` (0.375) was ein Spieler wirklich findet. Der Abstand dazwischen ist das eigentliche Spiel.
+**Band: 0.2 – 0.6.** Keine Richtung (kein "höher = besser"). Unter 0.2 nimmt das Spiel den Spieler an die Hand; über 0.6 ist es faktisch unentdeckbar. `blueprint_reachability` (1.0) misst, was ein Orakel erreichen kann; `naive_discovery_rate` (0.375) was ein Spieler wirklich findet. Der Abstand dazwischen ist das eigentliche Spiel.
 
 
 ## forage_pressure — Zielband
@@ -44,7 +44,7 @@
     "version": 1
   },
   "blueprint_reachability": {
-    "value": 0.75,
+    "value": 1.0,
     "per_blueprint": {
       "axe": true,
       "axe_bone": true,
@@ -52,8 +52,8 @@
       "knife": true,
       "knife_bone": true,
       "knife_stone": true,
-      "spear": false,
-      "spear_bound": false
+      "spear": true,
+      "spear_bound": true
     },
     "version": 1
   },
@@ -111,8 +111,8 @@
     "version": 1
   },
   "discovery_gap": {
-    "value": 0.375,
-    "blueprint_reachability": 0.75,
+    "value": 0.625,
+    "blueprint_reachability": 1.0,
     "naive_discovery_rate": 0.375,
     "naive_p25": 0.375,
     "naive_p75": 0.5,

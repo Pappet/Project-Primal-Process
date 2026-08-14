@@ -307,6 +307,37 @@ class TestDiscoveryGap:
         assert "höher" not in row[0].split("|")[4]
 
 
+# ----------------------------------------------------------------------------
+# REC-001 — Reachability-Zähler löst Tag-Familien auf (freigegeben)
+# ----------------------------------------------------------------------------
+
+class TestRec001FamilyReachability:
+    def test_pair_slots_resolves_family(self):
+        """Slot-Tag SHARP_OR_RIGID akzeptiert ein SHARP- oder RIGID-Item."""
+        from engine.core import GameEngine, TAG_FAMILIES
+        from data.items import create_item
+        engine = GameEngine()
+        # stick = RIGID, flint_shard = SHARP+HARD → beide erfüllen SHARP_OR_RIGID
+        engine.player.inventory.add(create_item("stick"))
+        engine.player.inventory.add(create_item("flint_shard"))
+        from data.blueprints import get_all_blueprints
+        spear = next(bp for bp in get_all_blueprints() if bp.id == "spear")
+        sel = sc._pair_slots(engine, spear)
+        assert sel is not None, "spear (Familien-Slots) muss im Fresh-Gather auflösbar sein"
+
+    def test_reachability_is_one_for_current_set(self):
+        """Nach Familien-Fix: alle 8 aktuellen Blueprints erreichbar → 1.0."""
+        m = sc.metric_reachability()
+        assert m["value"] == 1.0
+
+    def test_discovery_gap_above_band(self):
+        """Wahrer Gap liegt über Band-Obergrenze 0.6 (ehrlich, nicht abgeschwächt)."""
+        from engine.core import GameEngine
+        m = sc.metric_discovery_gap()
+        assert m["value"] > 0.6
+
+
+
 class TestForagePressure:
     """forage_pressure (SPEC-004, Probezeit) — Band-Metrik + Registrierung."""
 

@@ -33,7 +33,7 @@
       "version": 1
     },
     "blueprint_reachability": {
-      "value": 0.75,
+      "value": 1.0,
       "per_blueprint": {
         "axe": true,
         "axe_bone": true,
@@ -41,8 +41,8 @@
         "knife": true,
         "knife_bone": true,
         "knife_stone": true,
-        "spear": false,
-        "spear_bound": false
+        "spear": true,
+        "spear_bound": true
       },
       "version": 1
     },
@@ -100,8 +100,8 @@
       "version": 1
     },
     "discovery_gap": {
-      "value": 0.375,
-      "blueprint_reachability": 0.75,
+      "value": 0.625,
+      "blueprint_reachability": 1.0,
       "naive_discovery_rate": 0.375,
       "naive_p25": 0.375,
       "naive_p75": 0.5,

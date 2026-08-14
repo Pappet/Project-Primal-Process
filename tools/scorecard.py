@@ -24,7 +24,7 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(ROOT))
 
-from engine.core import GameEngine, _label_for, TAG_LABELS, FIRE_HEAT  # noqa: E402
+from engine.core import GameEngine, _label_for, TAG_LABELS, TAG_FAMILIES  # noqa: E402
 from data.items import TEMPLATE_DB, create_item  # noqa: E402
 from data.blueprints import get_all_blueprints  # noqa: E402
 from data.locations import get_all_locations    # noqa: E402
@@ -120,14 +120,26 @@ def metric_first_craft():
 # ----------------------------------------------------------------------------
 
 def _pair_slots(game, bp):
+    """Findet je ein distinctes Item pro Slot-Tag, Familien aufgelöst.
+
+    Slot-Tags können Tag-Familien sein (`SHARP_OR_RIGID`, `RIGID_OR_FIBER`…);
+    das lösen wir wie die Engine auf die Mitglieder auf, damit der Zähler exakt
+    das misst, was die Engine wirklich craften kann (REC-001, freigegeben).
+    """
     inv = [it for it in game.player.inventory.items
            if it.quantity >= 1 and it.condition > 0]
     by_tag = {}
     for it in inv:
         for t in it.tags:
             by_tag.setdefault(t, []).append(it)
-    slot_tags = [tag for _slot, tag in bp.slots.items()]
-    candidates = [by_tag.get(tag, []) for tag in slot_tags]
+
+    candidates = []
+    for _slot, tag in bp.slots.items():
+        members = TAG_FAMILIES.get(tag, {tag})
+        pool = []
+        for m in members:
+            pool.extend(by_tag.get(m, []))
+        candidates.append(pool)
 
     chosen = []
 
