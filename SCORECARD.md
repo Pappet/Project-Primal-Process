@@ -15,6 +15,7 @@
 | session_depth (v1) | 25.000 | ±0 | höher | Aktionen bis nichts Neues passiert |
 | discovery_gap (v1) | 0.375 | ±0 | im Band | Abstand erreichbar vs. tatsächlich gefunden |
 | forage_pressure (v1) (Probe bis 20.08.) | 0.707 | ±0 | über Band | Anteil Sammel-Versuche an nicht-volem Node (Knappheit) |
+| warmth_stability (v1) (Probe bis 27.08.) | 0.460 | — (Baseline) | im Band | Anteil Kälte-Stress-Ticks, die warm überstanden werden (Feuer/Isolation) |
 
 ## discovery_gap — Zielband
 
@@ -26,7 +27,12 @@
 **Band: 0.1 – 0.5.** Keine Richtung (kein "höher = besser"). Unter 0.1 nimmt das Spiel den Spieler an die Hand; über 0.5 ist es faktisch unentdeckbar. `blueprint_reachability` (None) misst, was ein Orakel erreichen kann; `naive_discovery_rate` (None) was ein Spieler wirklich findet. Der Abstand dazwischen ist das eigentliche Spiel.
 
 
-## Details (2026-08-12)
+## warmth_stability — Zielband
+
+**Band: 0.4 – 0.9.** Keine Richtung (kein "höher = besser"). Unter 0.4 nimmt das Spiel den Spieler an die Hand; über 0.9 ist es faktisch unentdeckbar. `blueprint_reachability` (None) misst, was ein Orakel erreichen kann; `naive_discovery_rate` (None) was ein Spieler wirklich findet. Der Abstand dazwischen ist das eigentliche Spiel.
+
+
+## Details (2026-08-14)
 
 ```json
 {
@@ -74,8 +80,8 @@
   },
   "content_reachable": {
     "value": 1.0,
-    "reachable_count": 15,
-    "defined_count": 15,
+    "reachable_count": 16,
+    "defined_count": 16,
     "reachable": [
       "berries",
       "bone",
@@ -83,6 +89,7 @@
       "cooked_meat",
       "fire_pit",
       "flint_shard",
+      "fur_cloak",
       "log_oak",
       "mushroom",
       "pebble",
@@ -119,6 +126,13 @@
     "value": 0.707,
     "p25": 0.612,
     "p75": 0.862,
+    "n_runs": 20,
+    "version": 1
+  },
+  "warmth_stability": {
+    "value": 0.46,
+    "p25": 0.46,
+    "p75": 0.46,
     "n_runs": 20,
     "version": 1
   }

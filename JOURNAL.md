@@ -5,6 +5,41 @@
 
 ---
 
+## 2026-08-14 — [Play] Scorecard + Playtest: Langeweile-Stelle unverändert, Kälte als Wartungsloop (cron)
+
+### Befund (headline)
+`session_depth` **25 (flach, deterministisch — erwartet)**, geführte Erschöpfung Median
+**~31 Aktionen** (n=10, Range 9–47, erweiterter Bot inkl. `make_fur_cloak`). SPEC-007
+hat genau EINEN Prozess zur Entdeckungsmenge beigetragen → +~3 Aktionen Erschöpfung.
+8 Blueprints + 5 Prozesse + 16 Templates sind in unter 30 Min realem Spiel geleert.
+**Die Langeweile-Stelle ist unverändert** — `session_depth` bleibt die Nordstern-Ziel;
+SPEC-006 ist der einzige geplante Hebel und blockiert auf Peters Freigabe (tool-aware
+reachability).
+
+### Zweitbefund: Kälte (SPEC-007) ist real — als Wartungsloop, nicht als Entdeckung
+- Naive Runs sterben jetzt an Unterkühlung (HP-negativ), nicht mehr nur an Hunger; überleben
+  aber länger. Gegen-Schleife **funktioniert**: Höhle + endloses Feuer + Fell-Umhang hält
+  body_temp bei 37, HP=0 über 400 Ticks (STORM/SNOW verifiziert).
+- `warmth_stability` 0.46 im Band, p25=p75=0.46 über alle Seeds — misst geführte
+  Einheits-Policy, spricht auf Einstiegsschwierigkeit nicht an. Flach-Erwartung.
+- **Der rekommendierte Guided-Bot friert sich tot** (HP −2…−73): nutzt `stoke_fire` nicht,
+  kennt `make_fur_cloak` nicht → misst Discovery-Decke nicht mehr sauber. → BACKLOG 🔵.
+
+### Drittbefund
+Naive Session-Frist wird heute von Kälte bestimmt statt von Hunger. Nach Entleerung der
+Entdeckung bleibt nur Wärme-Frieren. Mehr Überlebensschicht, aber dieselbe Leere in neuer
+Farbe.
+
+### BACKLOG
+- 🔵 `play/guided_full.py` seit SPEC-007 veraltet (fehlender `make_fur_cloak`/Stoke-Loop).
+- 🟡 Kälte = Wartungsloop ohne Entdeckungsziel; beobachten, ob sie in Spielziele einmündet.
+
+### Konstitution
+Nichts an Metriken/Antastbarem verändert. Scorecard gerechnet + SCORECARD.md aktualisiert
+(v2). Nur Play-reports/BACKLOG/JOURNAL geschrieben.
+
+---
+
 ## 2026-08-13 — [Dev] SPEC-007 implementiert: Feuer & Wärme — Gegen-Schleife zur Unterkühlung (cron)
 
 ### Aufgabe
