@@ -357,9 +357,26 @@ class GameEngine:
 
     def _create_tool(self, bp: ToolBlueprint, comp: Dict[str, Item]) -> Dict[str, Any]:
         dur_attr = min(c.get_attr("durability", 0.5) for c in comp.values())
-        main = comp.get("head") or comp.get("blade") or list(comp.values())[0]
+        # TASK-R02: Dynamische Slot-Erkennung statt hartkodierter "head"/"blade"-
+        # Fallbacks. Der Träger der Werkzeug-Effizienz ist der erste Bauteil mit
+        # Schärfe (sharpness > 0), unabhängig davon, wie der Slot heißt ("tip",
+        # "blade", "head", …). Konsistent mit crafting.py::create_dynamic_item.
+        # Fällt kein Bauteil mit Schärfe aus, zählt der erste als Hauptteil mit
+        # dem sharpness-Fallback 0.1 (Verhalten unverändert für alle aktuellen
+        # Blueprints). Dadurch bricht kein Blueprint: Der Speer (Slots "tip"/"shaft"),
+        # der zuvor über die generische Value-Fallback-Liste den spitzen Stein als
+        # Hauptteil nahm, wird jetzt über die Schärfe-Scan: identisch ermittelt.
+        comp_list = list(comp.values())
+        main = comp_list[0] if comp_list else Item("Empty", 0)
+        for c in comp_list:
+            if c.get_attr("sharpness", 0.0) > 0:
+                main = c
+                break
         power = main.get_attr("sharpness", 0.1) * bp.base_efficiency
-        name = f"{main.name}-{bp.result_name} ({list(comp.values())[1].name})"
+        if len(comp_list) >= 2:
+            name = f"{main.name}-{bp.result_name} ({comp_list[1].name})"
+        else:
+            name = f"{main.name}-{bp.result_name}"
         new_tool = Item(name=name, base_weight=sum(c.base_weight for c in comp.values()),
                         tags={"DURABILITY": dur_attr}, attributes={"durability": dur_attr, "power": power},
                         template_id=bp.id)

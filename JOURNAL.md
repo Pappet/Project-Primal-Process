@@ -5,6 +5,45 @@
 
 ---
 
+## 2026-08-15 — [Dev] R02: `_create_tool` dynamische Slot-Erkennung (Tech-Debt, cron)
+
+### Aufgabe
+Alle PLAN-Tasks sind erledigt oder auf Peters Freigabe blockiert (SPEC-006, SPEC-003 =
+Metrik-Core-Gate; forage_pressure beobachtend). Kein offener, implementierbarer PLAN-Task.
+Stattdessen das letzte konkrete offene 🔵 Tech-Debt (BACKLOG 29.07., **TASK-R02**):
+`engine/core.py:_create_tool` hatte `comp.get("head") or comp.get("blade")` als
+hartkodierte Slot-Namen-Fallbacks — inkonsistent mit der dynamischen Slot-Erkennung, die
+`crafting.py::create_dynamic_item` nach TASK-M03 nutzt.
+
+### Befund (beim Einstieg)
+Der alte Code wählte den Effizienz-Träger nur, wenn der Slot `head` oder `blade` hiess.
+Der Speer kam nur über den generischen `list(comp.values())[0]`-Fallback zum spitzen Bauteil
+(Slots `tip`/`shaft`) — funktionierte zufällig, war aber fragil (IndexError bei
+Ein-Slot-Blueprints via `list(comp.values())[1]`).
+
+### Fix (nur `engine/core.py:_create_tool`, Engine-Verhalten unverändert)
+- **Dynamische Schärfe-Scan:** der Hauptteil = erster Bauteil mit `sharpness > 0`,
+  unabhängig vom Slot-Namen (`tip`/`blade`/`head`/…). Fallback auf den ersten Bauteil bei
+  fehlender Schärfe — für alle 8 aktuellen Blueprints identisches Ergebnis wie vorher.
+- **Ein-Slot-sicher:** Name `{main}-{result_name} ({[1]})` nur noch bei ≥2 Komponenten,
+  sonst ohne Klammer-Teil (vorher `IndexError`-Risiko). Konsistent mit `crafting.py`.
+- Defensive `Item("Empty", 0)`-Leer-Fallback (unerreichbar, aber Linter-sauber).
+
+### Verifikation
+- `python -m pytest`: **194 passed** (vorher 192; +2 neue Tests in
+  `TestRCreateToolDynamicSlotDetection`: power aus scharfem `tip`-Slot, Ein-Slot-Name).
+- Metrik-Stabilität: `blueprint_reachability` **1.0**, `discovery_gap` **0.625** — identisch
+  (Scorecard liest nur `success`/`blueprint_id`, nie die tool-`power`).
+- `find_item_by_tag` prüft nur Tag-Präsenz — der `power`-Wert im tool_tag ist fürs Gameplay
+  derzeit ein reiner Indikator; Skalierung des Werkzeug-Nutzens bleibt offen (Idea, nicht Debt).
+
+### Constitution-Check
+Kein Metrik-Code angefasst; kein Content/Rezeptbuch geändert; CLI-Text unverändert; stdlib
+only; Spielverhalten identisch (nur robustere, konsistente Slot-Erkennung). Messwerkzeug-
+Charakter erfüllt — kein Metrik-Entfernen/Umdefinieren.
+
+---
+
 ## 2026-08-14 — [Freigabe] REC-001 angewendet + DECISIONS.md für Peter
 
 ### Freigabe (Peter)

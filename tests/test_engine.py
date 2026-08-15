@@ -895,3 +895,44 @@ class TestFireWarmthMechanic:
         assert "brennt kein Feuer" in _feedback_message("NO_FIRE")
         assert "Brennholz" in _feedback_message("MISSING_FUEL")
         assert "Wärmequelle" in _feedback_message("MISSING_ENV:HEAT_SOURCE")
+
+
+class TestRCreateToolDynamicSlotDetection:
+    """TASK-R02: _create_tool erkennt den Effizienz-Träger über die Schärfe,
+    nicht über hartkodierte Slot-Namen ("head"/"blade"). Ein Blueprint, dessen
+    aktiver (scharfer) Bauteil einen anderen Slot-Namen trägt (z.B. "tip"),
+    wählt trotzdem genau diesen als Hauptteil für power + tool_tags."""
+
+    def _blueprint(self, id_n, result, slots, tool_tags):
+        from engine.components import ToolBlueprint
+        return ToolBlueprint(id=id_n, result_name=result, slots=slots,
+                             base_efficiency=1.0, min_survival_req=0.0,
+                             tool_tags=tool_tags)
+
+    def test_tool_power_uses_sharp_component_not_slot_name(self):
+        """Der scharfe Bauteil in einem Nicht-"head/blade"-Slot bestimmt die power."""
+        engine = GameEngine()
+        engine.blueprints = {
+            "spear_x": self._blueprint("spear_x", "Speer",
+                                       {"tip": "SHARP_OR_RIGID", "shaft": "RIGID"},
+                                       ["PIERCE"])}
+        engine.player.inventory.add(create_item("flint_shard"))  # sharpness 0.9
+        engine.player.inventory.add(create_item("stick"))        # RIGID, kein sharpness
+        res = engine.execute_experiment(list(engine.player.inventory.items))
+        assert res["success"] is True
+        tool = next(i for i in engine.player.inventory.items if "Speer" in i.name)
+        # power stammt vom scharfen Feuerstein (0.9 * eff 1.0), nicht vom Stab
+        assert abs(tool.get_attr("power") - 0.9) < 1e-6
+        assert abs(tool.tags["PIERCE"] - 0.9) < 1e-6  # tool-tag trägt die power
+
+    def test_single_slot_blueprint_still_names_correctly(self):
+        """Ein-Slot-Blueprints brechen nicht an list()[1] (vorher IndexError)."""
+        engine = GameEngine()
+        engine.blueprints = {
+            "stone_knife": self._blueprint("stone_knife", "Steinwerkzeug",
+                                           {"tip": "SHARP"}, ["CUTTING"])}
+        engine.player.inventory.add(create_item("sharp_stone"))  # SHARP, sharpness 0.7
+        res = engine.execute_experiment(list(engine.player.inventory.items))
+        assert res["success"] is True
+        tool = next(i for i in engine.player.inventory.items if "Steinwerkzeug" in i.name)
+        assert abs(tool.get_attr("power") - 0.7) < 1e-6
