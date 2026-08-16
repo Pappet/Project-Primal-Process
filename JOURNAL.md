@@ -5,6 +5,54 @@
 
 ---
 
+## 2026-08-16 — [Direktor] Plan-Neufassung: discovery_gap ehrlich über Band → SPEC-003 reaktiviert (cron)
+
+### Scorecard-Verlauf (Trajektorie 03.08. → 14.08.)
+| Metrik | 03.08 | 05.08 | 07.08 | 10.08 | 12.08 | 14.08 | Lesart |
+|--------|-------|-------|-------|-------|-------|-------|--------|
+| actions_to_first_craft | 63 | 62 | 34.5 | 34.5 | 34.5 | 34.5 | ↑ gesund, stabil |
+| blueprint_reachability | 1.0 | 1.0 | 0.75 | 0.75 | 0.75 | **1.0** | ↑ REC-001, ehrlich |
+| craft_variety | 0.5 | 1.0 | 3.0 | 3.0 | 3.0 | 3.0 | ↑ gesund, stabil |
+| skill_spread | 0.315 | 0.259 | 0.216 | 0.216 | 0.216 | 0.216 | ↓→ klären (Deutung an Peter) |
+| feedback_quality | 1.0 | 1.0 | 1.0 | 1.0 | 1.0 | 1.0 | – Decke |
+| content_reachable | 0.667 | 1.0 | 1.0 | 1.0 | 1.0 | 1.0 | – Decke (16/16) |
+| session_depth | 24 | 26 | 25 | 25 | 25 | **25** | ↔ **stagniert — Langeweile-Stelle** |
+| discovery_gap | 0.5 | 0.25 | 0.375 | 0.375 | 0.375 | **0.625** | ↑ über Band (jetzt ehrlich) |
+| forage_pressure | – | – | 0.707 | 0.707 | 0.707 | 0.707 | Probe bis 20.08 |
+| warmth_stability | – | – | – | – | – | 0.460 | Probe bis 27.08 |
+
+**Was vorwärts geht:** `blueprint_reachability` 0.75→**1.0** (REC-001 angewendet 14.08.) — der Zähler löst Familien jetzt ehrlich auf. Einstieg gesund & stabil. **Was stagniert:** `session_depth` 25 (die Langeweile-Stelle, Nordstern), `skill_spread` 0.216 (geklärter Befund, wartet auf Peter). **Dunkelste Erkenntnis:** `discovery_gap` ist nach REC-001 **ehrlich 0.625 — über dem Band 0.6**. Naive Spieler finden nur 0.375 des Erreichbaren (1.0). Das Spiel ist aktuell eher schwer- als leicht entdeckbar — das deckt das `session_depth`-Bild (Entdeckungs-Leere nach ~25–31 Aktionen).
+
+### Entscheidung: SPEC-003 REAKTIVIERT
+Die frühere Aussetzung ("Überführung-Risiko, d.h. neue Discovery-Mechanik könnte Gap unter 0.2 drücken") galt Content-/Gap-erweiternden Mechaniken. **SPEC-003 ist das Gegenteil** — partieller Match (≥2/3 Slots) gibt generischen "gehört zusammen"-Hinweis, der naive Spieler **konvergiert**: es **schließt** die Lücke (naive_rate ↑, gap ↓), es vergrößert sie nicht. Es ist reines Feedback/Experimentiergedächtnis (Constitution-erlaubt), **kein Metrik-Core-Gate**. Und mit ehrlichem Zähler (REC-001 angewendet) ist seine Wirkung jetzt verifizierbar — die Aussetzungs-Bedingung ("Zähler unverlässlich") ist entfallen. ⇒ Höchster offener Dev-Task.
+
+### Entscheidung: SPEC-006 bleibt zurückgestellt (nicht nur wegen Freigabe)
+Zusätzlich zur tool-aware-reachability-Freigabe: Bei `discovery_gap` über Band (0.625) würde eine Tier-2-Schicht (mehr Entdeckungs-Content) die Lücke **weiter anheben** und `blueprint_reachability` regredieren. Reihenfolge ist jetzt zwingend: **erst Gap in Band (SPEC-003), dann neuer Discovery-Content (SPEC-006) neu bewerten.** Beides explizit in PLAN festgehalten.
+
+### skill_spread — klären, nicht fixen
+Befund steht (10.08., gehobene Einsteiger-Decke). Wartet auf Peters Deutungs-Entscheid (DECISIONS A/B/C). Metrik unangetastet (Constitution). Als eigener Task geführt, damit Dev nicht blind fixen versucht.
+
+### Triage (BACKLOG)
+- SPEC-003 reaktiviert (PLAN-Task), Recovery begründet.
+- SPEC-006 zurückgestellt (Freigabe + Gap-Reihenfolge).
+- Energie-Okonomie-Decke-Idee (10.08.) als ⚪/🔵 priorisiert notiert, nicht verworfen — mittelfristig ein `session_depth`/`skill_spread`-Hebel, aber erst nach Gap-Stabilisierung.
+
+### Self-Modification (Cron-Jobs)
+**Keine Cron-Änderungen.** Die reaktivierte SPEC-003 passt in die bestehenden Dev-Slots (Mo/Mi/Fr); PLAY/Research-Messung unangetastet. Kein echter Gap, der einen neuen Job rechtfertigt. "CONSTITUTION.md ist unantastbar" bleibt in allen Prompts.
+
+### Constitution-Check
+Kein Metrik-Core angefasst (`tools/scorecard.py`, `METRICS`, Scorecard-Dateien unverändert — REC-001 war bereits von Peter freigegeben). Kein Rezeptbuch geändert. Probe-Metriken (forage_pressure 20.08., warmth_stability 27.08.) bewusst nur beobachtend, **nicht** als Plan-Ziel. SPEC-003 ist reines Feedback (erlaubt), kein Rezept-Leak. Konform.
+
+### Artefakte
+- `PLAN.md` (komplett neu, 3 Sektionen)
+- `BACKLOG.md` (Triage-Note 16.08.)
+- `JOURNAL.md` (dieser Eintrag)
+
+### Verifikation
+`python -m pytest` grün (194 passed) vor jedem Schreiben.
+
+---
+
 ## 2026-08-15 — [Dev] R02: `_create_tool` dynamische Slot-Erkennung (Tech-Debt, cron)
 
 ### Aufgabe

@@ -38,6 +38,8 @@ Dinge die kaputt sind und gefixt werden müssen.
 > **Triage 2026-08-05:** 2 neue 🔴 Bugs (B06–B07) aus Play-Session — beide gefühlt [Play]. Nicht gebündelt.
 >
 > **Triage 2026-08-09 (Direktor):** ✅ B06 + B07 in Dev 07.08. gefixt (Template + Axt trägt SHOVEL) → nach "✅ Triaged". 🟡 Stack-Verschmelzung → **zu SPEC-005 promotet** (PLAN.md). Metrik-Änderungen (Reachability-Blindspot, craft_variety-zählt-Prozesse, content_reachable-blinde-Nodes) → konsolidiert als **Metrik-Anfrage an Peter** (REC-001, PLAN.md) — brauchen Freigabe, bleiben 🔴-frei notiert. forage_pressure / SPEC-003-Konflikte bleiben in Probezeit bzw. suspendiert.
+>
+> **Triage 2026-08-16 (Direktor):** ✅ REC-001 freigegeben+angewendet (14.08.) → `discovery_gap` ehrlich 0.625 über Band. 🟡 **SPEC-003 REAKTIVIERT** (16.08.): das Über-Band-Gap ist jetzt verifizierbar; SPEC-003 ist die einzige Discovery-Mechanik, die die Lücke *schließt* statt sie zu vergrößern, kein Metrik-Gate → PLAN.md-Task. 🟡 SPEC-006 bleibt auf Peters Freigabe (tool-aware reachability) zurückgestellt — mit Gap über Band würde eine Tier-2-Schicht ihn weiter anheben. skill_spread-Deutung weiter bei Peter (DECISIONS A/B/C). Backlog-Ideen bzgl. Energie-Okonomie-Decke (10.08.) bleiben als ⚪/🔵-Kandidat für spätere Specs notiert; mit Blick auf Discovery-Tiefe PRIORISIERT, nicht verworfen.
 
 ---
 
