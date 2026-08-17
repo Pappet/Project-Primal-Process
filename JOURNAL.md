@@ -5,6 +5,26 @@
 
 ---
 
+## 2026-08-17 — [Play] Scorecard flach — Langeweile-Stelle unverändert, guided Bot + cook_meat-Unterreport (cron)
+
+### Headline: `session_depth` 25 flach — nichts an der Entdeckungsschicht geändert
+Vollständig flache Scorecard vs. Vorwoche (±0 über alle 10 Metriken). Erwartet: deterministische Seeds (base_seed 20260803), Engine/Content seit 14.08. unverändert (nur REC-001 scorecard + R02 power-math, beide verhaltensneutral). Kein Regress, kein Alarm — die Zahlen bewegen sich nur, wenn ein Entdeckungs-LAYER landet, nicht durch weiteren Inhalt in derselben flachen Liste.
+
+Geführte Erschöpfung (HEAD-Bot, 20 Seeds): full-only-Median **~21**, Range 13–35. Die Decke bleibt: **8 Blueprints + 5 Prozesse + 16 Templates** in unter einer halben Stunde realem Spiel, danach reiner Gather-Grind. Das ist die Langeweile-Stelle — die wichtigste Zahl ist nicht ein Bug, sondern der Punkt, an dem nichts Interessantes mehr passiert.
+
+### Zweitbefund: guided Bot bleibt fragil — 35 % der Seeds verhungern/erfrieren mitten in der Entdeckung
+- Nur **13/20** Seeds erreichen alle 8 Blueprints; die übrigen 7 sterben mit hp < 0, body_temp ~23, **Energie 0** (Kälte-Drain verschärft das Verhungern).
+- Gipfel-Warmup-Ausflug gehärtet versucht (Feuer+Essen+Unterkühlungs-Abbruch), machte es minimal SCHLECHTER (12 vs 13/20) → revertiert. HEAD-Bot ist das beste verfügbare Messwerkzeug.
+- **`cook_meat` erreicht der Bot nur in 5/20 Seeds** — `eat()` frisst das rohe Fleisch (EDIBLE) selbst, bevor er kochen kann. Messwerkzeug-Unterreport des 5. Prozesses, kein Spiel-Bug (ein echter Spieler, der Kochen als Ziel kennt, spielt es voll). → BACKLOG 🔵 Tech Debt (Fix-Richtung: Fleisch vorenthalten + Reihenfolge).
+
+### Drittbefund: Kälte (SPEC-007) ist echte Gegen-Schleife, verschiebt aber die Langeweile-Stelle nicht
+Wärme-Haltung (Feuer nachlegen, Fell-Umhang) funktioniert als Mechanik und ist beantwortbar, aber sie ist ein **Wartungsloop**, kein neues Entdeckungsziel. `warmth_stability` 0.46, p25=p75 identisch (flache Policy, deterministisch). Verlängert Sessions konstant, ohne dass etwas Neues passiert — Friktion ohne Neuheit.
+
+### Fazit für Direktor
+Agenda unverändert und seit Wochen klar: **SPEC-003 zuerst** (kein Metrik-Gate, schließt die über-Band-`discovery_gap` 0.625), danach SPEC-006 neu bewerten. `session_depth` flach ist der bekannte Blockierer, nicht ein neuer Befund.
+
+---
+
 ## 2026-08-16 — [Direktor] Plan-Neufassung: discovery_gap ehrlich über Band → SPEC-003 reaktiviert (cron)
 
 ### Scorecard-Verlauf (Trajektorie 03.08. → 14.08.)
