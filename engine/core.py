@@ -71,6 +71,18 @@ def _label_for(tag: str) -> str:
     return TAG_LABELS.get(tag, f"etwas mit der Eigenschaft {tag}")
 
 
+def _missing_tags(bp, available) -> list:
+    """Repräsentierte fehlende Single-Tags eines Blueprints bzgl. der
+    verfügbaren Tag-Menge. Familien-Slots werden auf ihren Ziel-Tag aufgelöst.
+    Gibt die *fehlenden* Member zurück (leer → Voll-Treffer)."""
+    missing = []
+    for slot_value in bp.slots.values():
+        required = set(TAG_FAMILIES.get(slot_value, {slot_value}))
+        if not (required & available):
+            missing.append(next(iter(required)))
+    return missing
+
+
 def _feedback_message(reason: str, broken_names: "List[str] | None" = None) -> str:
     """Baut eine spielersprachliche Meldung exakt aus dem Reason-Code.
 
@@ -89,6 +101,10 @@ def _feedback_message(reason: str, broken_names: "List[str] | None" = None) -> s
         return f"{names} ist zerbrochen und kann nicht verwendet werden."
     if reason == "NO_MATCH":
         return "Die Kombination ergibt nichts."
+    if reason.startswith("NEAR_MISS:"):
+        # SPEC-003: reines Ja/nein auf die gehaltene Teilmenge — bestätigt den
+        # Weg, verrät weder das fehlende Item noch den Tag (kein Rezept-Leak).
+        return "Einige dieser Dinge scheinen zusammenzugehören, aber es fehlt noch etwas."
     if reason == "DEPLETED":
         return "Diese Stelle ist erschöpft. Komm später zurück."
     if reason == "FIRE_OUT":
@@ -273,32 +289,81 @@ class GameEngine:
     def _no_match_reason(self, selected_items):
         """Bestimmt den konkretesten Reason für einen Fehlschlag.
 
-        Wählt den Blueprint (passender Slot-Anzahl), dem der Spieler am nächsten
-        ist, und nennt daraus genau ein fehlendes Merkmal. Familien-Slots werden
-        auf ihren fehlenden Mitglieds-Tag aufgelöst, damit die Meldung ein
-        verständliches Label trägt (nie ein leeres Null-Feedback).
+        Priorität (SPEC-003 / SPEC-002):
+        1. Bekannter Blueprint (SPEC-002): Wer das Ziel bereits entdeckt hat,
+           bekommt das fehlende Merkmal genannt — die bestehende Hilfe, die
+           Vorwissen belohnt.
+        2. Unbekannter Blueprint mit ≥2/3 Treffern (SPEC-003): reines
+           Ja/nein-Signal (NEAR_MISS) auf die gehaltene Teilmenge, einmalig pro
+           Blueprint, ohne Rezept-/Tag-Leak. Konvergiert naive Spieler, ohne
+           ihnen etwas zu schenken.
+        3. Generischer Fallback: konkretes Merkmal eines unbekannten Blueprints
+           nur, solange noch gar kein Beinahe-Treffer gelaufen ist — danach
+           bleibt es still statt jeden Richtungsversuch erneut zu befeuern.
         """
         available = set()
         for it in selected_items:
             available.update(it.tags)
 
-        best = None  # (Nähe-Score, fehlender Tag fürs Label)
-        for bp in self.blueprints.values():
-            if len(bp.slots) != len(selected_items):
-                continue
-            missing = []
+        def _overlap(bp) -> int:
+            n = 0
             for slot_value in bp.slots.values():
                 required = set(TAG_FAMILIES.get(slot_value, {slot_value}))
-                if not (required & available):
-                    # Repräsentant fürs Label: der Ziel-Tag, der am nächsten liegt.
-                    missing.append(next(iter(required)))
+                if required & available:
+                    n += 1
+            return n
+
+        # 1. Bekannte Blueprints → konkretes Merkmal (SPEC-002). Vorrang, weil
+        #    entdecktes Wissen beim Wieder-Herstellen mehr wert ist als ein
+        #    neuer Entdeckungs-Hinweis auf ein anderes Ziel.
+        best_score, best_tag = -1, None
+        for bp in self.blueprints.values():
+            if bp.id not in self.player.known_blueprints:
+                continue
+            if len(bp.slots) != len(selected_items):
+                continue
+            missing = _missing_tags(bp, available)
             if not missing:
-                continue  # Volltreffer wäre schon im Haupt-Loop gefangen worden
+                continue
             score = len(bp.slots) - len(missing)
-            if best is None or score > best[0]:
-                best = (score, missing[0])
-        if best:
-            return f"MISSING_TAG:{best[1]}"
+            if score > best_score:
+                best_score, best_tag = score, missing[0]
+        if best_tag:
+            return f"MISSING_TAG:{best_tag}"
+
+        # 2. Unbekannte Blueprints → Beinahe-Treffer (SPEC-003). Einmalig: der
+        #    Blueprint wandert in near_misses und feuert nicht erneut.
+        near, near_overlap = None, 1  # muss ≥2 sein
+        for bp in self.blueprints.values():
+            if bp.id in self.player.known_blueprints:
+                continue
+            if bp.id in self.player.near_misses:
+                continue
+            o = _overlap(bp)
+            if 2 <= o < len(bp.slots) and o > near_overlap:
+                near_overlap, near = o, bp
+        if near is not None:
+            self.player.near_misses.add(near.id)
+            return f"NEAR_MISS:{near.id}"
+
+        # 3. Generisch — konkretes Merkmal nur, solange kein Beinahe-Treffer
+        #    lief (danach genügt der eine Hinweis; kein Dauer-Leak derselben
+        #    Materialrichtung).
+        if not self.player.near_misses:
+            best_score, best_tag = -1, None
+            for bp in self.blueprints.values():
+                if bp.id in self.player.known_blueprints:
+                    continue
+                if len(bp.slots) != len(selected_items):
+                    continue
+                missing = _missing_tags(bp, available)
+                if not missing:
+                    continue
+                score = len(bp.slots) - len(missing)
+                if score > best_score:
+                    best_score, best_tag = score, missing[0]
+            if best_tag:
+                return f"MISSING_TAG:{best_tag}"
         return "NO_MATCH"
 
     def execute_experiment(self, selected_items: List[Item]) -> Dict[str, Any]:

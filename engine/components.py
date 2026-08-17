@@ -75,3 +75,8 @@ class Player:
         
         self.known_blueprints: Set[str] = set()
         self.known_processes: Set[str] = set()
+        # SPEC-003: Experimentiergedächtnis für Beinahe-Treffer. Blueprint-IDs,
+        # für die der Spieler schon einmal eine latente ≥2/3-Teilkombination
+        # gemeldet bekommen hat (NEAR_MISS). Der Hinweis feuert pro Blueprint
+        # genau einmal — danach still bis zum echten Craft (keine Dauer-Belehrung).
+        self.near_misses: Set[str] = set()

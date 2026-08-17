@@ -15,7 +15,7 @@ Die Messung ist jetzt **ehrlich**: mit REC-001 (angewendet 14.08.) löst der Rea
 > Offene Aufgaben mit Akzeptanzkriterien. Dev arbeitet von oben nach unten.
 > `[ ]` offen · `[~]` in Arbeit · `[x]` erledigt
 
-- [ ] **SPEC-003 — Partielle Match-Erkennung (`discovery_gap` in Band).** REAKTIVIERT 16.08. (war suspendiert, weil der Zähler unlrelial war; jetzt ehrlich 0.625 über Band, Wirkung verifizierbar). Ziel: naive Spieler konvergieren statt „kalt" aufzugeben. Akzeptanz: Fehlschlag mit ≥2/3 Slots eines unbekannten Blueprints → generischer `NEAR_MISS`-Text ohne Rezept-Leak; Einmaligkeit (danach still bis echter Craft); `naive_discovery_rate` steigt, `naive_p25` > 0.375; keine Metrik umdefiniert (reines Gameplay/Feedback); `python -m pytest` grün. Quelle: SPEC-003-partial-match-recognition.md.
+- [x] **SPEC-003 — Partielle Match-Erkennung (`discovery_gap` in Band).** ✅ DEV 17.08. Fehlschlag mit ≥2/3 Slots eines unbekannten Blueprints → generisches `NEAR_MISS:<bp_id>` (Ja/nein auf die Teilmenge, kein Rezept-/Tag-Leak); einmalig pro Blueprint (Experimentiergedächtnis `Player.near_misses`), danach still bis zum echten Craft; bekannte Blueprints behalten das konkrete Merkmal (SPEC-002 vor SPEC-003). Quelle: SPEC-003-partial-match-recognition.md.
 - [ ] **SPEC-006 — Werkzeug als Zutat (`session_depth`).** ⚠️ **Blockiert — braucht Peters Freigabe (tool-aware reachability, Metrik-Core).** Bleibt zurückgestellt: mit `discovery_gap` über Band (0.625) würde eine Tier-2-Schicht die Lücke weiter anheben und `blueprint_reachability` regredieren. Erst nach SPEC-003 + stabiler Gap neu bewerten. Optionen A/B/C in DECISIONS.md / JOURNAL 11.08.
 - [~] *(beobachtend)* **forage_pressure (Probe bis 20.08.)** — kein Ziel. Erstwert 0.707 über Band 0.1–0.5 bleibt definitorisch verdächtig. Nach Probezeitende (in 4 Tagen) entscheiden: Definition/Band anpassen (braucht Peter) oder Spiel reiben lassen. Beobachten, nicht steuern.
 - [~] *(beobachtend)* **warmth_stability (Probe bis 27.08.)** — kein Ziel. Erstwert 0.460 im Band, p25=p75 identisch (flache Policy). Nach Probeende prüfen, ob Streuung informativer wird. Beobachten, nicht steuern.
@@ -23,6 +23,7 @@ Die Messung ist jetzt **ehrlich**: mit REC-001 (angewendet 14.08.) löst der Rea
 
 **Erledigt (Kontext):**
 - [x] **REC-001 — Reachability-Zähler kalibriert.** ✅ Freigegeben 14.08. + angewendet. `_pair_slots` löst Familien → `blueprint_reachability` 0.75→1.0, `discovery_gap` ehrlich 0.625 (über Band). Kein Spielverhalten geändert.
+- [x] **SPEC-003 — Partielle Match-Erkennung.** ✅ Dev 17.08. (siehe oben im Tasks-Block). `discovery_gap`-Hebel ohne Metrik-Gate.
 - [x] **SPEC-005 — Mengen-basiertes Mehrfach-Slot-Crafting.** Stack `quantity N` füllt N identische Slots; `NOT_ENOUGH_QUANTITY`-Feedback; kein Rezept-Leak; pytest grün.
 - [x] **SPEC-007 — Feuer & Wärme.** Aktives Location-Feuer (FIRE_HEAT 40), Stoke, `fur_cloak` (CLOTHING 0.6), hartes `required_tag_in_env`. `content_reachable` 1.0 (16/16). `warmth_stability`-Metrik ergänzt (Probe bis 27.08.).
 - [x] **skill_spread-Regress-Rückwärtsprüfung.** Befund 10.08.: kein Tiefen-Regress, gehobene Einsteiger-Decke; Metrik-Interpretation an Peter delegiert (DECISIONS A/B/C).

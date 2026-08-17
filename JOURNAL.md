@@ -5,6 +5,40 @@
 
 ---
 
+## 2026-08-17 — [Dev] SPEC-003 — Partielle Match-Erkennung implementiert (NEAR_MISS, cron)
+
+### Headline: `discovery_gap`-Hebel gelandet — ≥2/3 unbekannter Slots gibt reines Ja/nein
+
+**Scope:** `engine/core.py` (`_no_match_reason`, `_feedback_message`, `_missing_tags`), `engine/components.py` (`Player.near_misses`), `tests/test_engine.py` (6 neue Tests + 1 aktualisiert), `PLAN.md` (SPEC-003 [x]).
+
+**Mechanik:**
+- Beinahe-Treffer (NEAR_MISS) feuert bei Fehlschlag mit ≥2/3 Slots eines UNBEKANNTEN Blueprints. Meldung: *"Einige dieser Dinge scheinen zusammenzugehören, aber es fehlt noch etwas."* — kein Rezept-/Tag-Leak.
+- Einmalig pro Blueprint (`Player.near_misses: Set[str]`), danach still bis zum echten Craft (kein Dauer-Belehren derselben Richtung).
+- Bekannte Blueprints haben Vorrang: SPECIAL-002 (MISSING_TAG) feuert, wenn der Spieler schon ein Rezept kennt — Vorwissen schlägt Entdeckungs-Hinweis.
+- Generischer Fallback: konkretes Merkmal wird nur noch genannt, solange kein Beinahe-Treffer gelaufen ist. Danach: NO_MATCH statt Tag-Leak für unbekannte Blueprints.
+
+**Akzeptanz (alle grün):**
+- `test_near_miss_fires_for_rifid_fiber_combo`: stick+plant_fiber → `NEAR_MISS:axe`, keine Leak-Wörter.
+- `test_fully_unknown_single_slot_overlap_stays_missing_tag`: berries+mushroom (overlap 0) → kein NEAR_MISS, bleibt MISSING_TAG.
+- `test_near_miss_reported_once_only`: axe feuert nur einmal; wiederholte Versuche ≠ NEAR_MISS:axe.
+- `test_completing_near_miss_blueprint_succeeds`: nach NEAR_MISS → Volltreffer (flint+stick+plant_fiber) → SUCCESS, Axt in known.
+- `test_known_blueprint_still_hints_missing_tag`: Messer bekannt → RIGID+FIBER → MISSING_TAG:FLINT (SPEC-002 vor SPEC-003).
+- `test_near_miss_has_label`: `_feedback_message("NEAR_MISS:axe")` → generisch, kein Blueprint-Name.
+- 200/200 pytest passed.
+
+**Bekannte Nebeneffekte:**
+- `axe_bone` (BONE+RIGID+FIBER) ist ein eigener Blueprint und feuert eigenständigen NEAR_MISS, wenn der Spieler RIGID+FIBER hält (selbe 2 Materialien, aber andere Rezept-Variante). Das ist korrekt: verschiedene Rezepte, verschiedene Hinweise.
+- Speer (SHARP_OR_RIGID+RIGID, 2 Slots) kann nie near-missen, weil `overlap < len(bp.slots)` für len=2 und overlap=2 falsch ist (Volltreffer-Restriktion).
+
+**Erwartete Metrik-Wirkung (nächster Play-Job):**
+- `discovery_gap` 0.625 → **~0.3–0.4** (Mitte des Bands 0.2–0.6). Der über-Band-Wert, der SPEC-003 reaktivierte, sollte in den Bandbereich zurückkehren.
+- `naive_p25` > 0.0 (kein "findet nichts"-Schwanz mehr).
+- `session_depth` leicht steigend (Nebeneffekt: Spieler gibt weniger oft "kalt" auf).
+
+**Konstitution geprüft:** kein vorgegebenes Rezept, Experimentiergedächtnis erlaubt, CLI-Text erhalten, stdlib only. Keine Metrik umdefiniert oder entfernt.
+
+---
+
 ## 2026-08-17 — [Play] Scorecard flach — Langeweile-Stelle unverändert, guided Bot + cook_meat-Unterreport (cron)
 
 ### Headline: `session_depth` 25 flach — nichts an der Entdeckungsschicht geändert

@@ -181,18 +181,24 @@ class TestBlueprintFamilies:
         assert res["blueprint_id"] == "knife"
 
     def test_discovery_feedback_is_categorized(self):
-        """Fehlschlag mit bekanntem Ziel-Tag nennt konkretes Merkmal, nie generisch."""
+        """Fehlschlag mit ≥2/3 eines UNBEKANNTEN Blueprints → NEAR_MISS
+        (SPEC-003): reines Ja/nein-Signal, nie ein Tag-Leak. stick+plant_fiber
+        trägt RIGID+FIBER = 2 der 3 Axt-Slots, aber die Axt ist noch unbekannt
+        → `NEAR_MISS:axe` statt eines Rezept-Hinweises.
+        """
         engine = GameEngine()
-        # Spieler hat ein Festes + Faseriges (RIGID + FIBER), aber keine harte Klinge.
         engine.player.inventory.items.clear()
         self._give(engine, "stick")
         self._give(engine, "stick")
         self._give(engine, "plant_fiber")
         res = engine.execute_experiment(list(engine.player.inventory.items))
         assert res["success"] is False
-        assert res["reason"].startswith("MISSING_TAG:")
-        assert "fehlt" in res["message"]
+        assert res["reason"].startswith("NEAR_MISS:")
+        assert res["reason"] == "NEAR_MISS:axe"
+        # generische Bestätigung — kein konkretes Merkmal gemeldet
+        assert "gehören" in res["message"]
         assert "Nichts passiert" not in res["message"]
+        assert "Feuerstein" not in res["message"] and "faser" not in res["message"]
 
     def test_bone_gatherable_in_hidden_cave(self, monkeypatch):
         """Knochen (BONE) ist als Materialquelle erreichbar → BONE-Varianten machbar."""
@@ -201,6 +207,105 @@ class TestBlueprintFamilies:
         engine.travel("hidden_cave")
         engine.gather()
         assert any(i.template_id == "bone" for i in engine.player.inventory.items)
+
+
+class TestSpec3NearMiss:
+    """SPEC-003: Beinahe-Treffer-Erkennung. Fehlschlag mit ≥2/3 Slots eines
+    UNBEKANNTEN Blueprints → generisches `NEAR_MISS:<bp_id>` (Ja/nein auf die
+    Teilmenge, kein Rezept-/Tag-Leak), einmalig pro Blueprint (danach still bis
+    zum echten Craft). Bekannte Blueprints behalten das konkrete Merkmal
+    (SPEC-002)."""
+
+    def _give(self, engine, tpl, qty=1):
+        engine.player.inventory.add(create_item(tpl, qty))
+
+    def _combo(self, tpls):
+        """Setzt genau die Templates ins Inventar und experimentiert."""
+        engine = GameEngine()
+        engine.player.inventory.items.clear()
+        for t in tpls:
+            self._give(engine, t)
+        return engine, engine.execute_experiment(list(engine.player.inventory.items))
+
+    def test_near_miss_fires_for_rifid_fiber_combo(self):
+        """stick+plant_fiber (RIGID+FIBER) = 2 der 3 Axt-Slots, Axt unbekannt
+        → `NEAR_MISS:axe`, generische Meldung ohne Tag-Leak."""
+        engine, res = self._combo(["plant_fiber", "stick"])
+        assert res["success"] is False
+        assert res["reason"] == "NEAR_MISS:axe"
+        assert "gehören" in res["message"]
+        # keiner der konkreten Werkzeug-Tags wird verraten
+        for leak in ("Feuerstein", "Knochen", "Faser", "Scharf", "Holz",
+                     "Stein", "Wurf", "Grab", "Ton", "Kleidung", "Wärme"):
+            assert leak not in res["message"]
+
+    def test_fully_unknown_single_slot_overlap_stays_missing_tag(self):
+        """Nur 1 von ≥2 Slots getroffen (berries+mushroom) → kein NEAR_MISS,
+        bleibt beim konkreten Merkmal (Statistik ohne Beinahe-Hinweis)."""
+        engine, res = self._combo(["berries", "mushroom"])
+        assert res["success"] is False
+        assert not res["reason"].startswith("NEAR_MISS")
+
+    def test_near_miss_reported_once_only(self):
+        """Einmaligkeit: DERSELBE Beinahe-Treffer (axe) meldet genau einmal
+        NEAR_MISS und ist danach belegt; keine Dauer-Belehrung derselben
+        Richtung. (Eine andere Variante derselben Materialien, z.B. axe_bone,
+        ist ein eigener Blueprint und darf eigenständig befeuern.)"""
+        engine = GameEngine()
+        engine.player.inventory.items.clear()
+        self._give(engine, "plant_fiber")
+        self._give(engine, "stick")
+        first = engine.execute_experiment(list(engine.player.inventory.items))
+        assert first["reason"] == "NEAR_MISS:axe"
+        assert "axe" in engine.player.near_misses
+
+        # Wiederholung derselben Richtung: axe feuert NICHT erneut
+        second = engine.execute_experiment(list(engine.player.inventory.items))
+        assert second["reason"] != "NEAR_MISS:axe"
+        # und die belegte Richtung leaket keinen Tag nachträglich
+        assert "Feuerstein" not in second["message"]
+
+    def test_completing_near_miss_blueprint_succeeds(self):
+        """Nach NEAR_MISS schließt der echte Volltreffer ab: flint+stick+
+        plant_fiber → Axt SUCCESS und in known_blueprints (near_miss stört nicht)."""
+        engine = GameEngine()
+        engine.player.inventory.items.clear()
+        for t in ("plant_fiber", "stick"):
+            self._give(engine, t)
+        engine.execute_experiment(list(engine.player.inventory.items))  # → NEAR_MISS
+        self._give(engine, "flint_shard")
+        res = engine.execute_experiment(list(engine.player.inventory.items))
+        assert res["success"] is True
+        assert res["blueprint_id"] == "axe"
+        assert "axe" in engine.player.known_blueprints
+
+    def test_known_blueprint_still_hints_missing_tag(self):
+        """Bekanntes Messer bleibt bei MISSING_TAG: Wer FLINT+RIGID schon hat
+        (Messer entdeckt) und RIGID+FIBER hält, bekommt das fehlende Merkmal —
+        Vorwissen schlägt den Entdeckungs-Hinweis (SPEC-002 vor SPEC-003)."""
+        engine = GameEngine()
+        # Messer entdecken → knife bekannt
+        engine.player.inventory.items.clear()
+        self._give(engine, "flint_shard")
+        self._give(engine, "stick")
+        assert engine.execute_experiment(list(engine.player.inventory.items))["success"]
+        # jetzt RIGID+FIBER halten (kein FLINT)
+        engine.player.inventory.items.clear()
+        self._give(engine, "plant_fiber")
+        self._give(engine, "stick")
+        res = engine.execute_experiment(list(engine.player.inventory.items))
+        assert res["success"] is False
+        assert res["reason"].startswith("MISSING_TAG:")
+        assert "Feuerstein" in res["message"]
+
+    def test_near_miss_has_label(self):
+        """NEAR_MISS hat ein Label in _feedback_message (feedback_quality-Zweig),
+        es liest sich generisch und verrät keinen Blueprint-Namen."""
+        from engine.core import _feedback_message
+        msg = _feedback_message("NEAR_MISS:axe")
+        assert "gehören" in msg
+        assert "axe" not in msg
+        assert "Axt" not in msg
 
 
 class TestEngineCore:
