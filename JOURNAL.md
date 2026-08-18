@@ -5,6 +5,38 @@
 
 ---
 
+## 2026-08-18 — [Research] SPEC-008: Wissens-Gate — toter `min_survival_req`-Filter als metrik-sichere zweite Discovery-Schicht (`session_depth`, cron)
+
+### Metrik-Wahl (Metrik-Modus)
+Schwächste/stagnierende Metrik: **`session_depth` = 25**, flach über vier Messungen (24→26→25→25→25), Richtung „höher = besser“. Play 17.08. bestätigt die Langeweile-Stelle (8 BP + 5 Proz + 16 Templates in <30 min geleert).
+
+**Warum die Band-/Probe-Metriken übersprungen:** `discovery_gap` ist durch REC-001/SPEC-003 der Discovery-Lücke-Hebel mit eigenem Dev-Task (DEV 17.08) — kein neues Ziel. `forage_pressure` (Probe bis 20.08.) und `warmth_stability` (Probe bis 27.08.) sind beobachtend, kein Ziel. `skill_spread` wartet auf Peters Deutungs-Entscheid. `session_depth` ist die sauberste, verifizierbare Langeweile-Metrik (PLAN #1), und für sie gibt es einen **nicht-blockierten** Hebel.
+
+### Befund (systemisch): toter Fortschritts-Gate
+`engine/core.py:405` prüft `min_survival_req`, `execute_experiment` erhöht `survival` um **+0.2 je entdecktem Blueprint** (+0.1 je Prozess) — **aber alle 8 Blueprints tragen 0.0**. Das Feld ist voll kodiert, aber kein Blueprint nutzt es. Discovery hat keine Rückkopplung: Entdecken macht nichts Neues entdeckbar — dieselbe „Discovery erzeugt keine Discovery“-Lücke wie SPEC-006, aber ohne deren Metrik-Blocker.
+
+### Mechanik / Quelle
+**Valheim** (Werkbank-Stufen schalten Rezepte frei — Fortschritt, nicht Items) + **Little Alchemy / RuneScape-Skillgates** (man kombiniert, was man gelernt hat; kumulativer Skill-Score öffnet Rezepte). Adaptiert als Wissens-Gate: Tier-2-Blueprints mit `min_survival_req > 0`, erst nach ≥2 entdeckten Tier-1-Blueprints craftbar.
+
+### Verifizierte Metrik-Wirkung (n=20, deterministisch, per Monkeypatch — scorecard.py unangetastet)
+| Metrik | jetzt | mit 2 Tier-2 (`rope` 0.4, `cord_spear` 0.6) |
+|---|---|---|
+| session_depth | 25.0 (p25 21, p75 43) | **32.0** (p24, p50) |
+| blueprint_reachability | 1.0 | **1.0** (alle Tier-2 erreicht) |
+| discovery_gap | 0.625 | **0.6** (kein Überschießen) |
+
+**Das ist der entscheidende Unterschied zu SPEC-006:** das Wissens-Gate sperrt nur das *Versuchslaufen* eines Blueprints, nicht die Tag-*Existenz* — der Reachability-Zähler entdeckt Tier-1 zuerst (survival steigt), erreicht Tier-2 dann ebenfalls. Kein Engine-/Scorecard-Eingriff nötig (Feld + Akkumulation existieren). Nur `data/blueprints.json` + `data/items.json` + Tests.
+
+### Geliefert
+- `specs/SPEC-008-survival-gate-tier2.md` — Problem/Mechanik/Adaption/Akzeptanz/Metrik-Wirkung + Probe-Skript.
+- PLAN.md: SPEC-008 als offener Task (über SPEC-006, da lieferbar ohne Freigabe).
+- Constitution-geprüft: kein vorgegebenes Rezept, Experimentiergedächtnis/Skill erlaubt, CLI-Text bleibt, stdlib only, keine Metrik entfernt/abgeschwächt (additiv), Metrik-Core unangetastet.
+
+### Risiko / Ehrlichkeit
+Effektgröße hängt am Tier-2-Umfang (1–2 BP ≈ wenig; 2–3 schieben realistisch 25→~30+). Balance (exakte Items/Score) entscheidet Dev/Direktor. `discovery_gap` wird primär von SPEC-003 geschlossen; SPEC-008 hebt sie nicht über Band (0.6 verifiziert).
+
+---
+
 ## 2026-08-17 — [Dev] SPEC-003 — Partielle Match-Erkennung implementiert (NEAR_MISS, cron)
 
 ### Headline: `discovery_gap`-Hebel gelandet — ≥2/3 unbekannter Slots gibt reines Ja/nein
