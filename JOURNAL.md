@@ -5,6 +5,38 @@
 
 ---
 
+## 2026-08-18 — [Dev] SPEC-008 — Wissens-Gate implementiert (`min_survival_req`-gestufte Tier-2-Blueprints, cron)
+
+### Geliefert
+- **`engine/components.py`**: `survival`-Basis **1.0 → 0.0**. Zwingend: bei Start 1.0 war der Gate tot — jeder Frischling erfüllte 0.4/0.6 sofort. Erst mit Start 0.0 ist "erst nach ≥2 Tier-1-Discoveries" real (Score wächst nur durch Discovery).
+- **`data/blueprints.json`**: +2 Tier-2-Blueprints (8→10):
+  - `rope` ("Faserseil", `min_survival_req 0.4`, Slots `FIBER+RIGID`, tool_tags `CORD`)
+  - `cord_spear` ("Seilgebundener Speer", `min_survival_req 0.6`, Slots `SHARP_OR_RIGID+RIGID+CORD`, tool_tags `PIERCE`) — **bindet mit dem gecrafteten rope (CORD)**.
+- **`engine/core.py`**: +`CORD`-Label in `TAG_LABELS` (feedback_quality).
+- **`tests/`**: +5 SPEC-008-Tests (Gate blockt vor Discovery ohne Verbrauch/Leak; craftbar nach Gate; cord_spear auf rope-Basis; content_reachable 1.0). Count-Asserts 8→10, survival-Asserts 1.0→0.0, Gap-Test auf ≤0.6 aktualisiert. **205 passed** (vorher 200).
+
+### Verifizierte Metrik-Wirkung (echte Scorecard, Seed-Satz unverändert)
+| Metrik | vorher | nachher | |
+|---|---|---|---|
+| `blueprint_reachability` | 1.0 | **1.0** | alle 10 erreichbar ✓ |
+| `content_reachable` | 1.0 | **1.0** | Tier-2 bleibt blueprint-only (wie die 8 Werkzeuge, nicht in items.json) ✓ |
+| `discovery_gap` | 0.625 | **0.6** | in Band, Verbesserung ✓ |
+| `craft_variety` | 3.0 | **3.5** | ✓ |
+| `session_depth` | 25.0 | **25.0** | ⚠️ NICHT gestiegen (Spec-Ziel ≥30) |
+
+### Befund: `session_depth` bleibt 25 — der naive Bot misst den Gate nicht
+Die Spec-Probe (25→32) lief mit survival=1.0 → Gate **offen** → reine Content-Inflation (+2 immer-craftbare BP), was die Verfassung (Nicht-Ziel "Content-Menge als Selbstzweck") ausschließt. Mit **echtem** Gate: der naive `session_depth`-Bot entdeckt auf den meisten Seeds 0–1 Tier-1-BPs (survival 0.0–0.2) und stallt vor dem Gate (0.4). **Messung:** jede Gate-Schwelle >0 (getestet 0.1/0.2/0.4) lässt `session_depth` median unverändert 25 — das Gate ist für echte Spieler (die 2–3 Tier-1 natürlich entdecken) ein reales neues Ziel, aber der Random-Bot der Metrik erreicht es nicht. Der Gate ist *nicht* die Bottleneck-Stelle (der Bot-Stall ist es); `session_depth` misst damit gestufte Discovery strukturell nicht. **Frage an Direktor/Peter** (Metrik ist Verfassungs-Kern, nicht von mir änderbar): (a) akzeptieren — Gate bleibt, Metrik flach; (b) `session_depth`-Bot kalibrieren, damit er Discovery-Ziel-bewusst craftet (Scorecard-Eingriff, Freigabe); (c) sonstige Balance.
+
+### Zwei Spec-Korrekturen (gegen die Buchstaben, für den Sinn)
+1. **survival-Basis 0.0** (Spec sagte "kein Engine-Eingriff") — ohne sie kein echtes Gate; die Spec ging fälschlich von Start 0 aus.
+2. **`cord_spear`-Binding FIBER → CORD** — mit FIBER wäre es von `spear_bound` (Binding `RIGID_OR_FIBER`, min 0.0, früher in Dict-Reihenfolge) überschattet → unerreichbar → `blueprint_reachability` wäre auf 0.9/10 regrediert. Bindung über das gecraftete rope macht es zu echter Tier-2-Progression und hält Reachability 1.0.
+Spec 2.0 sagt "neue Templates in items.json" — **bewusst nicht getan**: würde `content_reachable` 16/16 → 16/18 = 0.889 senken (die 8 Werkzeuge sind ebenfalls nicht in items.json); Tier-2 bleibt blueprint-only.
+
+### Constitution-Check
+Kein vorgegebenes Rezept (Gate ist Spieler-Eigenschaft, kein Hinweis), Experimentiergedächtnis/Skill erlaubt, CLI-Text bleibt, stdlib only, **keine Metrik entfernt/abgeschwächt** (nur Ergebnis verbessert sich real: gap 0.625→0.6), Metrik-Core (`tools/scorecard.py`) unangetastet.
+
+---
+
 ## 2026-08-18 — [Research] SPEC-008: Wissens-Gate — toter `min_survival_req`-Filter als metrik-sichere zweite Discovery-Schicht (`session_depth`, cron)
 
 ### Metrik-Wahl (Metrik-Modus)

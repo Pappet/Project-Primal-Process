@@ -330,11 +330,13 @@ class TestRec001FamilyReachability:
         m = sc.metric_reachability()
         assert m["value"] == 1.0
 
-    def test_discovery_gap_above_band(self):
-        """Wahrer Gap liegt über Band-Obergrenze 0.6 (ehrlich, nicht abgeschwächt)."""
+    def test_discovery_gap_in_or_at_band(self):
+        """Wahrer Gap liegt in/am Band (≤ 0.6). SPEC-008 (Tier-2-Satz) hat ihn
+        von 0.625 (über Band) auf 0.6 gesenkt — Verbesserung, kein Abschwächen
+        der Berechnung; naive_discovery stieg mit dem zusätzlichen Ziel."""
         from engine.core import GameEngine
         m = sc.metric_discovery_gap()
-        assert m["value"] > 0.6
+        assert m["value"] <= 0.6
 
 
 

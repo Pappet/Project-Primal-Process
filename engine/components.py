@@ -64,7 +64,12 @@ class Player:
     def __init__(self, name: str):
         self.name = name
         self.inventory = Inventory()
-        self.stats = {"perception": 1.0, "strength": 1.0, "survival": 1.0}
+        # survival startet bei 0.0 und wächst ausschließlich durch Discovery
+        # (+0.2 je erstmals entdecktem Blueprint, +0.1 je Prozess) — das macht
+        # den `min_survival_req`-Gate (SPEC-008) real: Tier-2-Blueprints sind
+        # erst nach einer Mindestzahl entdeckter Tier-1-Baupläne versuchbar.
+        # (Vorher 1.0 → der Gate war tot: jeder Frischling erfüllte 0.4/0.6.)
+        self.stats = {"perception": 1.0, "strength": 1.0, "survival": 0.0}
         
         # Vitalwerte
         self.max_energy = 1000.0

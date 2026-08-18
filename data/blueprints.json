@@ -62,5 +62,21 @@
     "base_efficiency": 0.9,
     "min_survival_req": 0.0,
     "tool_tags": ["PIERCE"]
+  },
+  {
+    "id": "rope",
+    "result_name": "Faserseil",
+    "slots": {"fiber": "FIBER", "rigid": "RIGID"},
+    "base_efficiency": 1.0,
+    "min_survival_req": 0.4,
+    "tool_tags": ["CORD"]
+  },
+  {
+    "id": "cord_spear",
+    "result_name": "Seilgebundener Speer",
+    "slots": {"tip": "SHARP_OR_RIGID", "shaft": "RIGID", "bind": "CORD"},
+    "base_efficiency": 1.0,
+    "min_survival_req": 0.6,
+    "tool_tags": ["PIERCE"]
   }
 ]

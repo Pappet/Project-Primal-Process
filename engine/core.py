@@ -26,6 +26,7 @@ TAG_LABELS = {
     "CHOPPING": "etwas zum Schneiden",
     "CUTTING": "etwas zum Schneiden",
     "PIERCE": "etwas zum Stechen",
+    "CORD": "etwas zum Binden",
     "KINDLING": "etwas zum Feuermachen",
     "SHOVEL": "etwas zum Graben",
     "DURABILITY": "etwas Haltbares",

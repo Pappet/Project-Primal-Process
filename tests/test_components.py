@@ -127,4 +127,4 @@ class TestPlayer:
         p = Player("Test")
         assert p.stats["perception"] == 1.0
         assert p.stats["strength"] == 1.0
-        assert p.stats["survival"] == 1.0
+        assert p.stats["survival"] == 0.0

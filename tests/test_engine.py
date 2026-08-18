@@ -11,27 +11,27 @@ class TestEngineCrafting:
         engine.player.inventory.add(create_item("flint_shard"))
         engine.player.inventory.add(create_item("stick"))
         engine.player.inventory.add(create_item("plant_fiber"))
-        assert engine.player.stats["survival"] == 1.0
+        assert engine.player.stats["survival"] == 0.0
 
         items = list(engine.player.inventory.items)
         result = engine.execute_experiment(items)
 
         assert result["success"] is True
         assert "axt" in result["message"].lower()  # "Feuersteinaxt"
-        assert engine.player.stats["survival"] > 1.0  # Skill gain
+        assert engine.player.stats["survival"] > 0.0  # Skill gain
 
     def test_knife_crafting_success(self):
         engine = GameEngine()
         engine.player.inventory.add(create_item("flint_shard"))
         engine.player.inventory.add(create_item("stick"))
-        assert engine.player.stats["survival"] == 1.0
+        assert engine.player.stats["survival"] == 0.0
 
         items = list(engine.player.inventory.items)
         result = engine.execute_experiment(items)
 
         assert result["success"] is True
         assert "messer" in result["message"].lower()  # "Feuersteinmesser"
-        assert engine.player.stats["survival"] > 1.0
+        assert engine.player.stats["survival"] > 0.0
 
     def test_crafting_consumes_ingredients(self):
         engine = GameEngine()
@@ -315,7 +315,7 @@ class TestEngineCore:
         assert engine.player.name == "Survivor"
         assert engine.current_location_id == "forest_edge"
         assert len(engine.locations) == 3
-        assert len(engine.blueprints) == 8
+        assert len(engine.blueprints) == 10
 
     def test_current_location(self):
         engine = GameEngine()
@@ -1041,3 +1041,94 @@ class TestRCreateToolDynamicSlotDetection:
         assert res["success"] is True
         tool = next(i for i in engine.player.inventory.items if "Steinwerkzeug" in i.name)
         assert abs(tool.get_attr("power") - 0.7) < 1e-6
+
+
+class TestSpec8SurvivalGate:
+    """SPEC-008: Wissens-Gate. `min_survival_req`-gestufte Tier-2-Blueprints
+    (rope 0.4, cord_spear 0.6). Der survival-Score startet bei 0.0 und wächst
+    nur durch Discovery (+0.2 je entdecktem Blueprint) — ein Tier-2-Ziel ist
+    erst nach einer Mindestzahl entdeckter Tier-1-Baupläne versuchbar, vorher
+    scheitert es ehrlich ohne Score-/Rezept-Leak und ohne Items zu verbrauchen.
+    Metrik-sicher: Reachability/Content bleiben 1.0 (Orgel erreicht Tier-2)."""
+
+    def _give(self, engine, tpl, qty=1):
+        engine.player.inventory.add(create_item(tpl, qty))
+
+    def test_rope_fails_before_gate(self):
+        """Frischer Spieler (survival 0.0) kann rope (0.4) nicht craften —
+        ehrlicher Fehlschlag ohne Leak, Items bleiben unverbraucht."""
+        engine = GameEngine()
+        assert engine.player.stats["survival"] == 0.0
+        engine.player.inventory.items.clear()
+        self._give(engine, "plant_fiber")
+        self._give(engine, "stick")
+        n_before = len(engine.player.inventory.items)
+        res = engine.execute_experiment(list(engine.player.inventory.items))
+        assert res["success"] is False
+        assert res["blueprint_id"] != "rope"
+        # kein Verbrauch, kein Score-Zuwachs, kein Rezept verraten
+        assert len(engine.player.inventory.items) == n_before
+        assert engine.player.stats["survival"] == 0.0
+
+    def test_rope_craftable_after_gate(self):
+        """Nach ≥2 entdeckten Tier-1-Blueprints (survival 0.4) ist rope craftbar
+        (SUCCESS, survival +0.2)."""
+        engine = GameEngine()
+        engine.player.inventory.items.clear()
+        engine.player.stats["survival"] = 0.4  # = 2 entdeckte Tier-1
+        self._give(engine, "plant_fiber")
+        self._give(engine, "stick")
+        res = engine.execute_experiment(list(engine.player.inventory.items))
+        assert res["success"] is True
+        assert res["blueprint_id"] == "rope"
+        assert engine.player.stats["survival"] == pytest.approx(0.6)  # +0.2 Discovery
+        # Ergebnis ist ein echtes Item mit CORD (Bindungs-Option)
+        assert "rope" in engine.player.known_blueprints
+        rope = next(i for i in engine.player.inventory.items if i.template_id == "rope")
+        assert "CORD" in rope.tags
+
+    def test_cord_spear_craftable_with_rope(self):
+        """cord_spear (0.6) baut auf dem gecrafteten rope (CORD) auf: tip(SHARP)
+        + shaft(RIGID) + bind(CORD) → SUCCESS, echtes Tier-2-Ergebnis."""
+        engine = GameEngine()
+        engine.player.inventory.items.clear()
+        engine.player.stats["survival"] = 0.4
+        # rope herstellen (survival → 0.6)
+        self._give(engine, "plant_fiber")
+        self._give(engine, "stick")
+        assert engine.execute_experiment(list(engine.player.inventory.items))["success"]
+        # jetzt tip + shaft ergänzen
+        self._give(engine, "sharp_stone")  # SHARP, sharpness 0.7
+        self._give(engine, "stick")        # RIGID
+        res = engine.execute_experiment(list(engine.player.inventory.items))
+        assert res["success"] is True
+        assert res["blueprint_id"] == "cord_spear"
+        spear = next(i for i in engine.player.inventory.items if i.template_id == "cord_spear")
+        assert "PIERCE" in spear.tags
+        assert "cord_spear" in engine.player.known_blueprints
+
+    def test_cord_spear_gate_blocks_at_low_survival(self):
+        """Mit einem CORD-Bindungsitem, aber survival < 0.6, bleibt cord_spear
+        gated (ehrlicher Fehlschlag, kein Verbrauch)."""
+        from engine.components import Item
+        engine = GameEngine()
+        engine.player.inventory.items.clear()
+        engine.player.stats["survival"] = 0.4  # < 0.6 → cord_spear gesperrt
+        # handgebautes Seil (CORD) + scharfer Stein + Stab
+        rope = Item(name="Faserseil", base_weight=0.2, tags={"CORD": 0.1},
+                    attributes={"durability": 0.5}, template_id="rope")
+        engine.player.inventory.add(rope)
+        self._give(engine, "sharp_stone")
+        self._give(engine, "stick")
+        n_before = len(engine.player.inventory.items)
+        res = engine.execute_experiment(list(engine.player.inventory.items))
+        assert res["success"] is False
+        assert res["blueprint_id"] != "cord_spear"
+        assert len(engine.player.inventory.items) == n_before
+        assert engine.player.stats["survival"] == 0.4
+
+    def test_content_reachable_stays_one(self):
+        """SPEC-008 fügt nur Blueprint-Items hinzu (wie die 8 Bestands-Werkzeuge,
+        NICHT in items.json) → content_reachable bleibt 1.0."""
+        from tools import scorecard as sc
+        assert sc.metric_content_reachable()["value"] == 1.0
