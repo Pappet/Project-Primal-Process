@@ -5,6 +5,35 @@
 
 ---
 
+## 2026-08-19 — [Dev] Guided-Bot: rohes Fleisch als Zutat reserviert → `cook_meat` 5/20 → 17/20 (cron)
+
+### Aufgabe
+Alle PLAN-Tasks sind offen, aber blockiert (SPEC-006 = Peters Freigabe; forage_pressure/warmth beobachtend; skill_spread = Peter-Entscheid). Kein implementierbarer PLAN-Task. Dem etablierten Muster folgend (Dev 15.08./14.08.) das offene 🔵 Tech-Debt aus BACKLOG 17.08.: **`play/guided_full.py` aß sein rohes Fleisch (EDIBLE 150) selbst, bevor `cook_meat` (braucht 1× raw_meat + Feuer) Inputs hatte** → 5. Prozess systematisch unterrepräsentiert (5/20 Seeds). Play-Messwerkzeug, keine Metrik — CONSTITUTION-konform.
+
+### Root Cause (beim Einstieg reproduziert)
+`eat()` wählte das **höchste EDIBLE** — `raw_meat` (150) schlug berries (50)/mushroom (30) und wurde gefressen, sobald Energie/HP sanken. Der bestehende Guard schützte rohes Fleisch nur als letztes Stück bei energy > 100. `cook_meat` und `make_fur_cloak` stehen zwar in der Prozessliste, aber das Fleisch war vorher weg. Zusätzlicher Befund: nach dem Fell-Umhang (verbraucht 1 rohes Fleisch) jagte der Bot **nie gezielt ein zweites** fürs Kochen — fehlte also oft die Zutat komplett.
+
+### Fix (nur `play/guided_full.py`)
+1. **`eat()` reserviert rohes Fleisch als Zutat:** bevorzugt gekochtes Fleisch / Beeren / Pilze; rohes nur noch als letzte Notration (wenn nichts anderes EDIBLE übrig ist). Der Bot frisst sich nicht mehr seinen eigenen Fortschritt weg.
+2. **Gezielte Jagd-Brat-Sequenz im `_warmup`:** nach dem Fell (solange Feuer + Energie frisch) jagt er am warmen Waldrand ein **zweites** rohes Fleisch (PROJECTILE) und brät es mit `cook_meat`. Vorher verpuffte die Koch-Sequenz im fragilen Hauptloop, wo der Bot an Kälte/Energie starb, bevor er den 5. Prozess je erreichte.
+
+### Verifizierte Wirkung (n=20, deterministisch)
+| Prozess | vorher | nachher |
+|---|---|---|
+| `cook_meat` | **5/20** | **17/20** |
+| `make_fur_cloak` | 17/20 | 18/20 |
+
+`cook_meat`-Erreichbarkeit von 25 % auf 85 % der Seeds — der 5. Prozess wird jetzt ehrlich gemessen. `make_fur_cloak` bleibt stabil (18/20, leicht zurück, da Fleisch jetzt teils zum Braten verwendet wird — akzeptabler Tradeoff, Ziel war cook_meat).
+
+### Verifikation
+- `python -m pytest`: **209 passed** (vorher 205; +4 neue Tests in `tests/test_guided_full.py`: eat() reserviert rohes Fleisch vor gekochtem/Beeren + Notration; guided_full erreicht cook_meat auf ≥14/20 Seeds).
+- Kein Engine-/Metrik-/Content-Code angefasst. CONSTITUTION: Messwerkzeug frei, nichts entfernt/umdefiniert, kein Rezeptbuch.
+
+### BACKLOG
+- 🔵 guided_full-cook_meat-Eintrag (17.08.) → ✅ erledigt.
+
+---
+
 ## 2026-08-19 — [Play] Scorecard + Playtest: Das Spiel wurde tiefer, aber nichts misst es (cron)
 
 **Headline (Langeweile-Stelle):** `session_depth` 25, flach seit 5 Messungen — aber die erste Scorecard nach SPEC-008 zeigt: das Spiel hat einen ECHTEN zweiten Discovery-Layer (rope→cord_spear via `min_survival_req`-Gate), und beide Messwege sind dagegen strukturell blind:

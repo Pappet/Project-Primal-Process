@@ -29,19 +29,23 @@ def have_qty(game, tid, q):
     return sum(it.quantity for it in game.player.inventory.items if it.template_id==tid) >= q
 
 def eat(game):
-    # Gegen Kälte-Energieverlust und HP-Blut: essen, wenn Energie ODER HP sinken
+    # Gegen Kälte-Energieverlust und HP-Blut: essen, wenn Energie ODER HP sinken.
+    # Rohes Fleisch ist Zutat (cook_meat 1×, make_fur_cloak 1×) — nicht anrühren,
+    # solange gekochtes Fleisch / Beeren / Pilze verfügbar sind. Nur als letzte
+    # Notration essen (sonst frisst sich der Bot seinen eigenen Fortschritt weg).
     if game.player.energy < 260 or game.player.hp < 40:
         best = None
         for i, it in enumerate(game.player.inventory.items):
-            if "EDIBLE" in it.tags and (best is None or it.tags["EDIBLE"] > best[1]):
+            if "EDIBLE" not in it.tags or it.template_id == "raw_meat":
+                continue
+            if best is None or it.tags["EDIBLE"] > best[1]:
                 best = (i, it.tags["EDIBLE"])
         if best:
-            eat_idx = best[0]
-            it = game.player.inventory.items[eat_idx]
-            if it.template_id == "raw_meat" and have_qty(game, "raw_meat", 2) is False and game.player.energy > 100:
-                pass
-            else:
-                game.eat(eat_idx)
+            game.eat(best[0]); return
+        # Notration: nur noch rohes Fleisch übrig
+        for i, it in enumerate(game.player.inventory.items):
+            if it.template_id == "raw_meat" and "EDIBLE" in it.tags:
+                game.eat(i); return
 
 def _go(game, loc):
     if game.current_location_id != loc:
@@ -139,7 +143,20 @@ def _warmup(game):
             for _ in range(8):
                 game.gather()
                 if have_qty(game, "raw_meat", 1): break
+            # Fell-Umhang zuerst (braucht 1 rohes Fleisch)
             game.execute_process("make_fur_cloak")
+    # Kochen: 1. rohes Fleisch frisst das Fell-Rezept. Jage ein zweites und
+    # brate es, solange Feuer + Energie noch frisch sind (BL 17.08: sonst isst
+    # der Bot sein Fleisch oder stirbt, bevor cook_meat je Inputs hat).
+    if "cook_meat" not in game.player.known_processes:
+        _go(game, WARM)
+        _fire_at(game)
+        for _ in range(8):
+            game.gather()
+            if have_qty(game, "raw_meat", 1):
+                game.execute_process("cook_meat")
+                break
+        _go(game, WARM)
 
 class G:
     def __init__(s, seed):
@@ -187,6 +204,25 @@ def guided_full(seed, max_actions=400):
             if len(sel) == len(bp.slots):
                 g.shot(lambda: game.execute_experiment(sel))
                 acted = True; break
+        if acted: continue
+        # --- 1b. Kochen vorbereiten: rohes Fleisch jagen + Feuer halten ---
+        # cook_meat braucht 1 raw_meat + aktives Feuer am Ort. Nach dem Fell-Umhang
+        # (Warmup) ist das rohe Fleisch verbraucht; sonst jagt der Bot nie gezielt
+        # ein zweites und kocht nie (BL 17.08). Also: Feuer am Waldrand, dort jagen.
+        if "cook_meat" not in game.player.known_processes and not have_qty(game, "raw_meat", 1):
+            _go(game, WARM)
+            _fire_at(game)
+            hunted = False
+            for _ in range(8):
+                _warm_here(game)
+                game.gather()
+                if have_qty(game, "raw_meat", 1):
+                    hunted = True; break
+            if hunted:
+                g.shot(lambda: game.execute_process("cook_meat"))
+                acted = True; continue
+            else:
+                acted = True; continue  # Jagd-Fehlschlag zählt als Aktion, kein Spin
         if acted: continue
         # --- 2. processes in order ---
         prop = ["make_sharp_stone","create_tinder","start_fire","cook_meat","make_fur_cloak"]
