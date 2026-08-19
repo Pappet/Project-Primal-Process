@@ -5,6 +5,23 @@
 
 ---
 
+## 2026-08-19 — [Play] Scorecard + Playtest: Das Spiel wurde tiefer, aber nichts misst es (cron)
+
+**Headline (Langeweile-Stelle):** `session_depth` 25, flach seit 5 Messungen — aber die erste Scorecard nach SPEC-008 zeigt: das Spiel hat einen ECHTEN zweiten Discovery-Layer (rope→cord_spear via `min_survival_req`-Gate), und beide Messwege sind dagegen strukturell blind:
+- Gated: naive Metrik erreicht das Gate (survival 0.4 nach ≥2 Tier-1-Discoveries) vor dem Stall selten → die 2 neuen Blueprints tauchen nie auf, Wert bleibt 25.
+- Guided: öffnet das Gate automatisch → Tier-2 landet *mitten* in der Kette, der Erschöpfungspunkt (letzte Neuheit) rückt nicht nach hinten. Full-only-Median ~18–24 (10/10) vs. ~21 (8/8) letzte Woche — kein Zuwachs.
+Der Tier-2-Layer selbst ist verifiziert funktionsfähig (rope 0.4 + cord_spear 0.6 auf gecraftetem rope, engine-seitig craftbar). **Das ist Fortschritt in der Wirklichkeit, unsichtbar in den Zahlen.** `session_depth` ist zum veralteten Indikator für echte Tiefe geworden → Entscheid an Peter/Direktor (Metrik-Kern).
+
+**Zweitbefund:** `feedback_quality` 1.0→0.916 (−0.084). Ursache root-caused & verifiziert: `NEAR_MISS:*` (SPEC-003) zählt als uninformativ, weil `_expected_fragment` kein Mapping hat — der Near-Miss-Text ist absichtlich generisch (kein Leak), seine Nützlichkeit ist seine Vagheit. Zielkonflikt: beste Discovery-Rückmeldung kosten Metrik-Punkte. NICHT angefasst (Constitution), als Peter-Entscheid in Backlog. Kein Spielfehler.
+
+**Drittbefund:** guided-Bot fragiler denn je — 8/20 leeren alle 10 Blueprints (vorher 13/20 bei 8/8), alle Seeds enden negativ HP. Bekannte Messwerkzeug-Fragilität nach SPEC-007/008, kein Spielfehler.
+
+**Scorecard 2026-08-19:** session_depth 25.0 (±0) · discovery_gap 0.6 (−0.025, in Band) · craft_variety 3.5 (+0.5) · feedback_quality 0.916 (−0.084, NEAR_MISS-Blindstelle) · warmth_stability 0.46 (−) · forage_pressure 0.707 (Probe bis 20.08.) · Rest flach. Tests 205 passed vor jeder Schreib-OP.
+
+**Backlog:** +2 🟡 (feedback_quality-NEAR_MISS-Blindstelle, session_depth-Tier-2-Blindheit Play-Bestätigung). Play-Bericht: `play/2026-08-19.md`.
+
+---
+
 ## 2026-08-18 — [Dev] SPEC-008 — Wissens-Gate implementiert (`min_survival_req`-gestufte Tier-2-Blueprints, cron)
 
 ### Geliefert
