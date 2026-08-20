@@ -47,6 +47,31 @@ def eat(game):
             if it.template_id == "raw_meat" and "EDIBLE" in it.tags:
                 game.eat(i); return
 
+def _treat_if_injured(game):
+    """SPEC-009: Verletzungen behandeln, damit der Mess-Bot nicht verblutet (sonst
+    rot der Bot, wie nach SPEC-007, und untertreibt die Discovery-Decke). cut →
+    Verband (plant_fiber×2) weben + anlegen; strain → Umschlag (mushroom+clay_lump).
+    Verband/Paste ggf. erst besorgen; strain ist nur Effort-Malus (nicht tödlich),
+    also best-effort, wenn der Ton (SHOVEL) fehlt."""
+    inj = game.player.injuries
+    if not inj:
+        return
+    if "cut" in inj and not inj["cut"]["treated"]:
+        if not have_qty(game, "plant_fiber", 2):
+            gather_tag(game, {"FIBER"}, 8)
+        if "make_bandage" in game.available_processes():
+            game.execute_process("make_bandage")
+        if "treat_cut" in game.available_processes():
+            game.execute_process("treat_cut")
+    if "strain" in inj and not inj["strain"]["treated"]:
+        if not have_qty(game, "mushroom", 1):
+            gather_tag(game, {"EDIBLE"}, 6)
+        if "make_poultice" in game.available_processes():
+            game.execute_process("make_poultice")
+            # Ton ggf. nicht erreichbar → strain bleibt (nur Malus, kein Tod)
+            if "treat_strain" in game.available_processes():
+                game.execute_process("treat_strain")
+
 def _go(game, loc):
     if game.current_location_id != loc:
         game.travel(loc)
@@ -67,6 +92,7 @@ def _warm_here(game):
     SOLANGE es brennt, hebt es die eff. Temperatur um FIRE_HEAT). Ohne Feuer frisst
     die Kälte (exposure 1.0 am Gipfel) die body_temp — die Wärme-Haltung ist also
     hier der entscheidende Hebel, nicht der Rückzug."""
+    _treat_if_injured(game)
     _fire_at(game)
     # Kein Feuer möglich → kurzer Rückzug an den warmen Waldrand (base 15)
     loc = game.current_location
@@ -225,7 +251,8 @@ def guided_full(seed, max_actions=400):
                 acted = True; continue  # Jagd-Fehlschlag zählt als Aktion, kein Spin
         if acted: continue
         # --- 2. processes in order ---
-        prop = ["make_sharp_stone","create_tinder","start_fire","cook_meat","make_fur_cloak"]
+        prop = ["make_sharp_stone","create_tinder","start_fire","cook_meat","make_fur_cloak",
+                "make_bandage","make_poultice","treat_cut","treat_strain"]
         acted=False
         for pid in prop:
             if pid in game.available_processes():

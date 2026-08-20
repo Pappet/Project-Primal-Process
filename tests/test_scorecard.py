@@ -258,10 +258,11 @@ class TestMetricsProduceValues:
 
     def test_content_reachable_is_full(self):
         """Alle definierten Items sind erreichbar (Gather oder Prozess-Output) —
-        16/16 (SPEC-007: fur_cloak via make_fur_cloak-Prozess, keine dangling refs)."""
+        18/18 (SPEC-007: fur_cloak via make_fur_cloak-Prozess; SPEC-009: bandage/
+        poultice via make_bandage/make_poultice — keine dangling refs)."""
         m = sc.metric_content_reachable()
-        assert m["defined_count"] == 16
-        assert m["reachable_count"] == 16
+        assert m["defined_count"] == 18
+        assert m["reachable_count"] == 18
         assert m["value"] == 1.0
 
     def test_baseline_written_with_schema(self):
@@ -357,6 +358,26 @@ class TestForagePressure:
     def test_table_shows_probation_label(self):
         table = sc.build_table(sc.compute_all(), None)
         row = [l for l in table.splitlines() if l.startswith("| forage_pressure")]
+        assert row and "Probe bis" in row[0]
+
+
+class TestRecoveryStability:
+    """recovery_stability (SPEC-009, Probezeit) — Band-Metrik + Registrierung."""
+
+    def test_value_in_range(self):
+        m = sc.metric_recovery_stability()
+        assert 0 <= m["value"] <= 1
+        assert "p25" in m and "p75" in m
+
+    def test_registered_with_band_and_probation(self):
+        entry = next(m for m in sc.METRICS if m["key"] == "recovery_stability")
+        assert entry["band"] == (0.3, 0.7)
+        assert entry["direction"] is None
+        assert entry["probation_until"] == "2026-09-03"  # +14 Tage ab 20.08.
+
+    def test_table_shows_probation_label(self):
+        table = sc.build_table(sc.compute_all(), None)
+        row = [l for l in table.splitlines() if l.startswith("| recovery_stability")]
         assert row and "Probe bis" in row[0]
 
 

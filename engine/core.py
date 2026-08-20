@@ -43,6 +43,20 @@ FIRE_HEAT = 40.0          # Wärmebeitrag des aktiven Feuers zur Umgebungstemper
 START_FIRE_FUEL = 24.0    # Brennstoff-Ticks beim Entzünden (≈ 4 In-Game-Stunden)
 STOKE_FUEL = 8.0          # Brennstoff-Ticks, die nachgelegtes Holz/Machtsgut bringt
 
+# Verletzung & Heilung (SPEC-009): pro-Instanz Wund-Zustand (Player.injuries)
+# + handlungsgebundene Risikoquelle (Sammeln) + Behandlungs-/Ruhe-Gegenmechanik.
+# Frequenz bewusst niedrig: über die KURZE Mess-Fenster der Discovery-Bots
+# (~150 Aktionen) sollen die meisten Seeds unbeschadet bleiben (sonst fällt
+# `discovery_gap` über Band), während ein lang spielender, unvorbereiteter
+# Spieler Verletzungen schon spürt und die Behandlung lernen muss.
+INJURE_CUT_CHANCE = 0.015   # pro Fund scharfen Materials (SHARP-Node) → Schnittwunde
+INJURE_STRAIN_CHANCE = 0.02 # pro Sammeln am exponierten Ort (exposure ≥ 0.8) → Zerrung
+CUT_BLEED_PER_TICK = 0.2    # unbehandelte Schnittwunde: HP-Verlust pro Tick
+STRAIN_EFFORT_MALUS = 1.0   # unbehandelte Zerrung: Extra-Effort beim Sammeln
+INJ_HEAL_RATE = 0.05        # Behandlung + Ruhe: severity-Regeneration pro Tick
+INJ_HEAL_THRESHOLD = 0.05   # darunter gilt die Wunde als verheilt (entfernt)
+REST_EXPOSURE = 0.15        # Ort gilt als "ruhig/sheltered", wenn exposure darunter
+
 # Tag-Familien (SPEC-002): Eine Slot-Anforderung kann ein Familienname sein,
 # der mehrere Tags subsumiert (Layer über den Einzel-Tags). Ein Item genügt der
 # Familie, wenn es irgendeinen der Mitglieds-Tags trägt — so kann flint_shard
@@ -70,6 +84,14 @@ def _slot_satisfied(item_tags, slot_value: str) -> bool:
 
 def _label_for(tag: str) -> str:
     return TAG_LABELS.get(tag, f"etwas mit der Eigenschaft {tag}")
+
+
+# Spielersprachliche Namen für Verletzungen (SPEC-009) — fürs Heil-Feedback.
+INJURY_LABELS = {"cut": "Schnittwunde", "strain": "Zerrung"}
+
+
+def _injury_label(kind: str) -> str:
+    return INJURY_LABELS.get(kind, kind)
 
 
 def _missing_tags(bp, available) -> list:
@@ -117,6 +139,16 @@ def _feedback_message(reason: str, broken_names: "List[str] | None" = None) -> s
     if reason.startswith("MISSING_ENV:"):
         tag = reason.split(":", 1)[1]
         return f"Hier fehlt {_label_for(tag)} in der Umgebung."
+    if reason == "NO_INJURY":
+        return "Du bist nicht verletzt."
+    if reason == "BLEEDING":
+        # Generisch, kein Rezept-Leak: sagt nur, dass eine Behandlung fehlt,
+        # nicht welche Kombination sie herstellt.
+        return "Du blutest — die Wunde muss behandelt und du musst rasten."
+    if reason == "TREATED":
+        return "Die Wunde ist behandelt."
+    if reason == "HEALED":
+        return "Deine Wunde heilt."
     return "Das geht so nicht."  # UNKNOWN-Fallback — nie eine generische Leer-Meldung
 
 
@@ -137,6 +169,16 @@ class GameEngine:
             "SNOW": {"temp_mod": -15, "exposure_mod": 2.0}
         }
         self.current_weather = "CLEAR"
+
+        # Verletzungs-RNG (SPEC-009): EIGENER Strom, damit die Verletzungswürfe
+        # die Ressourcen-RNG-Sequenz (Fund-Items/Erschöpfung) NICHT verschieben.
+        # Würde gather() dafür das gemeinsame `random` benutzen, änderten sich
+        # für alle bestehenden Mess-Bots (Reachability, Session-Depth, guided)
+        # deterministisch die Ausbeuten — der Verletzungs-Wurf gehört nicht auf
+        # denselben Kanal. Aus dem aktuellen (deterministisch geseedeten) Zustand
+        # kopiert → pro Lauf reproduzierbar, aber unabhängig vom Hauptstrom.
+        self.injuries_rng = random.Random()
+        self.injuries_rng.setstate(random.getstate())
 
     @property
     def current_location(self):
@@ -212,12 +254,38 @@ class GameEngine:
             self.player.hp -= 1.0 * ticks
             logs.append("!!! HITZSCHLAG !!!")
 
+        # 3. Verletzung & Heilung (SPEC-009): Bluten + Behandlung+Ruhe-Heilung.
+        # Eine unbehandelte Schnittwunde zieht über Zeit (HP-Drain), bis sie
+        # verbunden wird. Eine behandelte Wunde heilt NUR, solange der Spieler
+        # an einem warmen/ruhigen Ort rastet (Feuer oder geschützter Ort).
+        cut = self.player.injuries.get("cut")
+        if cut:
+            cut["ticks"] += ticks
+            if not cut["treated"]:
+                self.player.hp -= CUT_BLEED_PER_TICK * ticks
+                logs.append("!!! " + _feedback_message("BLEEDING") + " !!!")
+
+        healed = []
+        for kind in list(self.player.injuries.keys()):
+            inj = self.player.injuries[kind]
+            inj["ticks"] += ticks
+            if inj["treated"] and self._resting_warm():
+                inj["severity"] -= INJ_HEAL_RATE * ticks
+                if inj["severity"] <= INJ_HEAL_THRESHOLD:
+                    del self.player.injuries[kind]
+                    healed.append(kind)
+        if healed:
+            logs.append("!!! " + _feedback_message("HEALED")
+                        + f" ({', '.join(map(_injury_label, healed))}) !!!")
+
         return "\n".join(logs) if logs else None
 
     def gather(self) -> List[str]:
         logs = []
-        # Sammeln ist anstrengend (Effort 2.0)
-        time_msg = self._advance_time(1, effort_multiplier=2.0)
+        # Sammeln ist anstrengend (Effort 2.0), plus Malus durch eine
+        # unbehandelte Zerrung (SPEC-009) — sie senkt die Leistungsfähigkeit.
+        effort = 2.0 + self._injury_effort_malus()
+        time_msg = self._advance_time(1, effort_multiplier=effort)
         if time_msg: logs.append(time_msg)
 
         for node in self.current_location.nodes:
@@ -246,6 +314,18 @@ class GameEngine:
                     node.stock = max(0.0, node.stock - node.harvest_cost)
                     if node.stock < node.harvest_cost:
                         node.depleted = True
+                    # Verletzungsrisiko (SPEC-009) — aus eigenem Handeln, nicht
+                    # globalem Timer: scharfe Funde → Schnitt; exponierter Ort →
+                    # Zerrung. Frequenz niedrig (abwendbar), nicht vermeidbar.
+                    # Eigener RNG-Strom (injuries_rng), damit diese Würfe die
+                    # Ressourcen-Sequenz der Mess-Bots nicht verschieben.
+                    if "SHARP" in item.tags and self.injuries_rng.random() < INJURE_CUT_CHANCE:
+                        if self._inflict("cut"):
+                            logs.append("!!! " + _feedback_message("INJURED") + " !!!")
+                    if (self.current_location.exposure >= 0.8
+                            and self.injuries_rng.random() < INJURE_STRAIN_CHANCE):
+                        if self._inflict("strain"):
+                            logs.append("!!! " + _feedback_message("INJURED") + " !!!")
                     if used_tool:
                         wear = 0.05 / used_tool.get_attr("durability", 0.5)
                         used_tool.condition = max(0, used_tool.condition - round(wear, 2))
@@ -516,6 +596,37 @@ class GameEngine:
             return self._fire_lit()
         return False
 
+    # ------------------------------------------------------------------
+    # Verletzung & Heilung (SPEC-009) — Zustand, Ruhe-Bedingung, Effort
+    # ------------------------------------------------------------------
+
+    def _resting_warm(self) -> bool:
+        """Ob der Spieler an einem warmen/ruhigen Ort rastet (Heil-Bedingung).
+
+        Rast = aktives Feuer an der Location ODER windgeschützter Ort mit
+        geringer Exposition (z.B. die Höhle). Nur HIER heilt eine behandelte
+        Wunde über Zeit — behandelt aber unterwegs heilt nicht (SPEC-009).
+        """
+        return self._fire_lit() or self.current_location.exposure <= REST_EXPOSURE
+
+    def _inflict(self, kind: str) -> bool:
+        """Setzt eine Verletzung, falls nicht schon aktiv. True, wenn neu.
+
+        `cut` verursacht Bluten; `strain` ist ein Effort-Malus. Wiederverletzen
+        einer aktiven Wunde stapelt nicht (Severity bleibt 1.0).
+        """
+        if kind in self.player.injuries:
+            return False
+        self.player.injuries[kind] = {"severity": 1.0, "ticks": 0, "treated": False}
+        return True
+
+    def _injury_effort_malus(self) -> float:
+        """Extra-Effort durch eine unbehandelte Zerrung beim Sammeln."""
+        inj = self.player.injuries.get("strain")
+        if inj and not inj["treated"]:
+            return STRAIN_EFFORT_MALUS
+        return 0.0
+
     def _find_fuel_item(self):
         """Brennstoff-Item fürs Nachlegen: Holz (WOOD) bevorzugt, sonst Zunder/
         Reisig (KINDLING) — aber nie die Feuergrube selbst."""
@@ -602,6 +713,21 @@ class GameEngine:
         # während seines Aufbaus, statt den Spieler in der Kälte warten zu lassen.
         if process_id == "start_fire":
             self._light_fire()
+
+        # SPEC-009: Behandlung anlegen (Verband stoppt das Bluten, Umschlag
+        # lindert die Zerrung). Ohne aktive Wunde wird das Verbandsmaterial
+        # NICHT verbraucht — ehrliches Feedback statt verschwendetem Item.
+        # Die eigentliche Heilung braucht danach zusätzlich Ruhe am warmen Ort.
+        if process_id == "treat_cut":
+            if "cut" not in self.player.injuries:
+                return {"success": False, "message": _feedback_message("NO_INJURY"),
+                        "reason": "NO_INJURY"}
+            self.player.injuries["cut"]["treated"] = True
+        if process_id == "treat_strain":
+            if "strain" not in self.player.injuries:
+                return {"success": False, "message": _feedback_message("NO_INJURY"),
+                        "reason": "NO_INJURY"}
+            self.player.injuries["strain"]["treated"] = True
 
         # Inputs verbrauchen, dann Zeit/Energie kosten (wie Crafting anstrengend)
         for item_id, qty in proc.inputs.items():

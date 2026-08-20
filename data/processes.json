@@ -39,5 +39,37 @@
     "tools": ["CUTTING"],
     "outputs": {"fur_cloak": 1},
     "duration_ticks": 4
+  },
+  {
+    "id": "make_bandage",
+    "name": "Verband weben",
+    "inputs": {"plant_fiber": 2},
+    "tools": [],
+    "outputs": {"bandage": 1},
+    "duration_ticks": 1
+  },
+  {
+    "id": "make_poultice",
+    "name": "Umschlag anrühren",
+    "inputs": {"mushroom": 1, "clay_lump": 1},
+    "tools": [],
+    "outputs": {"poultice": 1},
+    "duration_ticks": 1
+  },
+  {
+    "id": "treat_cut",
+    "name": "Verband anlegen",
+    "inputs": {"bandage": 1},
+    "tools": [],
+    "outputs": {},
+    "duration_ticks": 1
+  },
+  {
+    "id": "treat_strain",
+    "name": "Umschlag auflegen",
+    "inputs": {"poultice": 1},
+    "tools": [],
+    "outputs": {},
+    "duration_ticks": 1
   }
 ]

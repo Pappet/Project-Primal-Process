@@ -586,6 +586,72 @@ def metric_warmth_stability():
 
 
 # ----------------------------------------------------------------------------
+# Metrik 11 — recovery_stability (SPEC-009, Probezeit)
+# "Verletzung ist spürbar, aber durch Behandlung + Ruhe abwendbar."
+# ----------------------------------------------------------------------------
+
+# Verletzungs-Tick = ein Tick, an dem Player.injuries nicht-leer ist (cut blutet
+# oder strain aktiv). recovery = der Tick, an dem die Wunde BEHANDELT ist UND der
+# Spieler an einem warmen/ruhigen Ort rastet (Feuer oder sheltered) — nur dort
+# heilt sie (SPEC-009-Regel). Band 0.3–0.7: unter 0.3 entgleist die Verletzung
+# (Heilung wirkungslos → Mechanik tot); über 0.7 ist sie nie eine echte Frist.
+RECOVERY_EXPOSE = 30     # Ticks in exponierter, unbehandelter Wund-Phase
+RECOVERY_RECOVER = 40    # Ticks in behandelter Ruhe-Phase (Heilfenster)
+
+
+def _run_recovery_stability(seed, expose=RECOVERY_EXPOSE, recover=RECOVERY_RECOVER):
+    """Anteil der Verletzungs-Ticks, die Behandlung + Ruhe abwenden.
+
+    Geführte Policy: Mid-Game-Ausstattung (Heilmaterial + Brennholz vorhanden,
+    also Vorbereitung möglich). Eine Wunde wird am exponierten Ort erlitten und
+    eine Zeitlang unbehandelt getragen (Phase 1), dann an warmem Ort behandelt
+    und gerastet (Phase 2) — die echte `_advance_time`-Heilung entscheidet, ob
+    sie abklingt. Deterministisch (kein RNG in der Messschleife).
+    """
+    random.seed(seed)
+    random.Random(seed)  # noqa: F841 — deterministische Ausstattung
+    game = GameEngine()
+    inv = game.player.inventory
+
+    def give(t, q=1):
+        inv.add(create_item(t, q))
+
+    # --- Geführte Mid-Game-Ausstattung (Vorbereitung möglich) ---
+    give("plant_fiber", 4); give("mushroom", 2); give("clay_lump", 2)
+    give("stick", 8); give("tinder", 4); give("log_oak", 50)
+
+    # Phase 1: exponierte, unbehandelte Schnittwunde (kein Ruhe-Ort, kein Verband)
+    game.travel("mountain_peak")
+    game.current_weather = "CLEAR"
+    game.tick_counter = 45  # Tag — Kälte ist hier Nebensache, es zählt die Wunde
+    game.player.injuries["cut"] = {"severity": 1.0, "ticks": 0, "treated": False}
+    inj_ticks = rec_ticks = 0
+    for _ in range(expose):
+        game._advance_time(1)
+        if game.player.injuries:
+            inj_ticks += 1
+
+    # Phase 2: Rückkehr, Verband anlegen (Behandlung) + Ruhe am Feuer → Heilung
+    game.travel("forest_edge")
+    game.current_weather = "CLEAR"
+    game.tick_counter = 45
+    game._light_fire()
+    game.player.injuries["cut"]["treated"] = True
+    for _ in range(recover):
+        game._advance_time(1)
+        if game.player.injuries:
+            inj_ticks += 1
+            if game.player.injuries["cut"]["treated"] and game._resting_warm():
+                rec_ticks += 1
+    return rec_ticks / max(1, inj_ticks)
+
+
+def metric_recovery_stability():
+    """Anteil der Verletzungs-Ticks, die behandelt+in Ruhe abgewendet werden."""
+    return _aggregate(lambda s: _run_recovery_stability(s))
+
+
+# ----------------------------------------------------------------------------
 # Aggregation über Seeds (Median + p25/p75)
 # ----------------------------------------------------------------------------
 
@@ -630,6 +696,7 @@ METRICS = [
     {"key": "discovery_gap", "desc": "Abstand erreichbar vs. tatsächlich gefunden", "fn": metric_discovery_gap, "direction": None, "version": 1, "band": (0.2, 0.6)},
     {"key": "forage_pressure", "desc": "Anteil Sammel-Versuche an nicht-volem Node (Knappheit)", "fn": metric_forage_pressure, "direction": None, "version": 1, "band": (0.1, 0.5), "probation_until": "2026-08-20"},
     {"key": "warmth_stability", "desc": "Anteil Kälte-Stress-Ticks, die warm überstanden werden (Feuer/Isolation)", "fn": metric_warmth_stability, "direction": None, "version": 1, "band": (0.4, 0.9), "probation_until": "2026-08-27"},
+    {"key": "recovery_stability", "desc": "Anteil Verletzungs-Ticks, die Behandlung + Ruhe abwenden (Verband/Umschlag)", "fn": metric_recovery_stability, "direction": None, "version": 1, "band": (0.3, 0.7), "probation_until": "2026-09-03"},
 ]
 
 METRIC_VERSIONS = {m["key"]: m["version"] for m in METRICS}

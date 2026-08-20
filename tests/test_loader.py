@@ -36,7 +36,10 @@ class TestLoadItems:
         assert "clay_lump" in items
         # SPEC-007: fur_cloak (CLOTHING/Isolation) — tragbarer Wärmeschutz
         assert "fur_cloak" in items
-        assert len(items) == 16
+        # SPEC-009: bandage/poultice (Heilungs-Items) — Prozess-Outputs
+        assert "bandage" in items
+        assert "poultice" in items
+        assert len(items) == 18
 
     def test_template_has_correct_fields(self):
         items = load_items()
@@ -114,13 +117,18 @@ class TestLoadLocations:
 class TestLoadProcesses:
     def test_loads_all_processes(self):
         procs = load_processes()
-        assert len(procs) == 5
+        assert len(procs) == 9
         ids = [p.id for p in procs]
         assert "make_sharp_stone" in ids
         assert "create_tinder" in ids
         assert "start_fire" in ids
         assert "cook_meat" in ids  # SPEC-001: Koch-Prozess
         assert "make_fur_cloak" in ids  # SPEC-007: Fellumhang (Isolation)
+        # SPEC-009: Verletzung & Heilung — Verband/Umschlag weben + anlegen
+        assert "make_bandage" in ids
+        assert "make_poultice" in ids
+        assert "treat_cut" in ids
+        assert "treat_strain" in ids
 
     def test_process_has_correct_fields(self):
         procs = load_processes()
@@ -148,11 +156,14 @@ class TestLoadProcesses:
         """Public API builds ProcessDef objects from JSON (no hardcoded defs)."""
         from data.processes import get_all_processes, ProcessDef
         procs = get_all_processes()
-        assert len(procs) == 5
+        assert len(procs) == 9
         assert all(isinstance(p, ProcessDef) for p in procs)
         sharp = next(p for p in procs if p.id == "make_sharp_stone")
         assert sharp.inputs == {"pebble": 2}
         assert sharp.outputs == {"sharp_stone": 1}
+        # SPEC-009: Behandlungs-Prozesse haben einen leeren Output (apply-only)
+        treat = next(p for p in procs if p.id == "treat_cut")
+        assert treat.outputs == {}
 
 
 class TestValidationErrors:

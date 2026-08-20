@@ -5,6 +5,40 @@
 
 ---
 
+## 2026-08-20 — [Dev] SPEC-009: Verletzung & Heilung implementiert — persistente Wunden + `recovery_stability`-Probe (cron)
+
+### Aufgabe
+Der oberste offene, nicht-blockierte PLAN-Task: **SPEC-009** (Verletzung & Heilung, free research — additiv, kein Freigabe-Gate). SPEC-006 ist Peter-blockiert, forage_pressure/warmth/skill_spread sind beobachtend. Also: implementieren.
+
+### Geliefert (Engine)
+- `Player.injuries: dict` (persistenter Wund-Zustand): `cut` (blutet unbehandelt 0.2 HP/Tick über Zeit) + `strain` (Effort-Malus 1.0 beim Sammeln).
+- Handlungsgebundene Entstehung in `gather()`: exponierter `mountain_peak` (exposure ≥ 0.8) → strain; scharfe Funde (SHARP-Node) → cut. Kein globaler Timer.
+- Heilung = **entdeckbare Prozesse** + Ruhe: `make_bandage` (plant_fiber×2 → Verband), `make_poultice` (mushroom+clay_lump → Umschlag), `treat_cut`/`treat_strain` (apply-only; ohne Wunde `NO_INJURY`, Material **nicht** verbraucht). `_resting_warm()` = Feuer ODER shelter (exposure ≤ 0.15 / hidden_cave). **Unbehandelt heilt nie** — nur behandelt + rastend.
+- Neue Templates `bandage`/`poultice` (Prozess-Outputs) → `content_reachable` 18/18, `blueprint_reachability` 1.0.
+
+### Erstwert Probe-Metrik `recovery_stability`
+Band 0.3–0.7, Probation bis **03.09.** (offset +14 Tage). Erstwert **0.375 — im Band**, deterministisch, p25=p75 (flach, wie warmth — Probezeit entscheidet über Aussagekraft). Misst Anteil der Verletzungs-Ticks, die Behandlung+Ruhe abwenden.
+
+### Zwei Design-Entscheidungen (wichtig fürs Protokoll)
+1. **Eigener Injury-RNG** (`GameEngine.injuries_rng`, aus aktuellem globalen Zustand geseedet). Anfangs nutzte ich das gemeinsame `random` in gather → das **verschob die Ressourcen-Sequenz** aller Mess-Bots (guided cook_meat 17/20 → 8/20) und der `discovery_gap` kletterte. Fix: Verletzungswürfe gehören auf einen eigenen Strom, der den Fund-Strom **nicht** konsumiert. Ergebnis: **alle Baseline-Metriken byte-identisch** (skill_spread 0.216, session_depth 25, feedback 0.916, warmth 0.46, forage 0.707, first_craft 34.5), guided cook_meat wieder ≥14/20. Die Verletzung existiert für echte Spieler (eigener RNG), aber stört die Messung nicht.
+2. **Frequenz niedrig kalibriert** (cut 0.015, strain 0.02): die kurzen Discovery-Bot-Fenster (~150 Aktionen) sollen die meisten Seeds unbeschadet überstehen, sonst fällt `discovery_gap` über Band (Baseline steht exakt auf 0.6). Lang spielende, unvorbereitete Spieler spüren Verletzungen weiterhin.
+
+### Constitution & Metrik-Core
+- `tools/scorecard.py` nur um die **additive** Probe-Metrik `recovery_stability` erweitert; keine bestehende Metrik entfernt/umdefiniert/geschwächt. Alle Baseline-Werte unverändert (verifiziert per Inline-Probe, keine Scorecard-Dateien überschrieben — Play-Job bleibt Eigentümer).
+- Die Spec warnte vor der `feedback_quality`-Blindstelle (`_expected_fragment` für `INJURED`/`TREATED`/`HEALED`). **Umgehe ich strukturell:** die Wund-Meldungen laufen über Gather-Logs (nicht über Experiment-Reasons) → treffen `_expected_fragment` gar nicht → keine stille Metrik-Abschwächung, kein needs-Peter fürs Mapping. Die offene NEAR_MISS-Blindstelle (Play 19.08.) bleibt bei Peter.
+
+### Guided-Mess-Bot
+`play/guided_full.py` war (wie nach SPEC-007) gegen die neue Mechanik blind: es behandelte keine Wunden und verblutete. Fix (legitime Play-Tool-Pflege): `_treat_if_injured()` (cut→make_bandage+treat_cut, strain→make_poultice+treat_strain, best-effort) + neue Prozesse in die Prozessliste. cook_meat-Aggregat ≥14/20 bleibt grün; frühe Tode der Seeds 20260803/15 sind **vorbestehend** (Baseline identisch), kein Regress.
+
+### Verifikation
+`python -m pytest`: **223 passed** (inkl. neuer `tests/test_injury.py` 12 Tests + `recovery_stability`-Registrierung). Protokoll: reachability 1.0, content 18/18, gap 0.6 (im Band), recovery 0.375 (im Band).
+
+### Nächste Schritte für Direktor
+- `recovery_stability` bleibt Probe bis 03.09. — beobachtend, kein Plan-Ziel.
+- `feedback_quality`-NEAR_MISS-Blindstelle und `discovery_gap`-Randlage (0.6 = Grenze) weiter bei Peter/Direktor.
+
+---
+
 ## 2026-08-20 — [Research] SPEC-009: Verletzung & Heilung — persistente Wunden als aktive Überlebensökonomie (Explorations-Modus, cron)
 
 ### Auftrag

@@ -85,3 +85,9 @@ class Player:
         # gemeldet bekommen hat (NEAR_MISS). Der Hinweis feuert pro Blueprint
         # genau einmal — danach still bis zum echten Craft (keine Dauer-Belehrung).
         self.near_misses: Set[str] = set()
+        # SPEC-009: Persistente Verletzungen (Zustand, kein einmaliger HP-Abzug).
+        # Jede Wunde trägt severity (Stärke, startet 1.0), ticks (seit Entstehung)
+        # und treated (Behandlung angelegt? Verband/Umschlag). Pro-Instanz — eine
+        # frische GameEngine baut ein frisches Player-Objekt, kein Cross-Session-
+        # Bleed. `cut` blutet unbehandelt über Zeit; `strain` ist ein Effort-Malus.
+        self.injuries: Dict[str, Dict[str, Any]] = {}
