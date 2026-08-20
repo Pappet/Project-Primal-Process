@@ -5,6 +5,31 @@
 
 ---
 
+## 2026-08-20 — [Research] SPEC-009: Verletzung & Heilung — persistente Wunden als aktive Überlebensökonomie (Explorations-Modus, cron)
+
+### Auftrag
+Freier Explorations-Modus: Mechanik gesucht, die das Spiel als **System** vertieft — bewusst nicht an eine bestehende Metrik gebunden (Metrik-freies Feld u.a.: Verletzung und Heilung, Wetter, Werkzeugverschleiß, Terrain/Ortsbindung, Basisbau).
+
+### Befund (systemisch): die Fundamentalschraube ist die einzige Druckschraube
+`engine/core.py:_advance_time` (Z.180-214) reduziert `hp` ausschließlich über **Hunger-Drain** und **Unterkühlung/Hitzschlag**. `eat()` (Z.257-276) ist der **einzige Heilungsweg** (`hp += kcal/20`). Es gibt **keine persistente Verletzung, keine Verletzungsquelle aus eigenem Handeln, keinen Heilungs-Prozess** — kein Wund-Zustand, kein Verband/Umschlag.
+Doch die Rohstoffe für die Gegenmechanik **existieren bereits und liegen brach**: `plant_fiber` (FIBER → Verband), `mushroom`+`clay_lump` (EDIBLE/CLAY → Umschlag), `fire` (SPEC-007) + `hidden_cave` (exposure 0.1 → Rast). Analog zu SPEC-007 (Kälte-Druck da, Feuer-Hebel fehlte) — hier ist es grundlegender: **weder Druck (Verletzung) noch Hebel (Heilung) existiert.** Das Spiel hat nur eine einzige Druck-Schraube (thermisch/zeitlich); Risiko aus *eigener* Orts-/Materialwahl und die daraus folgende Entscheidung (vorbereiten vs. absichern, rasten) fehlt komplett.
+
+### Warum dieses Thema (kein Metrik-Zwang)
+Constitution: "Wachstum in Systemen, nicht nur Inhalten" + "Entdecken vertieft". Ein Verletzungs-/Heilungs-Layer gibt eine zweite, **aktive** Überlebensökonomie — echte Entscheidungen statt Wartungs-Loop. Rein additiv, kein Metrik-Core-Entrücken.
+
+### Geliefert
+- `specs/SPEC-009-injury-healing.md` — persistente `Player.injuries` (`cut` blutet über Zeit, `strain` Effort-Malus); handlungsgebundene Entstehung (exponiertes Sammeln am `mountain_peak`, scharfe Materialien); Heilung = entdeckbare Prozesse `make_bandage`/`make_poultice` + Ruhe an warmem/Ort-Ort. Quelle: The Long Dark (Affliction/Bleeding) + UnReal World/Vintage Story (Wunden, Kräutermittel + Ruhe). Kein Freigabe-Gate (additiv).
+- `metrics/proposed/recovery_stability.md` — neue Metrik: Anteil der Verletzungs-Ticks, die durch Behandlung+Ruhe abgewendet werden; Band 0.3–0.7. Misst, ob Verletzung *abwendbar* statt entgleisend ist.
+- `PLAN.md`: SPEC-009 als offener Task.
+
+### Warum die Discovery-Metriken nur als Nebeneffekt berührt sind
+`session_depth`/`discovery_gap` sind nicht Ziel dieses Modus; Sekundär-Wirkung explizit als Risiko notiert (new Prozesse helfen session_depth, aber Verletzung lässt den schwachen naiven Bot früher sterben → netto unklar; `discovery_gap` darf nicht über Band). Primär-Beweis liegt in der **neuen** Probe-Metrik.
+
+### Verzichtet
+Keine bestehende Metrik angefasst. SPEC-006 bleibt blockiert (Peters Freigabe), nicht umgangen. Kein Kampf-/Feind-System (Constitution: Kampf als Randphänomen). Kein Metrik-Core (`tools/scorecard.py`) berührt. CONSTITUTION: additiv, kein Rezeptbuch (Prozesse werden entdeckt), Experimentiergedächtnis erlaubt, CLI-Text bleibt, stdlib only.
+
+---
+
 ## 2026-08-19 — [Dev] Guided-Bot: rohes Fleisch als Zutat reserviert → `cook_meat` 5/20 → 17/20 (cron)
 
 ### Aufgabe
