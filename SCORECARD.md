@@ -8,14 +8,15 @@
 |--------|------|-----------|----------|--------------|
 | actions_to_first_craft (v1) | 34.500 | ±0 | niedriger | Aktionen bis zum ersten erfolgreichen Craft (naiv) |
 | blueprint_reachability (v1) | 1.000 | ±0 | höher | Anteil erreichbarer Blueprints (N=50) |
-| craft_variety (v1) | 3.500 | +0.500 ↑ besser | höher | Unterschiedliche Craft-Typen in 100 Aktionen |
+| craft_variety (v1) | 3.500 | ±0 | höher | Unterschiedliche Craft-Typen in 100 Aktionen |
 | skill_spread (v1) | 0.216 | ±0 | höher | Überlebens-Spanne optimal vs. zufällig |
-| feedback_quality (v2) | 0.916 | -0.084 ↓ schlechter | höher | Anteil informativer Rückmeldungen (Label-Stimmt) |
+| feedback_quality (v2) | 0.916 | ±0 | höher | Anteil informativer Rückmeldungen (Label-Stimmt) |
 | content_reachable (v1) | 1.000 | ±0 | höher | Anteil sammelbarer definierter Items |
 | session_depth (v1) | 25.000 | ±0 | höher | Aktionen bis nichts Neues passiert |
-| discovery_gap (v1) | 0.600 | -0.025 | im Band | Abstand erreichbar vs. tatsächlich gefunden |
+| discovery_gap (v1) | 0.600 | ±0 | im Band | Abstand erreichbar vs. tatsächlich gefunden |
 | forage_pressure (v1) (Probe bis 20.08.) | 0.707 | ±0 | über Band | Anteil Sammel-Versuche an nicht-volem Node (Knappheit) |
 | warmth_stability (v1) (Probe bis 27.08.) | 0.460 | ±0 | im Band | Anteil Kälte-Stress-Ticks, die warm überstanden werden (Feuer/Isolation) |
+| recovery_stability (v1) (Probe bis 03.09.) | 0.375 | — (Baseline) | im Band | Anteil Verletzungs-Ticks, die Behandlung + Ruhe abwenden (Verband/Umschlag) |
 
 ## discovery_gap — Zielband
 
@@ -32,7 +33,12 @@
 **Band: 0.4 – 0.9.** Keine Richtung (kein "höher = besser"). Unter 0.4 nimmt das Spiel den Spieler an die Hand; über 0.9 ist es faktisch unentdeckbar. `blueprint_reachability` (None) misst, was ein Orakel erreichen kann; `naive_discovery_rate` (None) was ein Spieler wirklich findet. Der Abstand dazwischen ist das eigentliche Spiel.
 
 
-## Details (2026-08-19)
+## recovery_stability — Zielband
+
+**Band: 0.3 – 0.7.** Keine Richtung (kein "höher = besser"). Unter 0.3 nimmt das Spiel den Spieler an die Hand; über 0.7 ist es faktisch unentdeckbar. `blueprint_reachability` (None) misst, was ein Orakel erreichen kann; `naive_discovery_rate` (None) was ein Spieler wirklich findet. Der Abstand dazwischen ist das eigentliche Spiel.
+
+
+## Details (2026-08-21)
 
 ```json
 {
@@ -82,9 +88,10 @@
   },
   "content_reachable": {
     "value": 1.0,
-    "reachable_count": 16,
-    "defined_count": 16,
+    "reachable_count": 18,
+    "defined_count": 18,
     "reachable": [
+      "bandage",
       "berries",
       "bone",
       "clay_lump",
@@ -96,6 +103,7 @@
       "mushroom",
       "pebble",
       "plant_fiber",
+      "poultice",
       "raw_meat",
       "reeds",
       "sharp_stone",
@@ -108,7 +116,7 @@
   "session_depth": {
     "value": 25.0,
     "p25": 21,
-    "p75": 43,
+    "p75": 44,
     "n_runs": 20,
     "version": 1
   },
@@ -127,7 +135,7 @@
   "forage_pressure": {
     "value": 0.707,
     "p25": 0.612,
-    "p75": 0.862,
+    "p75": 0.869,
     "n_runs": 20,
     "version": 1
   },
@@ -135,6 +143,13 @@
     "value": 0.46,
     "p25": 0.46,
     "p75": 0.46,
+    "n_runs": 20,
+    "version": 1
+  },
+  "recovery_stability": {
+    "value": 0.375,
+    "p25": 0.375,
+    "p75": 0.375,
     "n_runs": 20,
     "version": 1
   }

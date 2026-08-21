@@ -5,6 +5,24 @@
 
 ---
 
+## 2026-08-21 — [Play] Scorecard + Playtest: Langeweile-Stelle unverändert 25, guided-Decke in ~15 Aktionen geleert (cron)
+
+### Ablauf
+223 Tests grün. `tools/scorecard.py` geschrieben (2026-08-21.json, deterministisch). Befunde aus drei geführten + Naive-Sweeps.
+
+### Headline-Befund: Die Discovery-Decke IST das Spiel — und sie leert sich in ~14–16 geführten Aktionen
+`session_depth` **25.0, flach seit 5 Messungen**. Geführte Erschöpfung: ein kompetenter Player leert alle 10 Blueprints + 5 Prozesse in **~14–16 Aktionen** (seeds 20260810@16, 20260812@14), danach `gather_at(random)` = Grind. Timeline: `spear→spear_bound→rope→cord_spear→make_bandage…` alles in ≤16 Aktionen. Der Tier-2-Layer (rope→cord_spear) landet mitten in der Kette statt die Erschöpfung nach hinten zu schieben → die 2 Messwege sind strukturell blind für gestufte Discovery (bestätigt 18./19.08.). Entscheid nötig bei Peter (Metrik = Verfassungs-Kern): session_depth-Bot für gestufte Discovery kalibrieren, oder flach als soziales Signal akzeptieren.
+
+### Zweitbefund: guided-Bot 6/20 (19.08: 8/20) — bekannter Kälte-Wartungsloop, NICHT SPEC-009
+Sterbende Runs haben `injuries={}` → nicht die Verletzung. Kill: `_warm_here` rettet nur bei `not fire_active`; am kalten `mountain_peak` zündet der Bot Feuer (fire_active=True) → Rückzug-TRigger greift nie, body_temp ~31, −3 HP/Aktion. Geprüft und bewusst NICHT gehärtet: aggressiver body_temp<35-Retreat im 20-Sweep → **3/20 voll**, strikt schlechter (Skill-dokumentierte Falle). HEAD bleibt Decke.
+
+### Backlog/Journal
+- 🔵 Tech-Debt: Rückzug-Trigger `not fire_active` blockt Kälte-Retreat am Ort mit „aktivem aber ungenügendem Feuer" — chirurgischer Fix (body_temp-gated am kalten Ort), gegen-tastbar über 20-Sweep.
+- Kein neuer Spiel-Bug. Keine Metrik-Anfassung.
+- Commit: play/2026-08-21.md, BACKLOG.md, JOURNAL.md, SCORECARD.md, scorecard/2026-08-21.json.
+
+---
+
 ## 2026-08-20 — [Dev] SPEC-009: Verletzung & Heilung implementiert — persistente Wunden + `recovery_stability`-Probe (cron)
 
 ### Aufgabe
