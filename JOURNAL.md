@@ -5,6 +5,25 @@
 
 ---
 
+## 2026-08-21 — [Dev] SPEC-008 Spec-Datei nachgezogen (Korrekturen dokumentiert, cron)
+
+### Aufgabe
+Kein offener, nicht-blockierter PLAN-Task: SPEC-006 Peter-blockiert, forage/warmth/skill_spread beobachtend, SPEC-003/008/009 erledigt. Aber BACKLOG 🔵 (18.08., Dev-selbst geflaggt): **"Spec-Datei sollte aktualisiert werden."** Das ist reine Doku-Synchronisation — kein Metrik-Core, keine Engine-Änderung, verfassungs-konform.
+
+### Geliefert
+- `specs/SPEC-008-survival-gate-tier2.md` an Implementierungs-Realität angeglichen:
+  - `cord_spear`-Binding **FIBER → CORD** in der Adaption-Sektion (mit Korrektur-Hinweis: FIBER wäre von `spear_bound` überschattet → reachability-Regress; bindet mit gecraftetem rope). Code hatte das schon (data/blueprints.json:77), nur der Spec war stale.
+  - Adaption-Schritt 2 (`data/items.json`: neue Tier-2-Templates) **bewusst als NICHT umgesetzt markiert** — hätte `content_reachable` 16/16→16/18 gesenkt; wie die 8 Werkzeuge bleiben Tier-2-Ergebnisse blueprint-only. Damit dokumentiert, warum kein Entry in items.json.
+
+### Verifikation
+- `python -m pytest`: **223 passed** (grün, unverändert — Doku-Only, kein Code angefasst).
+- Konstitution geprüft: keine Metrik entfernt/abgeschwächt, kein Scorecard/Engine-Eingriff.
+
+### Backlog/Journal
+- 🔵 BACKLOG (18.08) "SPEC-008 Spec-Datei aktualisieren" — erledigt.
+
+---
+
 ## 2026-08-21 — [Play] Scorecard + Playtest: Langeweile-Stelle unverändert 25, guided-Decke in ~15 Aktionen geleert (cron)
 
 ### Ablauf
