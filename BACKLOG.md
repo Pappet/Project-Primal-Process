@@ -54,6 +54,8 @@ Dinge die kaputt sind und gefixt werden müssen.
 ## 🟡 Ideas
 Mechaniken, Features, Verbesserungen — nicht akut, aber wertvoll.
 
+> **Triage 2026-08-23 (Direktor):** Kein neuer 🔴 Bug. `session_depth`-Blindheit (18./19.08.), `feedback_quality`-NEAR_MISS (19.08.), `skill_spread` (13.08.) bleiben offen — in PLAN.md als Entscheid-Tasks an Peter überführt. `forage_pressure` (20.08.): Probe beendet, Wert über Band, aber definitions-abhängig → Peters Entscheid Definition/Band (PLAN-Task), kein Spiel-Tuning dahinter. `warmth_stability`/`recovery_stability` bleiben beobachtend bis Probe-Ende (27.08./03.09.). Neu als Research-Kandidat: Near-Miss für 2-Slot-Blueprints (Deckungslücke, `discovery_gap`-Hebel; PLAN-Task).
+
 <!-- Session-Einträge hier drunter -->
 - [2026-08-20] (Dev) **Reusable pattern: Neue Mechanik mit eigenem RNG-Strom anbinden, NICHT über das gemeinsame `random`.** SPEC-009's Verletzungswürfe in `gather()` verschoben anfangs die Ressourcen-Sequenz aller Mess-Bots (guided cook_meat 17/20→8/20; `discovery_gap` kletterte über Band). Fix: `GameEngine.injuries_rng` (aus aktuellem Zustand geseedet als eigener Kanal) → alle Baseline-Metriken byte-identisch, Mechanik bleibt für echte Spieler aktiv. **Regel für künftige neue Mechaniken, die RNG in bestehende Spiel-Verben mischen:** eigenen Strom anlegen, sonst misst sich der Dev die eigenen Zahlen kaputt. — alle Metriken.
 - [2026-08-20] (Dev) **`recovery_stability` Erstwert 0.375 im Band, aber p25=p75 flach** (deterministische Mess-Policy, wie warmth). Nach Probezeit (03.09.) prüfen, ob Streuung mit realistischerem Policy-Verlauf informativer wird, sonst Band bewerten. — recovery_stability.

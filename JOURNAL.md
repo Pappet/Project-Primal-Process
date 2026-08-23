@@ -5,7 +5,51 @@
 
 ---
 
-## 2026-08-21 — [Dev] SPEC-008 Spec-Datei nachgezogen (Korrekturen dokumentiert, cron)
+## 2026-08-23 — [Direktor] Plan-Neufassung: Plateauregime – Mess-Entscheide dominieren, ein neuer Discovery-Hebel (cron)
+
+### Scorecard-Verlauf (Trajektorie 03.08. → 21.08.)
+| Metrik | 03.08 | 17.08 | 19.08 | 21.08 | Lesart |
+|--------|-------|-------|-------|-------|--------|
+| actions_to_first_craft | 63 | 34.5 | 34.5 | 34.5 | ↑→ gesunder Einstieg, stabiler Boden |
+| blueprint_reachability | 1.0 | 1.0 | 1.0 | **1.0** | ↑ REC-001, ehrlich, Decke (10/10) |
+| craft_variety | 0.5 | 3.0 | 3.5 | 3.5 | ↑ gesund (SPEC-005/008/009) |
+| skill_spread | 0.315 | 0.216 | 0.216 | 0.216 | ↓→ klären (Peter, A/B/C) |
+| feedback_quality | 1.0 | 1.0 | 0.916 | 0.916 (v2) | –→ Blindstelle (NEAR_MISS, Peter) |
+| content_reachable | 0.667 | 1.0 | 1.0 | **1.0 (18/18)** | ↑ Decke (SPEC-009 bandage/poultice) |
+| session_depth | 24 | 25 | 25 | **25** | ↔ **Nordstern, flach seit Wochen** |
+| discovery_gap | 0.5 | 0.625 | 0.6 | **0.6** | → im Band, aber exakt auf der oberen Kante |
+| forage_pressure | – | 0.707 | 0.707 | 0.707 | Probe beendet 20.08, über Band – Entscheid |
+| warmth_stability | – | – | 0.46 | 0.46 | Probe bis 27.08, im Band – beobachtend |
+| recovery_stability | – | – | – | 0.375 | Probe bis 03.09, im Band – beobachtend |
+
+**Was vorwärts geht:** `reachability` 1.0, `content_reachable` 1.0 (18/18 nach SPEC-009), `discovery_gap` 0.625→0.6 (SPEC-003), `craft_variety` 3.5. SPEC-009 hat eine komplette zweite Überlebensökonomie (Verletzung & Heilung) mit eigener Probe-Metrik geliefert. **Was stagniert:** `session_depth` 25 (die Langeweile-Stelle, Nordstern – unverändert, auch nach SPEC-008s zweiter Schicht, weil der naive Bot die Gates nicht öffnet). `skill_spread` (0.216) und `feedback_quality` (0.916) sind **keine Spiel-Regresse** – beide sind Mess-Entscheide, die auf Peter warten.
+
+### Kernbefund: das System ist auf einem Plateau
+Alle drei großen offenen Metrik-Bewegungen sind **mess-entscheidungsblockiert**, nicht spiel-blockiert: `session_depth` (SPEC-006 / Bot-Recalbrierung), `feedback_quality` (NEAR_MISS-Mapping), `skill_spread` (Deutung A/B/C). Dazu `forage_pressure` nach Probe (20.08.) über Band, aber definitionsabhängig. Der einzige offene, **metrik-sichere, additiv tragfähige** Hebel liegt in der Discovery selbst: SPEC-003 kann für 2-Slot-BPs (`spear`, `spear_bound`) nie einen Near-Miss geben (`2 ≤ overlap < len` ist für len=2 nie wahr) — eine echte Deckungslücke, deren Schließen `discovery_gap` von der oberen Bandkante (0.6) in die Mitte ziehen und naive Trefferquote heben kann. Kein Content-Ballon, reines Feedback-Experimentiergedächtnis (Constitution-konform).
+
+### Neue PLAN-Tasks
+1. **DISCOVERY-GAP-HEBEL** (neu, aus Ziel 2): Near-Miss auf 2-Slot-Blueprints erweitern – additiv, leak-frei, am Deck auf der 0.6-Kante ziehend.
+2. **SESSION-DEPTH-ENTSPERRUNG** (neu, aus Ziel 1): fertiges **Entscheid-Paket** für Peter (Option A tool-aware reachability / B Bot-Kalibrierung / C accept), Wirkung je Option **gemessen** via inline-Probe, `scorecard.py` unangetastet. Deliverable = Entscheid-Grundlage, kein Implementieren/Ausheilen.
+3. **forage_pressure-Nachlese** (neu, Probe beendet): Peter-Entscheid Definition/Band; explizit *kein* Tuning-Ziel hinter einem Sensor-Artefakt.
+
+Behalten aus Vorwoche (Entscheid-Klärung, nicht als Ziel): `skill_spread` (A/B/C), `feedback_quality`-NEAR_MISS-Mapping. Beobachtend (Probezeit): `warmth_stability` (bis 27.08.), `recovery_stability` (bis 03.09.) — **Probe-Metriken sind laut CONSTITUTION keine Plan-Ziele.**
+
+### Selbstmodifikation des Systems
+**Keine Cron-Änderungen.** Die Tasks passen in die bestehenden Dev-Slots (Mo–Sa) und Research-Slots (Di/Do); ein eigener Discovery-Task ist ein Research-Kandidat, kein Grund für einen neuen Job. Kein echter Takt-/Rollen-Gap. Play/Mess-Kern unangetastet. „CONSTITUTION.md ist unantastbar. Prüfe jede Änderung dagegen.“ bleibt in allen Prompts.
+
+### Triage (BACKLOG)
+- 🔵 guided_full-Retreat-Trigger (21.08.) bleibt als echtes Tech-Debt im Backlog (Messwerkzeug-Pflege, chirurgischer Fix, 20-Sweep-gegengetastet) — kein neuer Task, keine Metrik.
+- 🟡 Deckungslücke `session_depth`/`feedback_quality`/`skill_spread`: in Tasks überführt, schwebend auf Peter.
+- ⚪ Research-Leads (Valheim/Long Dark/Green Hell/Zomboid/Dwarf Fortress) bleiben als Ideen-
+  reservoir; SPEC-006/Hebel bis zur Peters-Freigabe suspendiert.
+
+### CONSTITUTION-CHECK
+Keine Metrik entfernt/umdefiniert/abgeschwächt; `tools/scorecard.py`, `METRICS`, Scorecard-Dateien **unberührt**. Kein Spieldesign geändert (nur PLAN/Tasks neu). Probe-Metriken (forage seit 20.08., warmth bis 27.08., recovery bis 03.09.) bewusst nicht als Plan-Ziele. Keine Cron-Änderungen; Play-Job/Messung unangetastet. Konform.
+
+### Artefakte / Verifikation
+- PLAN.md (komplett neu, 3 Sektionen). `python -m pytest`: 223 passed (vor jedem Schreiben grün). Working tree war sauber + in sync (kein ahead).
+
+---
 
 ### Aufgabe
 Kein offener, nicht-blockierter PLAN-Task: SPEC-006 Peter-blockiert, forage/warmth/skill_spread beobachtend, SPEC-003/008/009 erledigt. Aber BACKLOG 🔵 (18.08., Dev-selbst geflaggt): **"Spec-Datei sollte aktualisiert werden."** Das ist reine Doku-Synchronisation — kein Metrik-Core, keine Engine-Änderung, verfassungs-konform.
