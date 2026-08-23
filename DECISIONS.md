@@ -1,10 +1,8 @@
 # Entscheidungsliste für Peter — freigabepflichtige Punkte im PPP
 
 > Stand: 2026-08-14. Diese Datei ist deine Lese-/Entscheidungshilfe.
-> Jeder Punkt braucht eine Metrik-bezogene Freigabe (Constitution: `tools/scorecard.py`,
-> `METRICS`, Scorecard-Dateien = unantastbar → Änderungen brauchen dich).
-> **Frei gegeben (zur Info):** REC-001 wurde von dir am 14.08. freigegeben und angewendet.
 > Haken → schreibe deine Entscheidung als `[x]`/`[ ]` mit Datum in den Punkt.
+> **Peter hat am 22.08. geantwortet** — siehe `DECISIONS_Response_2026_08_21.md`. Die freigegebenen Punkte unten sind abgehakt; offene Punkte (wenn sie noch offen sind) sind markiert.
 
 ---
 
@@ -25,13 +23,10 @@ erster Craft früher) → optimale vs. zufällige Überlebensspanne schrumpft. D
 weniger relativen Vorsprung, weil es den Zufallsspieler besser trägt.
 
 **Deine Wahl:**
-- [ ] **A (umdeuten):** Formel behalten; Metrik neu interpretieren (fallender Wert = Kindheit der
-      Einstiege, kein Tiefenverlust). Richtungs-/Beschreibungslabel in SCORECARD anpassen. **Empfohlen** —
-      minimal, ehrlich, keine Berechnung angefasst.
-- [ ] **B (umformen):** Statt relativer Spanne eine absolute/metrikmisch andere Definition vorschlagen —
-      aufwendiger, betrifft Metrik-Berechnung, mehr Tests nötig.
-- [ ] **C (belassen + erklären):** Wert steht weiter so, als "klärungsbedürftig" im Journal; keine
-      Änderung. Erst entscheiden, wenn ein neuer Mechanik-Zyklus das Verhältnis verschiebt.
+- [x] **A (umdeuten):** Formel behalten; Metrik neu interpretieren (fallender Wert = Kindheit der
+      Einstiege, kein Tiefenverlust). Richtungs-/Beschreibungslabel in SCORECARD anpassen. — **GEWAEHLT von Peter, 22.08.**
+- [ ] **B (umformen):** Statt relativer Spanne eine absolute/metrikmisch andere Definition vorschlagen — aufwendiger.
+- [ ] **C (belassen + erklären):** Wert steht weiter, als "klärungsbedürftig" im Journal.
 
 ---
 
@@ -41,16 +36,12 @@ Drei separate Metrik-Versionierungen (Umdefinitionen) — jedes ist ein eigener 
 Unabhängig voneinander möglich.
 
 ### 2a) `craft_variety` soll auch Prozesse zählen
-- **Heute:** zählt nur `execute_experiment`-Crafts, nie `execute_process`. Das neue Prozess-System
-  (Feuer, Wärme, Kochen, Werkzeugbau) bleibt für diese Metrik unsichtbar.
-- **Wirkung:** Prozesse werden als "Craft-Typ" mitgezählt → breiteres Bild der Craft-Vielfalt.
-- [ ] **Geben?** (Umdefinition → `craft_variety` v2, Alt-Pfad konkurriert nicht mehr.)
+- **Heute:** zählt nur `execute_experiment`-Crafts, nie `execute_process`. Das Prozess-System bleibt unsichtbar.
+- [x] **Freigegeben von Peter, 22.08.** → craft_variety v2 (distinkte `blueprint_id`s UND `process_id`s).
 
 ### 2b) `content_reachable` ist blind gegen dangling Nodes
-- **Heute:** zählt nur `TEMPLATE_DB`-Keys. Wenn eine Location-Node ein Item droppt, das gar kein
-  Template hat (oder umgekehrt), merkt die Metrik nichts.
-- **Wirkung:** entweder passend zählen (Node-Items einbeziehen) oder als bewusste Grenze dokumentieren.
-- [ ] **Geben?** (Umdefinition → `content_reachable` v2.)
+- **Heute:** zählt nur `TEMPLATE_DB`-Keys. Wenn eine Location-Node ein Item droppt, das kein Template hat, merkt die Metrik nichts. (B06/B07-Klasse.)
+- [x] **Gewaehlt von Peter, 22.08.** → content_reachable v2 (Node-Referenzen pruefen, `⚠ Content entfernt`-Logik bleibt).
 
 ### 2c) skill_spread-Änderung (siehe oben, Punkt SKILL-SPREAD)
 - Verknüpft mit der Neuinterpretation; hier nur zur Vollständigkeit gelistet.
@@ -65,23 +56,21 @@ regredieren, weil `metric_reachability` im Fresh-Gather-Lauf **nie Werkzeuge bau
 = Constitution-Core. **Reicht über REC-001 hinaus.**
 
 **Optionen (JOURNAL 11.08.):**
-- [ ] **A:** tool-aware reachability freigeben (Zähler baut Werkzeuge als Vorschritt) → SPEC-006
-      umsetzbar, `discovery_gap` bleibt ehrlich.
-- [ ] **B:** SPEC-006 aufschieben; nur Mechaniken, die ohne `tool_tag`-Slots auskommen.
-- [ ] **C:** SPEC-006 als "Metriken kümmern sich später" umsetzen (Zähler bleibt ohne Tool-Bau,
-      reachability `discovery_gap` wird temporär unrealibel). **Nicht empfohlen** — verfälscht die Steuerung.
+- [x] **A:** tool-aware reachability freigeben (Zähler baut Werkzeuge als Vorschritt) → SPEC-006 (REC-002). — **GEWAEHLT von Peter, 22.08.**
+- [ ] **B:** SPEC-006 aufschieben.
+- [ ] **C:** SPEC-006 ohne tool-aware Zähler umsetzen. **Nicht empfohlen.**
 
 ---
 
-## 👁️ FORAGE_PRESSURE — (Probezeit bis 20.08., derzeit KEIN Plan-Ziel)
-
-- Erstwert 0.707, Band 0.1–0.5 → **über Band**. `stock < max_stock` als Schwellenwert ist sensibel.
-- **Nach 20.08.** entscheiden: Willst du Definition/Band ändern (dann Freigabe nötig) oder das Spiel
-  "reiben lassen" und das Band als Draft sehen? Bis dahin nur Beobachtung, kein Ziel.
+## ✔️ FORAGE_PRESSURE — v2 freigegeben (22.08.), Band wird NICHT geschoben
+- Erstwert 0.707, Band 0.1–0.5 → **über Band**, aber definitionsbedingt (`stock < max_stock` zählt jede frisch geerntete Stelle).
+- **Peter 22.08.:** Band bleibt. v2 misst **gefühlte** Knappheit (z.B. Anteil verweigerter/geminderter Versuche durch Erschöpfung). Schwelle schlägt Dev/Direktor vor. Probezeit 14 Tage, beobachtend.
 
 ---
 
-## 🔥 WARMTH_STABILITY — (Probezeit bis 27.08., derzeit KEIN Plan-Ziel)
+## ✔️ WARMTH_STABILITY / RECOVERY_STABILITY — beobachtend bestaetigt (Peter, 22.08.)
+- warmth: Probezeit bis 27.08., danach Beobachtungsgroesse; p25=p75-Flachheit bekannt.
+- recovery: Probe bis 03.09., dito. Keins wird Plan-Ziel vor Probe-Ende.
 
 - Aus SPEC-007 (Feuer/Wärme). Erstwert 0.460, Band 0.4–0.9 → **im Band**. Rein beobachtend.
 

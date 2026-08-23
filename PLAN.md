@@ -4,35 +4,64 @@
 > Grenze: CONSTITUTION.md.
 
 ## Aktueller Zustand
-Die Messung ist ehrlich: `blueprint_reachability` **1.0** (alle 10 Blueprints erreichbar, REC-001), `content_reachable` **1.0** (18/18 nach SPEC-009), `discovery_gap` mit SPEC-003 zurück **im Band** (0.625→**0.6**, aber exakt auf der oberen Bandkante = „kaum entdeckbar“-Grenze). Parallel hat SPEC-009 (Verletzung & Heilung) eine zweite, aktive Überlebensökonomie geliefert (`recovery_stability` 0.375, im Band), und `craft_variety` ist auf **3.5** gestiegen. Aber der Nordstern bewegt sich nicht: **`session_depth` bleibt 25 flach** — die komplette entdeckbare Welt (10 BPs + 5 Prozesse) leert sich in ~15–25 geführten Aktionen; danach ist es Grind. `skill_spread` (0.216) und `feedback_quality` (0.916) sind keine Spiel-Regresse, sondern warten auf Peters Metrik-Entscheide. Der `forage_pressure`-Wert ist definitionsabhängig zu hoch (0.707, Band 0.1–0.5, Probe seit 20.08. beendet) — Entscheid, kein Tuning-Ziel.
+
+Peter hat am 22.08. alle offenen Entscheidungen gefällt (siehe `DECISIONS_Response_2026_08_21.md`).
+Er hat freigegeben: skill_spread umdeuten (Option A), craft_variety v2, content_reachable v2,
+feedback_quality v3, session_depth v2 (Probezeit 14 Tage), tool-aware reachability (REC-002),
+SPEC-006 (priorisiert) und forage_pressure v2. Damit ist die Mess-Blockade des Nordsterns aufgelöst.
+`session_depth` (25, flach) kann jetzt bewegt werden. Das Spiel ist messgesund: `blueprint_reachability`
+1.0, `content_reachable` 1.0, `discovery_gap` 0.6 (im Band, known-fragile), `craft_variety` 3.5.
 
 ## Was als nächstes besser werden muss
-1. **Die Langeweile-Stelle verschieben — `session_depth` (25 → höher).** Der Hebel ist die echte zweite Discovery-Schicht (SPEC-006: Werkzeug als Zutat), aber er ist auf **tool-aware reachability (Peters Freigabe)** blockiert, und der naive `session_depth`-Bot ist strukturell blind für gestufte Gates (SPEC-008 lieferte die Schicht, ohne die Zahl zu bewegen). Ohne Peters Metrik-Entscheid (Recalibrierung des Bots = Scorecard-Kern) wird `session_depth` nicht steigen; deshalb: **Decision-Paket fertigstellen** (Optionen + Wirkungs-Schätzung gemessen, nicht geraten), damit Peter schnell entscheiden kann — kein Content-Ballon, um die Zahl zu fälschen.
-2. **`discovery_gap` stabil im Band halten, weg von der 0.6-Kante (0.6, Band 0.2–0.6).** Jede weitere Druck-/Überlebensmechanik (forage, warmth, recovery) schiebt naive Bots Richtung Stall → Gap droht über die Kante zu kippen. Konkreter, additiver, leakt-freier Hebel liegt in der Discovery selbst: **SPEC-003-Deckungslücke schließen** — die 2-Slot-Blueprints (`spear`, `spear_bound`) können aktuell *nie* einen Near-Miss-Hinweis geben (`2 ≤ overlap < len` ist für len=2 nie wahr). Diese erweitern → naive Trefferquote steigt → Gap wandert in die Bandmitte statt auf der Kante zu hängen. Metrik, die sich bewegen soll: `discovery_gap` (Richtung: weg von der oberen Kante, im Band).
-3. **`forage_pressure`-Probe schließen (Probe seit 20.08. beendet).** Wert 0.707 über Band 0.1–0.5 — aber die Definition `stock < max_stock` zählt jeden Teilerfolg als Knappheit und sättigt prinzipbedingt nahe 1.0. Der Sensor misst aktuell „Node nicht bei 100 %“, nicht „Spieler fühlte Grind“. Entscheid an Peter: **Definition/Band anpassen** (Metrik-Core → Freigabe) oder Band als Referenz/Draft akzeptieren. Kein Spieldesign-Re-balancieren auf einen Messwert-Artefakt. Metrik, die sich bewegen soll: `forage_pressure` (Band-Entscheidung).
+
+1. **Die zweite Discovery-Schicht liefern** — Metrik: `session_depth` (hoeher = besser).
+   Mit dem ziel-bewussten v2-Bot und tool-aware reachability ist SPEC-006 nicht mehr blockiert.
+   Reihenfolge: Ehrlichmachungs-Batch, dann REC-002, dann SPEC-006.
+   Erst eine Ehrlichmachung, sonst misst man die Schicht falsch.
+   Die erste v2-Lesung liest hoeher, ohne dass sich das Spiel aendert — das ist Re-Baselining, kein Fortschritt (Peter).
+
+2. **Die Zahlen ehrlich machen.**
+   skill_spread: Label umdeuten. craft_variety v2: zaehlt auch Prozesse.
+   content_reachable v2: dangling Node-Referenzen zeigen sich. feedback_quality v3: NEAR_MISS ist informativ.
+   Metriken sind Indikatoren, keine Ziele.
+
+3. **discovery_gap nachhaltig im Band halten.**
+   Den Bandrand 0.6 akzeptieren, nicht aufs Band optimieren.
+   Steigt der Gap ueber 0.6: das ist ein Spiel-Signal (naive finden Tier-2 nicht).
+   Antwort ist spiel-seitig: NEAR_MISS erweitern, Hinweise, Gate-Balance. Niemals eine Metrik abschwaechen.
+   Konkreter Hebel heute: NEAR_MISS auf 2-Slot-Blueprints erweitern (spear, spear_bound koennen nie near-missen).
 
 ## Tasks
+
 > Offene Aufgaben mit Akzeptanzkriterien. Dev arbeitet von oben nach unten.
-> `[ ]` offen · `[~]` in Arbeit · `[x]` erledigt
 
-- [x] **SPEC-009 — Verletzung & Heilung.** ✅ DEV 20.08. → siehe unten „Erledigt“. `recovery_stability` in Probe (bis 03.09.), **kein Ziel**.
-- [x] **SPEC-008 — Wissens-Gate Tier-2.** ✅ DEV 18.08., Spec-Datei nachgezogen 21.08. `session_depth` blieb 25 — Metrik-Frage (s. Ziel 1). **Kein Content-Inflation-Fix.**
-- [x] **SPEC-003 — Partielle Match-Erkennung (Near-Miss).** ✅ DEV 17.08.
-- [x] **REC-001 — Reachability-Zähler kalibriert.** ✅ Freigegeben 14.08., angewendet.
-- [ ] **DISCOVERY-LÜCKE: Near-Miss für 2-Slot-Blueprints erweitern (`discovery_gap` weg von der 0.6-Kante).** NEU (aus Ziel 2). SPEC-003 kann für len=2 (`spear`, `spear_bound`) nie `NEAR_MISS` feuern — Lücke in der Discovery-Hilfe. Additive, leakfreie, ohne Rezept-Verrat. **Akzeptanz:** die 2-Slot-Blueprints liefern bei ≥1 gehaltenem + unbekanntem Rest-Material den generischen „gehört zusammen“-Hinweis (kein Tag/Rezept-Leak); naive Trefferquote steigt, `discovery_gap` bleibt ≤0.6 (kein Überschießen); pytest grün. Quelle: SPEC-003-partial-match-recognition.md.
-- [ ] **SESSION-DEPTH-ENTSPERRUNG — Entscheid-Grundlage für Peter (`session_depth`).** NEU (aus Ziel 1). Deliverable ist der fertige Entscheid-Block (nicht die Implementierung): messbare Option **A** (tool-aware reachability, Zähler baut Werkzeuge als Vorschritt → SPEC-006 umsetzbar, REC-001-Familie) vs **B** (session_depth-Bot ziel-bewusst kalibrieren, Scorecard-Core) vs **C** (accept: Gate bleibt, Zahl flach als ehrliches Signal). **NICHT `tools/scorecard.py` anfassen.** Akzeptanz: `proposals/`-Datei mit gemessener Wirkung je Option (inline-Probe, Scorecard-Dateien unangetastet) + DECISIONS-Eintrag; Peters Entscheid abgewartet. Quelle: JOURNAL 18.08./19.08./21.08., DECISIONS.md.
-- [ ] **forage_pressure-Nachlese (Peters Freigabe, kein Ziel).** Probe seit 20.08. beendet. Wert über Band (0.707 vs 0.1–0.5), definitionsbedingt (Artefakt), darum keine Tuning-Forderung ans Spiel. Akzeptanz: Peters Entscheid Definition/Band eingegangen; falls Definition bleibt, als „hoher, aber sensorischer Wert“ im Journal dokumentiert.
-- [ ] **skill_spread-Deutung — klären, nicht fixen, (Peter-Entscheid A/B/C).** Metrik bleibt unangetastet (Constitution). Akzeptanz: Freigabe eingegangen + angewandt, keine stille Änderung.
-- [ ] **feedback_quality-NEAR_MISS-Blindstelle (Peter-Entscheid).** `_expected_fragment` kennt `NEAR_MISS:` nicht → zählt als uninformativ (1.0→0.916). Kein Spielfehler; der Near-Miss-Text ist *absichtlich* vage. Entscheidung: ehrliches Mapping (Metrik-Core → Freigabe) oder Kosten akzeptieren. Akzeptanz: Peters Entscheid dokumentiert. **Nicht** still in `_expected_fragment` eingreifen.
-- [~] *(beobachtend)* **warmth_stability** (Probe bis 27.08.) — 0.460 im Band, p25=p75 flach. Vor Probensende keine Aktion.
-- [~] *(beobachtend)* **recovery_stability** (Probe bis 03.09.) — 0.375 im Band, p25=p75 flach (wie warmth). Vor Probensende keine Aktion.
+- [ ] **Ehrlichmachungs-Batch** (Freigabe 22.08., Pkt. 1-4, eine Session). Vier Metrik-Korrekturen:
+      skill_spread Option A (Formel bleibt, Label umdeuten); craft_variety v2 (Prozesse zaehlen);
+      content_reachable v2 (dangling Nodes pruefen); feedback_quality v3 (NEAR_MISS maplen, plus Vollstaendigkeit).
+      Gross testen. Keine andere Metrik ungewollt schwaechen.
 
-**Erledigt (Kontext):**
-- [x] **SPEC-005** — Mengen-basiertes Mehrfach-Slot-Crafting (Stack quantity füllt N Slots).
-- [x] **SPEC-007** — Feuer & Wärme (Location-Feuer, Stoke, `fur_cloak`, `warmth_stability` in Probe).
-- [x] **SPEC-004** — Resource depletion.
-- [x] **SPEC-002** — Blueprint-Familien.
+- [ ] **session_depth v2 — ziel-bewusster Bot** (Freigabe 22.08., Pkt. 5). Probezeit 14 Tage, beobachtend.
+      Bot verfolgt NEAR_MISS, versucht BPs mit >= 2/3 Materialien, ab survival >= 0.4 auch gated BPs.
+      Erste v2-Lesung als neue Baseline dokumentieren, nicht feiern.
+
+- [ ] **REC-002 — tool-aware reachability** (Freigabe 22.08., Pkt. 6). Patch-Entwurf + Wirkung +
+      Tests (wie REC-001, inline-Probe). Zaehler misst, was die Engine craften kann, inkl. Werkzeug-Bau.
+      Keine Scorecard-Datei ueberschreiben. Design bleibt Dev/Direktor.
+
+- [ ] **SPEC-006 — Werkzeug als Zutat** (priorisiert, nach Ehrlichmachung + REC-002). Akzeptanz:
+      session_depth (v2) steigend, blueprint_reachability 1.0, discovery_gap beobachtet.
+      Steigt der Gap ueber 0.6: Spiel-Signal, Antwort spiel-seitig. Kein Rezept-Leak, kein Content-Ballon.
+
+- [ ] **forage_pressure v2** (Freigabe 22.08., Pkt. 8). Gefuehlte Knappheit, nicht stock < max_stock.
+      Das Band wird NICHT geschoben. Schwelle schlaegt Dev/Direktor vor. Probezeit 14 Tage.
+
+- [ ] **PLAY-TOOLING: guided_full Rueckzug-Trigger** (keine Freigabe noetig). Jeder Fix nur am kalten Ort,
+      gegengetestet ueber 20-Sweep. Messwerkzeug, keine Metrik.
+
+- [~] *(beobachtend)* **warmth_stability** (Probe bis 27.08.) — 0.460 im Band, flach. Kein Ziel.
+- [~] *(beobachtend)* **recovery_stability** (Probe bis 03.09.) — 0.375 im Band, flach. Kein Ziel.
+- [x] *(erledigt)* REC-001, SPEC-003, SPEC-005, SPEC-007, SPEC-008, SPEC-009.
 
 ---
 
-*Nächste Scorecard-Kontrolle: nächster Play-Job. Plan-Neufassung: nächster Direktor (So).*
+*Naechste Scorecard-Kontrolle: naechster Play-Job. Plan-Neufassung: naechster Direktor (So).*

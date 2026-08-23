@@ -5,7 +5,7 @@
 
 ---
 
-## 2026-08-23 — [Direktor] Plan-Neufassung: Plateauregime – Mess-Entscheide dominieren, ein neuer Discovery-Hebel (cron)
+## 2026-08-23 — [Direktor] Plan-Neufassung: Peters Entscheide (22.08.) übernommen, SPEC-006-Leiter jetzt frei (cron)
 
 ### Scorecard-Verlauf (Trajektorie 03.08. → 21.08.)
 | Metrik | 03.08 | 17.08 | 19.08 | 21.08 | Lesart |
@@ -24,15 +24,18 @@
 
 **Was vorwärts geht:** `reachability` 1.0, `content_reachable` 1.0 (18/18 nach SPEC-009), `discovery_gap` 0.625→0.6 (SPEC-003), `craft_variety` 3.5. SPEC-009 hat eine komplette zweite Überlebensökonomie (Verletzung & Heilung) mit eigener Probe-Metrik geliefert. **Was stagniert:** `session_depth` 25 (die Langeweile-Stelle, Nordstern – unverändert, auch nach SPEC-008s zweiter Schicht, weil der naive Bot die Gates nicht öffnet). `skill_spread` (0.216) und `feedback_quality` (0.916) sind **keine Spiel-Regresse** – beide sind Mess-Entscheide, die auf Peter warten.
 
-### Kernbefund: das System ist auf einem Plateau
-Alle drei großen offenen Metrik-Bewegungen sind **mess-entscheidungsblockiert**, nicht spiel-blockiert: `session_depth` (SPEC-006 / Bot-Recalbrierung), `feedback_quality` (NEAR_MISS-Mapping), `skill_spread` (Deutung A/B/C). Dazu `forage_pressure` nach Probe (20.08.) über Band, aber definitionsabhängig. Der einzige offene, **metrik-sichere, additiv tragfähige** Hebel liegt in der Discovery selbst: SPEC-003 kann für 2-Slot-BPs (`spear`, `spear_bound`) nie einen Near-Miss geben (`2 ≤ overlap < len` ist für len=2 nie wahr) — eine echte Deckungslücke, deren Schließen `discovery_gap` von der oberen Bandkante (0.6) in die Mitte ziehen und naive Trefferquote heben kann. Kein Content-Ballon, reines Feedback-Experimentiergedächtnis (Constitution-konform).
+### Kernbefund: Peter hat die Warteschlange abgeräumt
+Am 22.08. hat Peter in `DECISIONS_Response_2026_08_21.md` entschieden: skill_spread = Option A (umdeuten, Formel bleibt v1). craft_variety v2 (Prozesse zählen) und content_reachable v2 (dangling Nodes) freigegeben. feedback_quality v3 (NEAR_MISS als informativ + Vollständigkeits-Test) freigegeben. session_depth v2 (ziel-bewusster Bot) freigegeben, Probezeit 14 Tage, beobachtend. tool-aware reachability als REC-002 freigegeben. SPEC-006 freigegeben und priorisiert. forage_pressure v2 freigegeben (Band bleibt). warmth/recovery beobachtend bestätigt. Damit ist die frühere Mess-Blockade des Nordsterns aufgelöst: `session_depth` kann jetzt bewegt werden.
 
-### Neue PLAN-Tasks
-1. **DISCOVERY-GAP-HEBEL** (neu, aus Ziel 2): Near-Miss auf 2-Slot-Blueprints erweitern – additiv, leak-frei, am Deck auf der 0.6-Kante ziehend.
-2. **SESSION-DEPTH-ENTSPERRUNG** (neu, aus Ziel 1): fertiges **Entscheid-Paket** für Peter (Option A tool-aware reachability / B Bot-Kalibrierung / C accept), Wirkung je Option **gemessen** via inline-Probe, `scorecard.py` unangetastet. Deliverable = Entscheid-Grundlage, kein Implementieren/Ausheilen.
-3. **forage_pressure-Nachlese** (neu, Probe beendet): Peter-Entscheid Definition/Band; explizit *kein* Tuning-Ziel hinter einem Sensor-Artefakt.
+### Neue PLAN-Tasks (Reihenfolge nach Peter)
+1. **Ehrlichmachungs-Batch** (Pkt. 1-4): skill_spread-Label, craft_variety v2, content_reachable v2, feedback_quality v3 (mit Vollständigkeits-Test).
+2. **session_depth v2** (Pkt. 5): ziel-bewusster Bot, Probezeit 14 Tage, beobachtend.
+3. **REC-002** (Pkt. 6): tool-aware reachability, Entwurf + Wirkung + Tests.
+4. **SPEC-006** (Pkt. 7): Werkzeug als Zutat, priorisiert. Gap steigt > 0.6 = Spiel-Signal, nie Metrik schwächen.
+5. **forage_pressure v2** (Pkt. 8): gefühlte Knappheit, Band bleibt, parallel.
+6. **Play-Tooling** guided_full-Rückzug-Trigger (ohne Freigabe).
 
-Behalten aus Vorwoche (Entscheid-Klärung, nicht als Ziel): `skill_spread` (A/B/C), `feedback_quality`-NEAR_MISS-Mapping. Beobachtend (Probezeit): `warmth_stability` (bis 27.08.), `recovery_stability` (bis 03.09.) — **Probe-Metriken sind laut CONSTITUTION keine Plan-Ziele.**
+Probe-Metriken (warmth bis 27.08., recovery bis 03.09.) bleiben beobachtend, sind laut CONSTITUTION keine Plan-Ziele.
 
 ### Selbstmodifikation des Systems
 **Keine Cron-Änderungen.** Die Tasks passen in die bestehenden Dev-Slots (Mo–Sa) und Research-Slots (Di/Do); ein eigener Discovery-Task ist ein Research-Kandidat, kein Grund für einen neuen Job. Kein echter Takt-/Rollen-Gap. Play/Mess-Kern unangetastet. „CONSTITUTION.md ist unantastbar. Prüfe jede Änderung dagegen.“ bleibt in allen Prompts.
@@ -41,13 +44,13 @@ Behalten aus Vorwoche (Entscheid-Klärung, nicht als Ziel): `skill_spread` (A/B/
 - 🔵 guided_full-Retreat-Trigger (21.08.) bleibt als echtes Tech-Debt im Backlog (Messwerkzeug-Pflege, chirurgischer Fix, 20-Sweep-gegengetastet) — kein neuer Task, keine Metrik.
 - 🟡 Deckungslücke `session_depth`/`feedback_quality`/`skill_spread`: in Tasks überführt, schwebend auf Peter.
 - ⚪ Research-Leads (Valheim/Long Dark/Green Hell/Zomboid/Dwarf Fortress) bleiben als Ideen-
-  reservoir; SPEC-006/Hebel bis zur Peters-Freigabe suspendiert.
+  reservoir; SPEC-006 ist durch Peters Entscheid (22.08.) wieder frei und priorisiert.
 
 ### CONSTITUTION-CHECK
-Keine Metrik entfernt/umdefiniert/abgeschwächt; `tools/scorecard.py`, `METRICS`, Scorecard-Dateien **unberührt**. Kein Spieldesign geändert (nur PLAN/Tasks neu). Probe-Metriken (forage seit 20.08., warmth bis 27.08., recovery bis 03.09.) bewusst nicht als Plan-Ziele. Keine Cron-Änderungen; Play-Job/Messung unangetastet. Konform.
+Peters Entscheide (22.08.) sind eingegangen; DECISIONS.md-Checkboxen sind gesetzt. Metrik-Änderungen selbst (v2/v3, REC-002) werden per DEV-Session angewendet, nicht vom Direktor — dieser hat nichts an `tools/scorecard.py`, `METRICS` oder Scorecard-Dateien geändert. Kein Spieldesign angefasst. Probe-Metriken (warmth bis 27.08., recovery bis 03.09.) sind nicht als Plan-Ziele gesetzt. Keine Cron-Änderungen; Play-Job/Messung unangetastet. Konform.
 
 ### Artefakte / Verifikation
-- PLAN.md (komplett neu, 3 Sektionen). `python -m pytest`: 223 passed (vor jedem Schreiben grün). Working tree war sauber + in sync (kein ahead).
+- PLAN.md (komplett neu, 3 Sektionen, Reihenfolge nach Peters Entscheiden), DECISIONS.md (Boxen gesetzt), BACKLOG.md (Triage-Note). `python -m pytest`: 223 passed vor den Schreib-OPs. Working tree war sauber; Rebase auf Peters Commit `4b78dc8` (DECISIONS_Response).
 
 ---
 
