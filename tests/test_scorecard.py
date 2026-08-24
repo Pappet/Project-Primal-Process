@@ -125,9 +125,46 @@ class TestFeedbackLabelConsistency:
         assert frag is not None
         assert sc._informative_experiment("Die Kombination ergibt nichts.", "NO_MATCH") is True
 
+    def test_near_miss_is_informative_v3(self):
+        """NEAR_MISS zählt als informativ (Entscheid 22.08., Pkt. 4) — der Text
+        ist absichtlich vage, seine Nützlichkeit IST seine Vagheit. Fragment:
+        'gehören' (aus 'zusammenzugehören')."""
+        frag = sc._expected_fragment("NEAR_MISS:axe")
+        assert frag == "gehören"
+        msg = ("Einige dieser Dinge scheinen zusammenzugehören, "
+               "aber es fehlt noch etwas.")
+        assert sc._informative_experiment(msg, "NEAR_MISS:axe") is True
+
+    def test_not_enough_quantity_is_informative_v3(self):
+        """not_enough_quantity hat ein stabiles Fragment (Vollständigkeit)."""
+        frag = sc._expected_fragment("NOT_ENOUGH_QUANTITY")
+        assert frag == "mehr von demselben"
+        assert sc._informative_experiment(
+            "Dafür brauchst du mehr von demselben Material.",
+            "NOT_ENOUGH_QUANTITY") is True
+
     def test_unknown_never_informative(self):
         assert sc._expected_fragment("UNKNOWN") is None
         assert sc._informative_experiment("Das geht so nicht.", "UNKNOWN") is False
+
+    def test_reason_completeness_all_emittable(self):
+        """Vollständigkeits-Test (Entscheid 22.08., Pkt. 4): JEDER Reason-Code,
+        den die Engine emittieren kann, braucht ein Fragment oder einen
+        dokumentierten None-Grund. Kein still unbedachter Reason mehr."""
+        # Bewusst generische Reasons, deren Nicht-Informativität dokumentiert ist.
+        documented_none = {"UNKNOWN", "UNKNOWN_PROCESS", "MISSING_INPUT"}
+        # Enthalten in der Fragment-Map ODER per Tag-Sonderfall (MISSING_TAG→Label).
+        statisch = ("SUCCESS", "TOO_FEW_ITEMS", "NOT_ENOUGH_QUANTITY", "BROKEN_ITEM",
+                    "NO_MATCH", "DEPLETED", "FIRE_OUT", "NO_FIRE", "MISSING_FUEL",
+                    "NO_INJURY", "BLEEDING", "TREATED", "HEALED", "UNKNOWN",
+                    "UNKNOWN_PROCESS", "MISSING_INPUT")
+        for code in sc.EMITTABLE_REASONS:
+            assert code in sc._EXPECTED_FRAGMENTS or code == "MISSING_TAG", \
+                f"Reason '{code}' fehlt in der Fragment-Map (Vollständigkeit)"
+            val = (sc._expected_fragment(code) if code in statisch
+                   else sc._expected_fragment(f"{code}:X"))
+            assert val is not None or code in documented_none, \
+                f"Reason '{code}' ist None, aber nicht als dokumentierter None-Grund deklariert"
 
     def test_every_tag_has_label(self):
         """TAG_LABELS ist vollständig für alle im Spiel vorkommenden Tags."""
@@ -237,9 +274,9 @@ class TestMetricsProduceValues:
             key = m["key"]
             assert data[key].get("version") == m["version"], f"{key} Version falsch"
 
-    def test_feedback_quality_is_v2(self):
+    def test_feedback_quality_is_v3(self):
         data = sc.compute_all()
-        assert data["feedback_quality"]["version"] == 2
+        assert data["feedback_quality"]["version"] == 3
 
     def test_craft_variety_uses_blueprint_ids(self):
         from engine.core import GameEngine
@@ -264,6 +301,48 @@ class TestMetricsProduceValues:
         assert m["defined_count"] == 18
         assert m["reachable_count"] == 18
         assert m["value"] == 1.0
+        assert m["dangling_refs"] == []
+
+    def test_content_reachable_v2_detects_dangling(self):
+        """v2 (Entscheid 22.08., Pkt. 3): Ein Node, dessen result_template_id
+        kein Template hat, zählt als definiert-aber-unerreichbar → Metrik fällt.
+        B06/B07 hätten das am Tag 1 gezeigt."""
+        from data.locations import get_all_locations as real_locs
+        # echte Locations bauen, aber einen Node auf ein nicht existentes Template zeigen
+        locs = real_locs()
+        locs[0].nodes[0].result_template_id = "ghost_item"
+        # metric_content_reachable nutzt das Modul-Level `get_all_locations` —
+        # ersetzen, sonst baut der Zähler frische, unmutierte Locations.
+        orig = sc.get_all_locations
+        sc.get_all_locations = lambda: locs
+        try:
+            m = sc.metric_content_reachable()
+            assert "ghost_item" in m["dangling_refs"]
+            assert "ghost_item" in m["unreachable"]
+            assert m["value"] < 1.0
+        finally:
+            sc.get_all_locations = orig
+
+    def test_craft_variety_v2_counts_processes(self, monkeypatch):
+        """v2 (Entscheid 22.08., Pkt. 2): craft_variety zählt distinkte
+        blueprint_ids UND process_ids. Erzwingt man Prozess-Erfolg (alle
+        execute_process-Aufrufe gelingen), muss die Metrik gegenüber der reinen
+        Blueprint-v1-Baseline (3.5) steigen — die Prozesse tragen bei."""
+        from engine.core import GameEngine
+        v1_ref_line = 3.5  # dokumentierter v1-Median (nur blueprints)
+        orig = GameEngine.execute_process
+
+        def all_succeed(self_proc, pid):
+            return {"success": True, "process_id": pid}
+
+        GameEngine.execute_process = all_succeed
+        try:
+            v2_with_proc = sc.metric_craft_variety()["value"]
+        finally:
+            GameEngine.execute_process = orig
+        assert v2_with_proc is not None
+        assert v2_with_proc > v1_ref_line, \
+            f"Prozess-Pfad zählt nicht mit (Pkt. 2): {v2_with_proc} ≤ {v1_ref_line}"
 
     def test_baseline_written_with_schema(self):
         sc.SCORECARD_DIR.mkdir(exist_ok=True)
@@ -402,7 +481,9 @@ class TestVersionedDelta:
 
     def test_version_field_in_json_output(self):
         data = sc.compute_all()
-        assert data["feedback_quality"]["version"] == 2
+        assert data["feedback_quality"]["version"] == 3
+        assert data["craft_variety"]["version"] == 2
+        assert data["content_reachable"]["version"] == 2
         assert data["session_depth"]["version"] == 1
 
 

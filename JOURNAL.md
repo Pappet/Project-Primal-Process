@@ -5,6 +5,28 @@
 
 ---
 
+## 2026-08-24 — [Dev] Ehrlichmachungs-Batch (Pkt. 1–4): skill_spread-Label, craft_variety v2, content_reachable v2, feedback_quality v3 (cron)
+
+### Aufgabe
+Der oberste offene PLAN-Task: **Ehrlichmachungs-Batch** — die vier am 22.08. von Peter freigegebenen Metrik-Korrekturen (`DECISIONS_Response_2026_08_21.md` Pkt. 1–4). Kein Spielfeld-Eingriff, nur Mess-Ehrlichkeit + eine Neu-Interpretation. Fehler-Batch: versionierte Metriken zeigen im nächsten Scorecard-Delta `— (neu definiert)` statt falscher Pfeile.
+
+### Geliefert (tools/scorecard.py)
+- **skill_spread v1 (Option A, umdeuten):** Formel exakt unverändert, **Version bleibt 1**. Richtung dreht auf `niedriger = besser`, Beschreibung: fallend = **gehobene Einsteiger-Decke** (Zufallsspieler überlebt näher am Optimum), kein Tiefenverlust. Der Fall 0.216 ist damit ein angenehmes Signal, kein Regress.
+- **craft_variety v2:** zählt jetzt distinkte `blueprint_id`s **und** `process_id`s. Der naive Bot versucht mit ~10% Wahrscheinlichkeit einen zufälligen Prozess und trägt bei Erfolg dessen `process_id` ein. Erste Lese 3.5 → 5.0 (re-Baseline, Prozesse waren vorher unsichtbar).
+- **content_reachable v2:** prüft zusätzlich Node-Referenzen — ein Node, dessen `result_template_id` kein Template hat, zählt als definiert-aber-unerreichbar (`dangling_refs`) und senkt die Metrik sichtbar. Aktuell 0 dangling, weiterhin 18/18 = 1.0. Die `⚠ Content entfernt`-Warnlogik (defined_count-Vergleich) bleibt unverändert.
+- **feedback_quality v3:** `_expected_fragment("NEAR_MISS:…")` → `"gehören"` — der Near-Miss-Text ist absichtlich vage, seine Nützlichkeit IST seine Vagheit, er zählt als informativ. Zusätzlich `NOT_ENOUGH_QUANTITY` → `"mehr von demselben"`. **Vollständigkeits-Pflicht:** `EMITTABLE_REASONS` + Vollständigkeits-Test erzwingen, dass jeder Reason ein Fragment ODER einen dokumentierten None-Grund hat (UNKNOWN/UNKNOWN_PROCESS/MISSING_INPUT). Erste Lese 0.916 → 1.0 (re-Baseline, NEAR_MISS war vorher untermessen).
+
+### Tests (wie das CONSTRAINT verlangt: grün, +5)
+228 passed (vorher 223). Neu: v3-Fragmente (NEAR_MISS, NOT_ENOUGH_QUANTITY), Vollständigkeits-Test über alle emittierbaren Reasons-Codes, craft_variety v2 (Prozess-Erfolg erzwungen → Metrik steigt über die v1-Baseline 3.5), content_reachable v2 (dangling via Monky patched `get_all_locations`). Versionen in `compute_all` (2/2/3) geprüft.
+
+### Kein Spiel-Regress, keine geschönte Zahl
+Keine Metrik abgeschwächt; nur was Peter am 22.08. (Pkt. 1–4) freigab. Werte steigen/interpretieren neu, ohne dass sich das Spiel änderungsbedingt ändert — das erwartete Re-Baseline-Verhalten, das Peter für die nächsten Play-Lesungen explizit als "nicht feiern, dokumentieren" eingeordnet hat.
+
+### Backlog/Journal
+- 🟡 Neu befunden (Constitution-Brücke, nicht im Batch-Scope): `INJURED` wird in `core.gather()` per `_feedback_message("INJURED")` ausgegeben, hat aber **keinen Zweig** in `_feedback_message` → fällt auf den generischen Fallback "Das geht so nicht." (gather-Log, keine Verletzungs-Meldung). Mess-Freundlich: betrifft nicht `feedback_quality` (experiment-only), aber ein echter Text-Qualitätsbug der SPEC-009-Ökonomie. → BACKLOG eingesetzt.
+
+---
+
 ## 2026-08-24 — [Play] Scorecard flach, Langeweile-Stelle unverändert (session_depth 25), guided-Erschöpfung ~13 (cron)
 
 ### Headline

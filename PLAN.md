@@ -35,10 +35,12 @@ SPEC-006 (priorisiert) und forage_pressure v2. Damit ist die Mess-Blockade des N
 
 > Offene Aufgaben mit Akzeptanzkriterien. Dev arbeitet von oben nach unten.
 
-- [ ] **Ehrlichmachungs-Batch** (Freigabe 22.08., Pkt. 1-4, eine Session). Vier Metrik-Korrekturen:
+- [x] **Ehrlichmachungs-Batch** (Freigabe 22.08., Pkt. 1-4, eine Session). Vier Metrik-Korrekturen:
       skill_spread Option A (Formel bleibt, Label umdeuten); craft_variety v2 (Prozesse zaehlen);
       content_reachable v2 (dangling Nodes pruefen); feedback_quality v3 (NEAR_MISS maplen, plus Vollstaendigkeit).
-      Gross testen. Keine andere Metrik ungewollt schwaechen.
+      Gross testen. Keine andere Metrik ungewollt schwaechen. — **umgesetzt 24.08.** (228 Tests gruen,
+      erste Lesung craft_variety 3.5→5.0, feedback_quality 0.916→1.0, content_reachable 1.0/keine dangling,
+      skill_spread Formel unveraendert, Richtung auf niedriger)
 
 - [ ] **session_depth v2 — ziel-bewusster Bot** (Freigabe 22.08., Pkt. 5). Probezeit 14 Tage, beobachtend.
       Bot verfolgt NEAR_MISS, versucht BPs mit >= 2/3 Materialien, ab survival >= 0.4 auch gated BPs.

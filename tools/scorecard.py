@@ -189,7 +189,7 @@ def metric_reachability(n=50):
 # ----------------------------------------------------------------------------
 
 def _run_craft_variety(seed, actions=100):
-    """Distinkte erfolgreiche blueprints in N Aktionen (ein Run)."""
+    """Distinkte blueprint_ids + process_ids in N Aktionen (ein Run)."""
     random.seed(seed)
     rng = random.Random(seed)
     game = GameEngine()
@@ -202,20 +202,33 @@ def _run_craft_variety(seed, actions=100):
         done += 1
         if game.player.energy < 150:
             _eat_best(game)
-        if rng.random() < 0.5:
+        r = rng.random()
+        if r < 0.5:
             if rng.random() < 0.2:
                 _travel_or_fail(game, locs[rng.randrange(len(locs))])
             game.gather()
-        else:
+        elif r < 0.9:
             sel = _random_sel(game, rng, kmin=2)
             if sel:
                 res = game.execute_experiment(sel)
                 if res.get("blueprint_id"):
                     results.add(res["blueprint_id"])
+        else:
+            # v2: Prozess-Pfad zählt mit (Entscheid 22.08., Pkt. 2). Das
+            # Prozess-System ist ein vollwertiger Craft-Pfad — ein naiver Spieler
+            # versucht gelegentlich einen Prozess, zu dem er (zufällig) die
+            # Mittel hält, und trägt den Prozess bei Erfolg als divergente.
+            procs = list(game.processes.keys())
+            if procs:
+                pid = procs[rng.randrange(len(procs))]
+                pres = game.execute_process(pid)
+                if pres.get("process_id"):
+                    results.add(pres["process_id"])
     return len(results)
 
 
 def metric_craft_variety():
+    """Distinkte erfolgreiche blueprints UND Prozesse in 100 Aktionen (v2)."""
     return _aggregate(lambda s: _run_craft_variety(s))
 
 
@@ -280,7 +293,14 @@ def _run_skill_spread(seed):
 
 
 def metric_skill_spread():
-    """Überlebenszeit optimal vs. zufällig — misst, ob Können etwas bringt."""
+    """Einsteiger-Decke: Überlebens-Lücke optimal vs. zufällig (Option A, umgedeutet).
+
+    Formel bleibt exakt (Optimum minus Zufall, über das Optimum normiert) — aber
+    die Richtung ist umgedeutet (Entscheid 22.08., Pkt. 1): Ein FALLENDER Wert
+    bedeutet eine GEHOBENE Einsteiger-Decke — ein Zufallsspieler überlebt näher
+    am Optimum, das Spiel straft Unwissen weniger hart. Es ist kein Tiefenverlust
+    der Experten-Ökonomie. Version bleibt 1 (Formel unverändert).
+    """
     return _aggregate(lambda s: _run_skill_spread(s))
 
 
@@ -292,19 +312,62 @@ def metric_skill_spread():
 # interner Wahrheit und Spielertext. Informativ NUR, wenn die Meldung das zum
 # Code gehörende Label wirklich enthält. Verrät die Engine den Grund nicht im
 # Text, zählt die Aktion als NICHT informativ (auch wenn der Code stimmt).
+#
+# Ein `None`-Eintrag ist eine BEWUSSTE Entscheidung, kein "vergessener" Code:
+# Der Reason ist von Natur aus nicht-informativ (generisch) und wird hier als
+# solcher dokumentiert. Der Vollständigkeits-Test (`test_..._cover_all_emittable`)
+# erzwingt, dass jeder Reason, den die Engine emittieren kann, entweder ein
+# Fragment trägt oder als dokumentierter `None`-Grund gehandelt wird.
+_EXPECTED_FRAGMENTS = {
+    "SUCCESS": "Hergestellt",
+    "TOO_FEW_ITEMS": "mindestens zwei",
+    "NOT_ENOUGH_QUANTITY": "mehr von demselben",
+    "BROKEN_ITEM": "zerbrochen",
+    "NO_MATCH": "ergibt nichts",
+    "NEAR_MISS": "gehören",          # SPEC-003: absichtlich vage, aber informativ
+    "DEPLETED": "erschöpft",
+    "FIRE_OUT": "erlischt",
+    "NO_FIRE": "kein Feuer",
+    "MISSING_FUEL": "Brennholz",
+    "NO_INJURY": "nicht verletzt",
+    "BLEEDING": "blutest",
+    "TREATED": "behandelt",
+    "HEALED": "heilt",
+    "MISSING_ENV": "in der Umgebung",
+    "MISSING_TOOL": "als Werkzeug",
+    # Dokumentiert NICHT-informativ (bewusst generisch, kein Handlungs-Hinweis):
+    "UNKNOWN": None,           # Engine-Fallback "Das geht so nicht."
+    "UNKNOWN_PROCESS": None,   # Prozess existiert nicht → kein Fragment sinnvoll
+    "MISSING_INPUT": None,     # Meldung nennt den Item-Namen, kein stabiles Fragment
+}
+
+# Parameterisierte Codes, deren Fragment über den Parameter aufgelöst wird.
+# MISSING_TAG: das Label des fehlenden Tags (z.B. SHARP → "etwas Scharfes").
+# MISSING_ENV/MISSING_TOOL: statisches Fragment aus der Map (das Label ist
+# nur der Parameter, der Meldungs-Rest "in der Umgebung"/"als Werkzeug" zählt).
+
+
 def _expected_fragment(reason):
-    if reason == "SUCCESS":
-        return "Hergestellt"
+    if reason is None:
+        return None
+    # MISSING_TAG: der Parameter (Tag) bestimmt das Label — das informativ
+    # machende Fragment ist das Tag-Label, nicht ein fester Text.
     if reason.startswith("MISSING_TAG:"):
         tag = reason.split(":", 1)[1]
         return _label_for(tag)
-    if reason == "TOO_FEW_ITEMS":
-        return "mindestens zwei"
-    if reason == "BROKEN_ITEM":
-        return "zerbrochen"
-    if reason == "NO_MATCH":
-        return "ergibt nichts"
-    return None  # UNKNOWN / unklar → nie informativ
+    key = reason.split(":", 1)[0]
+    return _EXPECTED_FRAGMENTS.get(key)
+
+
+# Alle Reason-Codes, die die Engine emittieren kann — Quelle der Wahrheit für
+# den Vollständigkeits-Test. Parameterisierte Codes werden als Präfix geführt.
+EMITTABLE_REASONS = {
+    "SUCCESS", "TOO_FEW_ITEMS", "NOT_ENOUGH_QUANTITY", "BROKEN_ITEM",
+    "NO_MATCH", "NEAR_MISS", "DEPLETED", "FIRE_OUT", "NO_FIRE",
+    "MISSING_FUEL", "MISSING_TAG", "MISSING_ENV", "MISSING_TOOL",
+    "MISSING_INPUT", "NO_INJURY", "BLEEDING", "TREATED", "HEALED",
+    "UNKNOWN", "UNKNOWN_PROCESS",
+}
 
 
 def _informative_experiment(message, reason):
@@ -397,21 +460,35 @@ def metric_discovery_gap():
 # ----------------------------------------------------------------------------
 
 def metric_content_reachable():
-    """Anteil der definierten Items, die tatsächlich sammelbar sind."""
+    """Anteil der definierten Items, die tatsächlich sammelbar sind (v2).
+
+    v2 (Entscheid 22.08., Pkt. 3): prüft zusätzlich Node-Referenzen. Ein Node,
+    dessen result_template_id kein Template hat, deklariert Inhalt, der nicht
+    existiert → zählt als definiert-aber-unerreichbar und senkt die Metrik
+    sichtbar. Genau das hätte B06/B07 am Tag 1 gezeigt. Die
+    `⚠ Content entfernt`-Warnt-Logik (defined_count-Vergleich) bleibt unverändert.
+    """
     defined = set(TEMPLATE_DB.keys())
-    gather_ids = {node.result_template_id
-                  for loc in get_all_locations() for node in loc.nodes}
+    nodes = [node for loc in get_all_locations() for node in loc.nodes]
+    gather_ids = {node.result_template_id for node in nodes}
+    # dangling = deklarierte, aber nicht existente Node-Referenzen
+    dangling = {tid for tid in gather_ids if tid not in TEMPLATE_DB}
     process_out = set()
     for pr in load_processes():
         process_out.update(pr.outputs.keys())
+    # "definiert" = echte Templates + deklarierte, aber fehlende Node-Referenzen.
+    all_defined = defined | dangling
+    # Erreichbar nur, was wirklich existiert — dangling ist nie erreichbar, auch
+    # wenn der Node es beim Sammeln "liefert" (das Item existiert ja nicht).
     reachable = {i for i in defined if i in gather_ids or i in process_out}
-    value = len(reachable) / len(defined) if defined else 0.0
+    value = len(reachable) / len(all_defined) if all_defined else 0.0
     return {
         "value": round(value, 3),
         "reachable_count": len(reachable),
-        "defined_count": len(defined),
+        "defined_count": len(all_defined),
         "reachable": sorted(reachable),
-        "unreachable": sorted(defined - reachable),
+        "unreachable": sorted(all_defined - reachable),
+        "dangling_refs": sorted(dangling),
     }
 
 
@@ -688,10 +765,10 @@ def _aggregate(run_fn, cap=None):
 METRICS = [
     {"key": "actions_to_first_craft", "desc": "Aktionen bis zum ersten erfolgreichen Craft (naiv)", "fn": metric_first_craft, "direction": "niedriger = besser", "version": 1},
     {"key": "blueprint_reachability", "desc": "Anteil erreichbarer Blueprints (N=50)", "fn": metric_reachability, "direction": "höher = besser", "version": 1},
-    {"key": "craft_variety", "desc": "Unterschiedliche Craft-Typen in 100 Aktionen", "fn": metric_craft_variety, "direction": "höher = besser", "version": 1},
-    {"key": "skill_spread", "desc": "Überlebens-Spanne optimal vs. zufällig", "fn": metric_skill_spread, "direction": "höher = besser", "version": 1},
-    {"key": "feedback_quality", "desc": "Anteil informativer Rückmeldungen (Label-Stimmt)", "fn": metric_feedback_quality, "direction": "höher = besser", "version": 2},
-    {"key": "content_reachable", "desc": "Anteil sammelbarer definierter Items", "fn": metric_content_reachable, "direction": "höher = besser", "version": 1},
+    {"key": "craft_variety", "desc": "Unterschiedliche Craft-Typen (Blueprints + Prozesse) in 100 Aktionen", "fn": metric_craft_variety, "direction": "höher = besser", "version": 2},
+    {"key": "skill_spread", "desc": "Überlebens-Spanne optimal vs. zufällig (fallend = gehobene Einsteiger-Decke)", "fn": metric_skill_spread, "direction": "niedriger = besser", "version": 1},
+    {"key": "feedback_quality", "desc": "Anteil informativer Rückmeldungen (Label-Stimmt, inkl. NEAR_MISS)", "fn": metric_feedback_quality, "direction": "höher = besser", "version": 3},
+    {"key": "content_reachable", "desc": "Anteil sammelbarer definierter Items (inkl. Node-Ref-Prüfung)", "fn": metric_content_reachable, "direction": "höher = besser", "version": 2},
     {"key": "session_depth", "desc": "Aktionen bis nichts Neues passiert", "fn": metric_session_depth, "direction": "höher = besser", "version": 1},
     {"key": "discovery_gap", "desc": "Abstand erreichbar vs. tatsächlich gefunden", "fn": metric_discovery_gap, "direction": None, "version": 1, "band": (0.2, 0.6)},
     {"key": "forage_pressure", "desc": "Anteil Sammel-Versuche an nicht-volem Node (Knappheit)", "fn": metric_forage_pressure, "direction": None, "version": 1, "band": (0.1, 0.5), "probation_until": "2026-08-20"},

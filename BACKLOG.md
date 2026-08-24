@@ -49,6 +49,10 @@ Dinge die kaputt sind und gefixt werden müssen.
 ### 🔴 B07 — `clay_lump` doppelt tot (fehlendes Werkzeug + fehlendes Template)
 - ~~[2026-08-05] (Play) **`clay_lump`-Node (hidden_cave, braucht `SHOVEL`)**: kein Item trägt das Tag `SHOVEL` → unerreichbar; zusätzlich fehlt das Template in `items.json`. Doppelt toter Content-Pfad. **Fix-Richtung:** SHOVEL-Werkzeug (z.B. Axt/Stab als Grabwerkzeug) einführen und Template anlegen, oder Node entfernen.~~ — **✅ erledigt** in Dev-Session 2026-08-07 (Template "Tonklumpen" + Axt trägt jetzt SHOVEL → Ton erreichbar).
 
+### 🔴 B08 — `INJURED`-Meldung fällt auf generischen Fallback (SPEC-009-Text)
+
+- [2026-08-24] (Dev) **`core.gather()` ruft `_feedback_message("INJURED")` beim Auslösen einer Schnitt- oder Zerrungs-Verletzung (SPEC-009), aber `_feedback_message` hat keinen `INJURED`-Zweig** → fällt auf den UNKNOWN-Fallback `"Das geht so nicht."`. Der Spieler bekommt statt einer Verletzungs-Meldung einen Sinnlos-Text. Betrifft nicht `feedback_quality` (nur Experimente zählen), aber ein echter Feedback-Qualitätsbug der Verletzungs-Ökonomie. **Fix-Richtung:** `_feedback_message`-Zweig für `INJURED` ergänzen (z. B. `"Du verletzt dich."`), ohne die Verletzungs-Wahrscheinlichkeit anzutasten. Kein Metrik-Eingriff.
+
 ---
 
 ## 🟡 Ideas
