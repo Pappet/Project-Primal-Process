@@ -16,7 +16,7 @@
 | discovery_gap (v1) | 0.600 | ±0 | im Band | Abstand erreichbar vs. tatsächlich gefunden |
 | forage_pressure (v1) (Probe bis 20.08.) | 0.707 | ±0 | über Band | Anteil Sammel-Versuche an nicht-volem Node (Knappheit) |
 | warmth_stability (v1) (Probe bis 27.08.) | 0.460 | ±0 | im Band | Anteil Kälte-Stress-Ticks, die warm überstanden werden (Feuer/Isolation) |
-| recovery_stability (v1) (Probe bis 03.09.) | 0.375 | — (Baseline) | im Band | Anteil Verletzungs-Ticks, die Behandlung + Ruhe abwenden (Verband/Umschlag) |
+| recovery_stability (v1) (Probe bis 03.09.) | 0.375 | ±0 | im Band | Anteil Verletzungs-Ticks, die Behandlung + Ruhe abwenden (Verband/Umschlag) |
 
 ## discovery_gap — Zielband
 
@@ -38,7 +38,7 @@
 **Band: 0.3 – 0.7.** Keine Richtung (kein "höher = besser"). Unter 0.3 nimmt das Spiel den Spieler an die Hand; über 0.7 ist es faktisch unentdeckbar. `blueprint_reachability` (None) misst, was ein Orakel erreichen kann; `naive_discovery_rate` (None) was ein Spieler wirklich findet. Der Abstand dazwischen ist das eigentliche Spiel.
 
 
-## Details (2026-08-21)
+## Details (2026-08-24)
 
 ```json
 {

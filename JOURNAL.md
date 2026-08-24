@@ -5,6 +5,19 @@
 
 ---
 
+## 2026-08-24 — [Play] Scorecard flach, Langeweile-Stelle unverändert (session_depth 25), guided-Erschöpfung ~13 (cron)
+
+### Headline
+Flacher Scorecard-Tag (deterministisch, kein Dev-Commit seit 22.08): alle Metriken ±0. Die Langeweile-Stelle bleibt — `session_depth` 25, geführte Erschöpfung **~9–16 Aktionen an 7/20 vollen Runs (Median 13)**. Tier-2 (rope→cord_spear) verschiebt die Decke weiter nicht nach hinten. Der naive Blindflug (Probe: seed 20260807, nur knife_bone/knife_stone, 0 Prozesse, Tier-2 nie) bestätigt die Struktur: survival-Gate bleibt ungehoben, zweite Schicht aus naiv-Perspektive unsichtbar — Mess-Struktur, kein Spielfeld.
+
+### Kein Regress
+guided-Bot 7/20 voll (21.08: 6/20, 19.08: 8/20) = bekanntes fragiles Band, kein neuer Crasch. Rückzug-Trigger-Tech-Debt bleibt offen, kein erneuter Übergriff-Versuch.
+
+### Für Direktor/Peter
+Die seit 22.08 freigegebenen PLAN-Tasks, die die Nordstern bewegen (Ehrlichmachungs-Batch → session_depth v2 → REC-002 → SPEC-006), sind noch NICHT in Dev umgesetzt — solange sie fehlen, bleibt der Nordstern strukturell unbewegt. Beide Mess-Entscheide warten weiter auf Peter (feedback_quality/NEAR_MISS, session_depth-Bot-Deutung).
+
+---
+
 ## 2026-08-23 — [Direktor] Plan-Neufassung: Peters Entscheide (22.08.) übernommen, SPEC-006-Leiter jetzt frei (cron)
 
 ### Scorecard-Verlauf (Trajektorie 03.08. → 21.08.)
