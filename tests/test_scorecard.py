@@ -469,10 +469,10 @@ class TestVersionedDelta:
         """Version geändert → '— (neu definiert)' statt Zahl."""
         prev = {"metrics": {
             "feedback_quality": {"value": 1.0, "version": 1},
-            "session_depth": {"value": 10, "version": 1},
+            "session_depth": {"value": 10, "version": 2},
         }}
         data = {"feedback_quality": {"value": 0.4, "version": 2},
-                "session_depth": {"value": 24, "version": 1}}
+                "session_depth": {"value": 24, "version": 2}}
         table = sc.build_table(data, prev)
         fq_row = [l for l in table.splitlines() if l.startswith("| feedback_quality")]
         sd_row = [l for l in table.splitlines() if l.startswith("| session_depth")]
@@ -484,7 +484,7 @@ class TestVersionedDelta:
         assert data["feedback_quality"]["version"] == 3
         assert data["craft_variety"]["version"] == 2
         assert data["content_reachable"]["version"] == 2
-        assert data["session_depth"]["version"] == 1
+        assert data["session_depth"]["version"] == 2
 
 
 # ----------------------------------------------------------------------------
@@ -505,5 +505,76 @@ class TestProbation:
         table = sc.build_table(data, None)
         dg_row = [l for l in table.splitlines() if l.startswith("| discovery_gap")]
         assert "Probe bis" not in dg_row[0]
+        # session_depth v2 (Peter 22.08.) in Probezeit → Label erscheint
+        sd_row = [l for l in table.splitlines() if l.startswith("| session_depth")]
+        assert sd_row and "Probe bis" in sd_row[0]
+
+
+# ----------------------------------------------------------------------------
+# session_depth v2 — ziel-bewusster naiver Bot (Peter 22.08., Pkt 5)
+# ----------------------------------------------------------------------------
+
+class TestSessionDepthV2:
+    def test_v2_probation_until_registered(self):
+        """session_depth v2 muss +14 Tage ab Landung in Probezeit sein."""
+        entry = next(m for m in sc.METRICS if m["key"] == "session_depth")
+        assert entry["version"] == 2
+        assert entry["probation_until"] == "2026-09-08"  # +14 Tage ab 25.08.
+
+    def test_v2_selection_prefers_completable_over_near_miss(self):
+        """Ein 100%-Match (rope: FIBER+RIGID) schlägt einen nur-2/3 Near-Miss."""
+        import random
+        from data.items import create_item
+        game = sc.GameEngine()
+        game.player.stats["survival"] = 0.6  # Gate für rope offen
+        game.player.inventory.items.append(create_item("plant_fiber", 1))
+        game.player.inventory.items.append(create_item("stick", 1))
+        sel = sc._v2_selection(game, random.Random(1))
+        assert sel is not None
+        # rope ist der einzige 100%-Overlap (FIBER+RIGID) → gewinnt
+        names = {it.name for it in sel}
+        assert names  # es wird ein Versuch gewählt, kein None
+
+    def test_v2_bot_can_open_gated_tier2(self):
+        """Der v2-Bot erreicht die survival-gated Tier-2-Blueprints (rope,
+        cord_spear), die der v1-Zufallsbot strukturell nie öffnen konnte."""
+        found = set()
+        for s in sc.SEEDS:
+            game = sc.GameEngine()
+            sc.random.seed(s)
+            import random
+            rng = random.Random(s)
+            locs = list(game.locations.keys())
+            cap = 1500
+            stall, actions = 0, 0
+            while actions < cap and game.player.hp > 0:
+                actions += 1
+                if game.player.energy < 150:
+                    sc._eat_best(game)
+                before = sc._novelty_set(game)
+                if rng.random() < 0.5:
+                    if rng.random() < 0.4:
+                        sc._travel_or_fail(game, locs[rng.randrange(len(locs))])
+                    elif rng.random() < 0.10:
+                        s2 = sc._random_sel(game, rng, kmin=1)
+                        if s2:
+                            game.execute_experiment(s2)
+                        else:
+                            game.gather()
+                    else:
+                        game.gather()
+                else:
+                    sel = sc._v2_selection(game, rng)
+                    if sel is not None:
+                        game.execute_experiment(sel)
+                    else:
+                        game.gather()
+                after = sc._novelty_set(game)
+                stall = stall + 1 if after == before else 0
+                if stall >= 15:
+                    break
+            found.update(game.player.known_blueprints)
+        assert "rope" in found and "cord_spear" in found, \
+            f"v2-Bot öffnete Tier-2 nicht (fand: {found})"
 
 

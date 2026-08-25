@@ -42,9 +42,11 @@ SPEC-006 (priorisiert) und forage_pressure v2. Damit ist die Mess-Blockade des N
       erste Lesung craft_variety 3.5→5.0, feedback_quality 0.916→1.0, content_reachable 1.0/keine dangling,
       skill_spread Formel unveraendert, Richtung auf niedriger)
 
-- [ ] **session_depth v2 — ziel-bewusster Bot** (Freigabe 22.08., Pkt. 5). Probezeit 14 Tage, beobachtend.
+- [x] **session_depth v2 — ziel-bewusster Bot** (Freigabe 22.08., Pkt. 5). Probezeit 14 Tage, beobachtend.
       Bot verfolgt NEAR_MISS, versucht BPs mit >= 2/3 Materialien, ab survival >= 0.4 auch gated BPs.
-      Erste v2-Lesung als neue Baseline dokumentieren, nicht feiern.
+      Erste v2-Lesung als neue Baseline dokumentieren, nicht feiern. — **umgesetzt 25.08.** (v2-Bot öffnet
+      Tier-2: rope/cord_spear erreicht, Erst-Lesung 64.5 als höhere Re-Baseline — kein Fortschritt, Peter;
+      231 Tests grün)
 
 - [ ] **REC-002 — tool-aware reachability** (Freigabe 22.08., Pkt. 6). Patch-Entwurf + Wirkung +
       Tests (wie REC-001, inline-Probe). Zaehler misst, was die Engine craften kann, inkl. Werkzeug-Bau.

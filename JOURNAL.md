@@ -5,6 +5,45 @@
 
 ---
 
+## 2026-08-25 — [Dev] session_depth v2 — ziel-bewusster naiver Bot (Peter 22.08., Pkt 5)
+
+### Aufgabe
+Top-Task der Freigabe-Reihenfolge (Ehrlichmachungs-Batch erledigt): den strukturell
+blinden v1-session_depth-Zufallsbot zu einem **ziel-bewussten naiven Bot** umbauen, der
+NEAR_MISS-Hinweise verfolgt, BPs mit ≥2/3 Materialien versucht und ab `survival ≥ 0.4`
+auch gated Tier-2-Blueprints. Version 2, Probezeit 14 Tage, beobachtend.
+
+### Was gebaut wurde (`tools/scorecard.py`)
+- `_bp_overlap()` — resolved Slot-Overlap über `TAG_FAMILIES` (wie die Engine).
+- `_v2_selection()` — wählt für einen unbekannten, gate-offenen BP die Item-Auswahl:
+  Kandidat = höchste **Overlap-Quote** (n/n = vollendbar schlägt 2/3), NEAR_MISS als
+  Tiebreak; fehlende Slots werden mit zufälligen Rest-Items gefüllt, damit ein Versuch
+  überhaupt stattfindet (und ein NEAR_MISS feuern kann) — der Bot konvergiert also über
+  Versuch + Hinweis, nicht nur bei 100%-Match.
+- `_run_session_depth()` — halb Material (reisen + sammeln, um Kopf-Material in anderen
+  Biomen zu holen), halb zielgerichtete Versuche; `stall_limit=15` bleibt.
+- `METRICS`: session_depth **version 2**, `probation_until: 2026-09-08` (+14 Tage ab 25.08.).
+
+### Ergebnis (Re-Baseline, nicht Feiern)
+Der v1-Bot konnte die survival-gated Tier-2-Schicht strukturell nicht öffnen (nur 0–1
+Tier-1-Discovery, survival ≈0.0–0.2 → Gate 0.4 nie erreicht). Der v2-Bot **erreicht
+`rope` und `cord_spear`** über mehrere Seeds — genau der Zweck. Erst-Lesung `metric_session_depth`
+**25 → 64.5** (p25 42, p75 69). Das ist **kein Fortschritt, sondern Re-Baselining** — die
+Zahl ist höher, weil der Bot mehr entdeckt, nicht weil sich das Spiel geändert hat (Peter:
+„nicht feiern"). Neue Baseline dokumentieren, Probe bis 09.09.
+
+### Tests
+`test_scorecard.py`: `session_depth` version == 2; Batches-Probezeit-Label erscheint;
+`_v2_selection` wählt vollendbaren BP vor 2/3-Near-Miss; v2-Bot öffnet gated Tier-2
+(rope + cord_spear) über den Seed-Satz. **231 Tests grün** (228 → 231).
+
+### Konstitution
+session_depth-Umdefinition ist durch Peters Freigabe (22.08.) gedeckt, probe-zeit-metriken
+bleiben beobachtend (kein Plan-Ziel). Keine andere Metrik angefasst: reachability 1.0,
+discovery_gap 0.6, craft_variety 5.0, content_reachable 1.0 unverändert.
+
+---
+
 ## 2026-08-25 — [Research] SPEC-010 Kaltstart-Brücke: knappbarer Startstein (actions_to_first_craft)
 
 ### Befund (Metrik-Modus)

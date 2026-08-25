@@ -508,13 +508,102 @@ def _novelty_set(game):
     return tpl | bps | procs
 
 
+def _bp_overlap(bp, held_tags):
+    """Wie viele Slots eines Blueprints decken die gehaltenen Tags ab?
+    Löst Familien (SHARP_OR_RIGID) wie die Engine via TAG_FAMILIES auf."""
+    o = 0
+    for sv in bp.slots.values():
+        req = set(TAG_FAMILIES.get(sv, {sv}))
+        if req & held_tags:
+            o += 1
+    return o
+
+
+def _v2_selection(game, rng):
+    """Zielgerichtete, rezeptfreie Auswahl für den session_depth-v2-Bot.
+
+    Modelliert 'einen Spieler, der nicht kalt aufgibt': Er versucht einen
+    unbekannten, gate-offenen Blueprint zu vervollständigen, für den er
+    bereits >= 2/3 der Materialien hält, und bevorzugt Blueprints, die ihm
+    die Engine per NEAR_MISS-Hinweis als 'nah' gemeldet hat. Kein Orakel:
+    Er muss die Materialien erst sammeln, findet sie nur mit RNG-Zufall und
+    scheitert, wenn ein Slot-Tag nicht (in passender Menge) da ist.
+    """
+    inv = [it for it in game.player.inventory.items if it.quantity >= 1]
+    if len(inv) < 2:
+        return None
+    held = set()
+    for it in inv:
+        held.update(it.tags)
+    survival = game.player.stats["survival"]
+
+    candidates = []
+    for bp in game.blueprints.values():
+        if bp.id in game.player.known_blueprints:
+            continue
+        if survival < bp.min_survival_req:
+            continue  # gated und Gate noch nicht offen → erst später versuchen
+        o = _bp_overlap(bp, held)
+        n = len(bp.slots)
+        if o * 3 < 2 * n:  # < 2/3 der Slots gedeckt → noch nicht nah genug
+            continue
+        priority = 0 if bp.id in game.player.near_misses else 1
+        # Vorrang: höchste Overlap-Quote (n/n = vollendbar schlägt 2/3), dann
+        # NEAR_MISS als Tiebreak bei gleicher Quote, dann eindeutige Ordnung.
+        # Ein 100%-Match (z.B. rope mit FIBER+RIGID, 2/2) schlägt einen nur
+        # teilweise nahen Near-Miss-BP (axe 2/3), der noch ein Kopf-Material
+        # bräuchte, das gar nicht da ist.
+        ratio = o / n
+        candidates.append((-ratio, priority, bp.id, bp))
+    if not candidates:
+        return None
+    candidates.sort()
+    bp = candidates[0][3]
+
+    # Zu jedem Slot des Ziel-Blueprints das passende Item wählen (Familien
+    # aufgelöst); nur gezählte Items, pro Objekt einmal. Fehlende Slots werden
+    # mit zufälligen Rest-Items aufgefüllt, damit der Versuch überhaupt
+    # stattfindet und (bei Teiltreffer) ein NEAR_MISS-Hinweis feuern kann —
+    # so konvergiert der Bot über Versuch + Hinweis statt nur bei 100%-Match.
+    sel, used = [], set()
+    for sv in bp.slots.values():
+        req = set(TAG_FAMILIES.get(sv, {sv}))
+        pick = None
+        for it in inv:
+            if id(it) in used:
+                continue
+            if req & set(it.tags):
+                pick = it
+                break
+        if pick is not None:
+            sel.append(pick)
+            used.add(id(pick))
+        else:
+            # Slot nicht (passend) gedeckt → zufälliges anderes Item als Füller
+            fillers = [it for it in inv if id(it) not in used]
+            if fillers:
+                f = rng.choice(fillers)
+                sel.append(f)
+                used.add(id(f))
+    if len(sel) < 2:
+        return None
+    return sel
+
+
 def _run_session_depth(seed, stall_limit=15, cap=1500):
-    """Aktionen bis nichts Neues mehr passiert (ein Run)."""
+    """Aktionen bis nichts Neues mehr passiert (ein Run). v2: ziel-bewusster
+    naiver Bot — verfolgt NEAR_MISS-Hinweise, versucht Blueprints, für die er
+    >= 2/3 Materialien hält, und darf ab survival >= 0.4 auch gated Blueprints
+    versuchen. Kein Orakel, kein Rezeptbuch — nur ein Spieler, der nicht
+    'kalt' aufgibt. (Spec session_depth v2, Peter 22.08.)"""
     random.seed(seed)
     rng = random.Random(seed)
     game = GameEngine()
     locs = list(game.locations.keys())
     stall, actions = 0, 0
+    # Frischer Spieler startet am Waldrand — Kopf-Materialien (STONE/FLINT/BONE)
+    # liegen woanders. Ein nicht aufgebender Spieler reist, statt am selben Ort
+    # zu verhungern: abwechselnd sammeln (mit Reisen) und zielgerichtet versuchen.
     while actions < cap:
         if _drain_check(game):
             break
@@ -522,14 +611,28 @@ def _run_session_depth(seed, stall_limit=15, cap=1500):
         if game.player.energy < 150:
             _eat_best(game)
         before = _novelty_set(game)
+        # Halb sammeln/reisen (Material suchen — auch Kopf-Material an anderen
+        # Orten), halb zielgerichtet versuchen. Ein persistenter Spieler spinnt
+        # nicht am selben Ort, sondern holt das fehlende Material, bevor er
+        # erneut versucht — ohne Oracle also: reisen, bis der Kopf da ist.
         if rng.random() < 0.5:
-            if rng.random() < 0.15:
+            # Material-Phase: reisen + sammeln (Kopf-Material woanders)
+            if rng.random() < 0.4:
                 _travel_or_fail(game, locs[rng.randrange(len(locs))])
-            game.gather()
+            elif rng.random() < 0.10:
+                s2 = _random_sel(game, rng, kmin=1)
+                if s2:
+                    game.execute_experiment(s2)
+                else:
+                    game.gather()
+            else:
+                game.gather()
         else:
-            sel = _random_sel(game, rng, kmin=1)
-            if sel:
+            sel = _v2_selection(game, rng)
+            if sel is not None:
                 game.execute_experiment(sel)
+            else:
+                game.gather()
         after = _novelty_set(game)
         stall = stall + 1 if after == before else 0
         if stall >= stall_limit:
@@ -769,7 +872,7 @@ METRICS = [
     {"key": "skill_spread", "desc": "Überlebens-Spanne optimal vs. zufällig (fallend = gehobene Einsteiger-Decke)", "fn": metric_skill_spread, "direction": "niedriger = besser", "version": 1},
     {"key": "feedback_quality", "desc": "Anteil informativer Rückmeldungen (Label-Stimmt, inkl. NEAR_MISS)", "fn": metric_feedback_quality, "direction": "höher = besser", "version": 3},
     {"key": "content_reachable", "desc": "Anteil sammelbarer definierter Items (inkl. Node-Ref-Prüfung)", "fn": metric_content_reachable, "direction": "höher = besser", "version": 2},
-    {"key": "session_depth", "desc": "Aktionen bis nichts Neues passiert", "fn": metric_session_depth, "direction": "höher = besser", "version": 1},
+    {"key": "session_depth", "desc": "Aktionen bis nichts Neues passiert (ziel-bewusster naiver Bot, v2)", "fn": metric_session_depth, "direction": "höher = besser", "version": 2, "probation_until": "2026-09-08"},
     {"key": "discovery_gap", "desc": "Abstand erreichbar vs. tatsächlich gefunden", "fn": metric_discovery_gap, "direction": None, "version": 1, "band": (0.2, 0.6)},
     {"key": "forage_pressure", "desc": "Anteil Sammel-Versuche an nicht-volem Node (Knappheit)", "fn": metric_forage_pressure, "direction": None, "version": 1, "band": (0.1, 0.5), "probation_until": "2026-08-20"},
     {"key": "warmth_stability", "desc": "Anteil Kälte-Stress-Ticks, die warm überstanden werden (Feuer/Isolation)", "fn": metric_warmth_stability, "direction": None, "version": 1, "band": (0.4, 0.9), "probation_until": "2026-08-27"},
