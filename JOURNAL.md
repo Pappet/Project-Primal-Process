@@ -5,6 +5,46 @@
 
 ---
 
+## 2026-08-25 — [Research] SPEC-010 Kaltstart-Brücke: knappbarer Startstein (actions_to_first_craft)
+
+### Befund (Metrik-Modus)
+Schwächste/stagnierende verifizierbare Metrik: **`actions_to_first_craft` = 34.5**, flach
+über sechs Readings (08-07 bis 08-24), p75=48, `niedriger = besser`. = die Kaltstart-Friktion:
+der naive Spieler braucht ~34 Aktionen bis zum ersten Craft — fast so lang wie die komplette
+entdeckbare Welt (`session_depth` 25). Die Langeweile beginnt vor dem ersten Werkzeug.
+Diagnose (Probe über alle 20 Seeds, nicht vermutet): `forest_edge` enthält **kein
+Head-Material** (FLINT/BONE/STONE) — erst der kalte `mountain_peak`-Trip gibt eins her.
+Median **26.5 Aktionen, bis das Inventar überhaupt ein komplettes 2-Slot-Material hält**.
+
+### Skip-Begründung
+`discovery_gap`: gated (REC-002), kein Ziel. `session_depth` = Nordstern, aber SPEC-006
+verplant → Kollision. `actions_to_first_craft`: verifizierbar, nicht gated, nicht in
+Probezeit, sechs Readings ohne Signatur → sauberster Fall.
+
+### Mechanik
+"Primitive tool at hand" — Minecraft/UnReal World/Vintage Story/Long Dark: erstes
+Kopf-Material dort, wo die Hand es findet, kein kalter Reiseweg. Nicht Content anhängen,
+sondern die erste Stufe in den Start-Biom legen.
+
+### Adaption (SPEC-010)
+Ein `pebble`-Node (STONE+PROJECTILE, max_stock 8, regen 0.04, chance 0.6) in `forest_edge`
+(`data/locations.json`). Kein neuer Blueprint, kein neues Template, kein FLINT-Node (Head-
+Dreifaltigkeit STONE/BONE/FLINT bleibt). `make_sharp_stone` (2× pebble) wird als
+unbewaffneter Früh-Prozess erreichbar.
+
+### Probe (monkeypatch, keine Scorecard-Dateien geschrieben)
+`actions_to_first_craft` **34.5 → 12.5**, `session_depth` 25 → 40 (seitige Wirkung, via
+SPEC-006 additiv), `craft_variety` 5.0, `blueprint_reachability` 1.0, `content_reachable`
+1.0. Kein Mess-Bruch nachgewiesen.
+
+### Deliverables
+- `specs/SPEC-010-kaltstart-stein.md` — genau ein Spec (Problem/Mechanik/Adaption/
+  Akzeptanz/erwartete Metrik-Wirkung).
+- `PLAN.md` — SPEC-010 als offener `[ ]`-Task ergänzt.
+- COMMIT: `research: spec 010 kaltstart-stein (cron)`
+
+---
+
 ## 2026-08-24 — [Dev] Ehrlichmachungs-Batch (Pkt. 1–4): skill_spread-Label, craft_variety v2, content_reachable v2, feedback_quality v3 (cron)
 
 ### Aufgabe

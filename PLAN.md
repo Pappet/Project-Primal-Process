@@ -60,6 +60,12 @@ SPEC-006 (priorisiert) und forage_pressure v2. Damit ist die Mess-Blockade des N
 - [ ] **PLAY-TOOLING: guided_full Rueckzug-Trigger** (keine Freigabe noetig). Jeder Fix nur am kalten Ort,
       gegengetestet ueber 20-Sweep. Messwerkzeug, keine Metrik.
 
+- [ ] **SPEC-010 — Kaltstart-Bruecke (actions_to_first_craft)** (Research 25.08.). Ein knappbarer
+      `pebble`-Node im Start-Biome `forest_edge` (STONE+PROJECTILE, max_stock 8, regen 0.04, chance 0.6),
+      damit der erste Craft nicht länger den kalten `mountain_peak`-Trip erzwingt. Kein neuer Blueprint,
+      kein FLINT-Node. Akzeptanz: `actions_to_first_craft` 34.5 → <20 (Probe: 12.5), reachability/
+      content_reachable bleiben 1.0, p75 < 40, pytest gruen. Kein Rezept-Leak.
+
 - [~] *(beobachtend)* **warmth_stability** (Probe bis 27.08.) — 0.460 im Band, flach. Kein Ziel.
 - [~] *(beobachtend)* **recovery_stability** (Probe bis 03.09.) — 0.375 im Band, flach. Kein Ziel.
 - [x] *(erledigt)* REC-001, SPEC-003, SPEC-005, SPEC-007, SPEC-008, SPEC-009.
