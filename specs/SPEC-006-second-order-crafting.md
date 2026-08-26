@@ -2,6 +2,15 @@
 
 STATUS: offen · angelegt 2026-08-11 · Quelle: Scorecard 2026-08-10 + Play-Report 2026-08-10 (Metrik `session_depth`)
 
+> **Teil / Stand 26.08. (Dev):** Der Werkzeug-als-Zutat-Layer existiert seit SPEC-008 bereits
+> in Spielform (`rope` → `cord_spear`, cord_spear konsumiert das gebaute `rope`-`CORD` als Zutat).
+> REC-002 (26.08.) macht den Reachability-Zähler tool-aware, damit genau solche Tier-2-Blueprints
+> korrekt als erreichbar zählen. Der fehlende, hier beschriebene **NEW_COMPONENT-Reveal** ist am
+> 26.08. umgesetzt (einmaliger generischer Hinweis nach erstem Werkzeugbau, `Player.known_components`,
+> kein Rezept-Leak). **Abweichung von diesem Spec-Dokument:** der Reveal wird als Zusatz-Meldung an
+> den `SUCCESS` gehangen (`reason` bleibt `SUCCESS`), NICHT als separater `NEW_COMPONENT:<tag>`-Reason —
+> das hält `feedback_quality`/die Reason-Vollständigkeit bzw. den Metrik-Kern unangetastet.
+
 ## Problem
 **Metrik:** `session_depth` = 25, stagnierend über drei Messungen (24 → 26 → 25 → 25). Richtung „höher = besser“.
 **Befund (präzise, Play 2026-08-10):** Ein survival-sicherer Guided-Runner leert **alle 8 Blueprints + alle 4 Prozesse + alle 15 Item-Templates in ~25–37 Aktionen** (Seeds @28, @24, @37). Unter optimalem Spiel ist die Zahl nicht höher als im naiven Median — das Discovery-Spiel ist nach ~einer halben Stunde fertig, danach existiert **kein Blueprint, kein Prozess, kein Template**, das eine neue Entdeckung verspricht. `_run_session_depth` stoppt nach `stall_limit=15` Aktionen ohne Neuheit (`_novelty_set` = Templates ∪ known_blueprints ∪ known_processes) — und der Stall-Trigger feuert genau dort, wo die flache, endliche Entdeckungsmenge erschöpft ist.

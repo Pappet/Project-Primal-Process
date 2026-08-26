@@ -540,7 +540,23 @@ class GameEngine:
             else:
                 self.player.inventory.items.remove(c)
         self.player.inventory.add(new_tool)
-        return {"success": True, "message": f"Hergestellt: {name}",
+        # SPEC-006: Wird ein Werkzeug-Tag ERSTMALS gebaut, registriert das
+        # Experimentiergedächtnis ihn als bekannte Komponente und setzt den
+        # Einmal-Reveal (Don't-Starve-Prototyper): "Besitz gibt Richtung". Der
+        # Hinweis ist bewusst generisch — nennt weder Item noch Ziel-Blueprint
+        # noch fehlenden Tag (kein Rezept-Leak). Die `reason` bleibt SUCCESS: das
+        # Werkzeug IST erfolgreich gebaut; der Reveal ist eine Zusatz-Meldung,
+        # kein separater Fehlschlag-Reason (kein Eingriff in feedback_quality /
+        # die Reason-Vollständigkeit). Pro Tag genau einmal, dann still.
+        reveal = []
+        for t in bp.tool_tags:
+            if t not in self.player.known_components:
+                self.player.known_components.add(t)
+                reveal.append(t)
+        msg = f"Hergestellt: {name}"
+        if reveal:
+            msg += " Das könnte sich noch mit etwas anderem verbinden lassen."
+        return {"success": True, "message": msg,
                 "reason": "SUCCESS", "blueprint_id": bp.id,
                 "result_template_id": bp.id}
 

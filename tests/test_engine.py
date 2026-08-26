@@ -762,9 +762,12 @@ class TestStackMultiSlot:
         res = engine.execute_experiment([stack, stack])
         assert res["success"] is True
         assert res["blueprint_id"] == "spear"
-        # beide Stöcke verbraucht → nur noch der Speer im Inventar
+        # beide Stöcke verbraucht → nur noch der Speer im Inventar. Der Build
+        # kann seit SPEC-006 einen generischen Einmal-Reveal an die Meldung
+        # hängen ("...verbinden lassen."); der eigentliche Tool-Name steht davor.
         names = [it.name for it in engine.player.inventory.items]
-        assert names == [res["message"].split(": ", 1)[-1]]
+        msg_name = res["message"].split(": ", 1)[-1]
+        assert names == [msg_name] or names == [msg_name.split(" Das", 1)[0]]
 
     def test_consumption_leaves_remaining_quantity(self):
         """2-Slot-Craft aus Stack qty=3 hinterlässt qty=1 — kein Doppel-Entfernen."""
@@ -1132,3 +1135,97 @@ class TestSpec8SurvivalGate:
         NICHT in items.json) → content_reachable bleibt 1.0."""
         from tools import scorecard as sc
         assert sc.metric_content_reachable()["value"] == 1.0
+
+
+class TestSpec006ComponentReveal:
+    """SPEC-006 (2026-08-11, freigegeben): Werkzeug als Zutat / Don't-Starve-
+    Prototyper. Wer ein Werkzeug-Tag ERSTMALS gebaut hat, bekommt genau einen
+    generischen Einmal-Reveal („…lässt sich noch mit etwas anderem verbinden"),
+    der weder Item noch Ziel noch fehlenden Tag nennt (kein Rezept-Leak).
+    Der `reason` bleibt SUCCESS — der Reveal ist eine Zusatz-Meldung, kein
+    separater Reason, damit feedback_quality / die Reason-Vollständigkeit
+    unangetastet bleibt. `known_components` ist das Experimentiergedächtnis.
+    """
+
+    def test_first_build_registers_and_reveals_once(self):
+        """Erster Werkzeugbau: new tag in known_components + genau ein Reveal."""
+        from engine.components import Item
+        engine = GameEngine()
+        engine.player.inventory.add(Item(name="flint_shard", base_weight=0.5,
+                                         tags={"FLINT": 1, "SHARP": 0.9, "HARD": 0.8},
+                                         attributes={"sharpness": 0.9}))
+        engine.player.inventory.add(Item(name="stick", base_weight=0.3,
+                                         tags={"RIGID": 1, "WOOD": 1}))
+        engine.player.inventory.add(Item(name="plant_fiber", base_weight=0.1,
+                                         tags={"FIBER": 1}))
+        res = engine.execute_experiment(list(engine.player.inventory.items))
+        assert res["success"] is True
+        assert res["blueprint_id"] == "axe"
+        assert "CHOPPING" in engine.player.known_components
+        assert "SHOVEL" in engine.player.known_components
+        assert "verbinden" in res["message"]
+        assert res["reason"] == "SUCCESS"  # Reveal ändert den Reason nicht
+
+    def test_repeat_build_of_same_tag_stays_silent(self):
+        """Wiederholungsbau desselben Tag-Typs bleibt stumm (kein Dauer-Reveal)."""
+        from engine.components import Item
+        engine = GameEngine()
+        # beide Male dieselbe Tag-Belegung → zweiter Build zeigt keinen Reveal
+        def _build():
+            engine.player.inventory.add(Item(name="flint_shard", base_weight=0.5,
+                                             tags={"FLINT": 1, "SHARP": 0.9, "HARD": 0.8},
+                                             attributes={"sharpness": 0.9}))
+            engine.player.inventory.add(Item(name="stick", base_weight=0.3,
+                                             tags={"RIGID": 1, "WOOD": 1}))
+            engine.player.inventory.add(Item(name="plant_fiber", base_weight=0.1,
+                                             tags={"FIBER": 1}))
+            return engine.execute_experiment(list(engine.player.inventory.items))
+        first = _build()
+        second = _build()
+        assert "verbinden" in first["message"]
+        assert "verbinden" not in second["message"]
+
+    def test_no_recipe_leak_in_reveal(self):
+        """Der Reveal nennt weder Item noch Ziel-Blueprint noch fehlenden Tag."""
+        from engine.components import Item
+        engine = GameEngine()
+        engine.player.inventory.add(Item(name="flint_shard", base_weight=0.5,
+                                         tags={"FLINT": 1, "SHARP": 0.9, "HARD": 0.8},
+                                         attributes={"sharpness": 0.9}))
+        engine.player.inventory.add(Item(name="stick", base_weight=0.3,
+                                         tags={"RIGID": 1, "WOOD": 1}))
+        engine.player.inventory.add(Item(name="plant_fiber", base_weight=0.1,
+                                         tags={"FIBER": 1}))
+        res = engine.execute_experiment(list(engine.player.inventory.items))
+        reveal = res["message"]
+        for forbidden in ("Speer", "CORD", "CUTTING", "CHOPPING", "Rezept",
+                          "SHOVEL", "Faserseil", "cord_spear", "rope",
+                          "verarbeiten", "kombinier"):
+            assert forbidden not in reveal
+
+    def test_crafted_tool_tag_is_an_ingredient(self):
+        """Tool-as-Zutat (SPEC-006-Kern): ein Werkzeug-Tag (hier CORD von rope)
+        existiert erst nach Werkzeugbau — cord_spear (bind: CORD) ist craftbar,
+        sobald rope gebaut wurde."""
+
+        from engine.components import Item
+        engine = GameEngine()
+        engine.player.inventory.items.clear()
+        engine.player.stats["survival"] = 0.4
+        # rope herstellen → CORD-Tag + Reveal
+        engine.player.inventory.add(Item(name="plant_fiber", base_weight=0.1,
+                                         tags={"FIBER": 1}))
+        engine.player.inventory.add(Item(name="stick", base_weight=0.3,
+                                         tags={"RIGID": 1, "WOOD": 1}))
+        r = engine.execute_experiment(list(engine.player.inventory.items))
+        assert r["blueprint_id"] == "rope"
+        assert "CORD" in engine.player.known_components
+        # tip + shaft ergänzen → cord_spear craftbar (braucht CORD als Zutat)
+        engine.player.inventory.add(Item(name="sharp_stone", base_weight=0.6,
+                                         tags={"STONE": 1, "SHARP": 0.7, "HARD": 0.7},
+                                         attributes={"sharpness": 0.7}))
+        engine.player.inventory.add(Item(name="stick", base_weight=0.3,
+                                         tags={"RIGID": 1, "WOOD": 1}))
+        res = engine.execute_experiment(list(engine.player.inventory.items))
+        assert res["success"] is True
+        assert res["blueprint_id"] == "cord_spear"

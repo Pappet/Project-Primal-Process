@@ -54,9 +54,15 @@ SPEC-006 (priorisiert) und forage_pressure v2. Damit ist die Mess-Blockade des N
       ordnungsunabhängig statt Listenkopplung; reachability 1.0 + gap 0.6 unverändert — keine
       andere Metrik gesenkt; Patch-Entwurf + Tests in `proposals/REC-002-tool-aware-reachability.md`)
 
-- [ ] **SPEC-006 — Werkzeug als Zutat** (priorisiert, nach Ehrlichmachung + REC-002). Akzeptanz:
-      session_depth (v2) steigend, blueprint_reachability 1.0, discovery_gap beobachtet.
-      Steigt der Gap ueber 0.6: Spiel-Signal, Antwort spiel-seitig. Kein Rezept-Leak, kein Content-Ballon.
+- [x] **SPEC-006 — Werkzeug als Zutat** (priorisiert, nach Ehrlichmachung + REC-002). Die
+      Tier-2-Layer existiert seit SPEC-008 (`rope`→`cord_spear`, cord_spear konsumiert rope-CORD als
+      Zutat); REC-002 (26.08.) macht den Zähler tool-aware — was fehlte war der Einmal-Reveal. —
+      **Kern umgesetzt 26.08.** (`Player.known_components` + generischer Einmal-Hinweis nach erstem
+      Werkzeugbau, kein Rezept-Leak; als Zusatz-Meldung am SUCCESS, kein Metrik-Kern; 240 Tests grün,
+      alle Metrikwerte unverändert). Numerische Akzeptanz (`session_depth` steigend) prüft die nächste
+      Play-Scorecard — nicht vom Dev zu erzwingen, siehe Dev-Pitfall.
+      Akzeptanz: session_depth (v2) steigend (bei unveränderten Seeds), blueprint_reachability 1.0,
+      discovery_gap beobachtet. Steigt der Gap über 0.6: Spiel-Signal, Antwort spiel-seitig. Kein Rezept-Leak.
 
 - [ ] **forage_pressure v2** (Freigabe 22.08., Pkt. 8). Gefuehlte Knappheit, nicht stock < max_stock.
       Das Band wird NICHT geschoben. Schwelle schlaegt Dev/Direktor vor. Probezeit 14 Tage.

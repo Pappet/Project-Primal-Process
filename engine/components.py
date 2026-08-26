@@ -85,6 +85,13 @@ class Player:
         # gemeldet bekommen hat (NEAR_MISS). Der Hinweis feuert pro Blueprint
         # genau einmal — danach still bis zum echten Craft (keine Dauer-Belehrung).
         self.near_misses: Set[str] = set()
+        # SPEC-006: Experimentiergedächtnis für gebaute Werkzeuge. Registriert
+        # die tool_tag-Namen aller je gebauten Werkzeuge — der Don't-Starve-
+        # Prototyper-Effekt: wer ein Werkzeug erstmals gebaut hat, bekommt genau
+        # einmal den generischen Hinweis, dass es sich noch mit etwas anderem
+        # verbinden lässt (kein Rezept-Leak). Pro Tag genau einmal — danach still,
+        # analog der SPEC-003-Einmaligkeit.
+        self.known_components: Set[str] = set()
         # SPEC-009: Persistente Verletzungen (Zustand, kein einmaliger HP-Abzug).
         # Jede Wunde trägt severity (Stärke, startet 1.0), ticks (seit Entstehung)
         # und treated (Behandlung angelegt? Verband/Umschlag). Pro-Instanz — eine

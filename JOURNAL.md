@@ -5,6 +5,34 @@
 
 ---
 
+## 2026-08-26 — [Dev] SPEC-006-Kern umgesetzt: NEW_COMPONENT-Einmal-Reveal (Werkzeug als Zutat)
+
+### Was
+Der Werkzeug-als-Zutat-Layer existierte seit SPEC-008 (`rope` → `cord_spear`, cord_spear
+konsumiert das gebaute `rope`-`CORD` als Zutat). REC-002 (dieselbe Session) macht den
+Reachability-Zähler tool-aware. Was laut SPEC-006 noch fehlte, war der **NEW_COMPONENT-
+Einmal-Reveal** — der Don't-Starve-Prototyper-Effekt: wer ein Werkzeug erstmals baut,
+bekommt genau einen generischen Hinweis, dass es sich weiter verbinden lässt (Besitz gibt
+Richtung). Früher YAGNI (Journal 11.08.) — jetzt ehrlich, weil der Tier-2-Layer real ist.
+
+**Umsetzung:**
+- `engine/components.py` — `Player.known_components: Set[str]` (Experimentiergedächtnis).
+- `engine/core.py::_create_tool` — nach erfolgreichem Bau: jedes neue `tool_tag` registriert
+  und einmaliger Hinweis ergänzt.
+- **Abweichung vom Spec:** Reveal als Zusatz-Meldung am `SUCCESS`, `reason` bleibt `SUCCESS` —
+  kein separater `NEW_COMPONENT:<tag>`-Reason, damit `feedback_quality`/Reason-Vollständigkeit
+  und der Metrik-Kern unangetastet bleiben. Spec-Datei angeglichen (nicht gelöscht).
+
+**Verifikation:** `reason` bleibt SUCCESS, Hinweis generisch (kein Rezept-Leak, 4 Tests);
+`known_components` pro Tag genau einmal. **Alle Metrikwerte byte-identisch** (reachability 1.0,
+gap 0.6, feedback_quality 1.0, first_craft 34.5, craft_variety 5.0, session_depth 64.5). 240 Tests grün.
+
+**Ehrlichkeit:** Der Reveal allein bewegt `session_depth` nicht (reine Meldung, keine neue
+Novelty). Die numerische Akzeptanz der SPEC-006-Akzeptanz (session_depth steigend) prüft die
+nächste Play-Scorecard — nicht vom Dev erzwingbar.
+
+---
+
 ## 2026-08-26 — [Dev] REC-002 umgesetzt: Tool-aware Reachability (Werkzeug-Bau als Vorschritt)
 
 ### Was
