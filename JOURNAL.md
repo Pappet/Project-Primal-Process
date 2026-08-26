@@ -5,6 +5,24 @@
 
 ---
 
+## 2026-08-26 — [Play] Erste PLAY-Lesung unter v2-Re-Baseline: session_depth 64.5, echter Boredom-Punkt bleibt ~15
+
+### Headline
+Erste PLAY-Lesung nach dem Dev-Land 25.08. des ziel-bewussten `session_depth`-v2-Bots. **Re-Baseline, kein Fortschritt** (Peter: "nicht feiern"): `session_depth` liest jetzt **64.5** (p25 42/p75 69) statt v1 25.0, weil der Bot ziel-bewusster sucht, nicht weil das Spiel länger wurde. Die übrigen Metriken ±0.
+
+Die relevanteste Erkenntnis: der geführte kompetente Player leert die komplette entdeckbare Welt (10 Blueprints + 9 Prozesse) weiterhin in **~15–19 gezielten Aktionen** (guided full 8/20, Median last_new ~15). Die 64.5 sind Mess-Bot-Reisezeit, keine gewachsene Tiefe. **Die Langeweile-Stelle bleibt ein flaches Discovery-Cap.** Einziger echter Hebel: die freigegebene REC-002 → SPEC-006-Kette (zweite Discovery-Schicht), weiterhin offen.
+
+### Weitere Befunde
+- **guided-Bot 8/20 voll** — dokumentierter fragiler Band (½–2 über Sessions), kein neuer Regress. Rückzug-Trigger weiterhin blind für brennendes-aber-zu-schwaches Feuer am kalten Ort (PLAYER-Tooling-Task bleibt).
+- **`discovery_gap` 0.6 EXAKT Bandkante** (naive 0.4, naive_p25 0.3) — Spiel-Signal annotiert, Direktor: beobachten, nicht optimieren.
+- **Naive Probe** (eigene Runs): stirbt ~18–24 Aktionen an Energie 0/Kälte, 1–2 BPs, 0 Prozesse, Tier-2 nie erreicht. Lern-Decke (Feuer/Futter), kein Bug.
+- Keine Spiel-Repression, kein neuer Bug → kein 🔴-Eintrag.
+
+### Commits
+`play: scorecard + playtest (cron)` — Scorecard (2026-08-26), play/2026-08-26.md.
+
+---
+
 ## 2026-08-25 — [Dev] session_depth v2 — ziel-bewusster naiver Bot (Peter 22.08., Pkt 5)
 
 ### Aufgabe

@@ -8,11 +8,11 @@
 |--------|------|-----------|----------|--------------|
 | actions_to_first_craft (v1) | 34.500 | ±0 | niedriger | Aktionen bis zum ersten erfolgreichen Craft (naiv) |
 | blueprint_reachability (v1) | 1.000 | ±0 | höher | Anteil erreichbarer Blueprints (N=50) |
-| craft_variety (v1) | 3.500 | ±0 | höher | Unterschiedliche Craft-Typen in 100 Aktionen |
-| skill_spread (v1) | 0.216 | ±0 | höher | Überlebens-Spanne optimal vs. zufällig |
-| feedback_quality (v2) | 0.916 | ±0 | höher | Anteil informativer Rückmeldungen (Label-Stimmt) |
-| content_reachable (v1) | 1.000 | ±0 | höher | Anteil sammelbarer definierter Items |
-| session_depth (v1) | 25.000 | ±0 | höher | Aktionen bis nichts Neues passiert |
+| craft_variety (v2) | 5.000 | — (neu definiert) | höher | Unterschiedliche Craft-Typen (Blueprints + Prozesse) in 100 Aktionen |
+| skill_spread (v1) | 0.216 | ±0 | niedriger | Überlebens-Spanne optimal vs. zufällig (fallend = gehobene Einsteiger-Decke) |
+| feedback_quality (v3) | 1.000 | — (neu definiert) | höher | Anteil informativer Rückmeldungen (Label-Stimmt, inkl. NEAR_MISS) |
+| content_reachable (v2) | 1.000 | — (neu definiert) | höher | Anteil sammelbarer definierter Items (inkl. Node-Ref-Prüfung) |
+| session_depth (v2) (Probe bis 08.09.) | 64.500 | — (neu definiert) | höher | Aktionen bis nichts Neues passiert (ziel-bewusster naiver Bot, v2) |
 | discovery_gap (v1) | 0.600 | ±0 | im Band | Abstand erreichbar vs. tatsächlich gefunden |
 | forage_pressure (v1) (Probe bis 20.08.) | 0.707 | ±0 | über Band | Anteil Sammel-Versuche an nicht-volem Node (Knappheit) |
 | warmth_stability (v1) (Probe bis 27.08.) | 0.460 | ±0 | im Band | Anteil Kälte-Stress-Ticks, die warm überstanden werden (Feuer/Isolation) |
@@ -38,7 +38,7 @@
 **Band: 0.3 – 0.7.** Keine Richtung (kein "höher = besser"). Unter 0.3 nimmt das Spiel den Spieler an die Hand; über 0.7 ist es faktisch unentdeckbar. `blueprint_reachability` (None) misst, was ein Orakel erreichen kann; `naive_discovery_rate` (None) was ein Spieler wirklich findet. Der Abstand dazwischen ist das eigentliche Spiel.
 
 
-## Details (2026-08-24)
+## Details (2026-08-26)
 
 ```json
 {
@@ -66,11 +66,11 @@
     "version": 1
   },
   "craft_variety": {
-    "value": 3.5,
-    "p25": 3,
-    "p75": 5,
+    "value": 5.0,
+    "p25": 5,
+    "p75": 6,
     "n_runs": 20,
-    "version": 1
+    "version": 2
   },
   "skill_spread": {
     "value": 0.216,
@@ -80,11 +80,11 @@
     "version": 1
   },
   "feedback_quality": {
-    "value": 0.916,
-    "p25": 0.911,
-    "p75": 0.925,
+    "value": 1.0,
+    "p25": 1.0,
+    "p75": 1.0,
     "n_runs": 20,
-    "version": 2
+    "version": 3
   },
   "content_reachable": {
     "value": 1.0,
@@ -111,14 +111,15 @@
       "tinder"
     ],
     "unreachable": [],
-    "version": 1
+    "dangling_refs": [],
+    "version": 2
   },
   "session_depth": {
-    "value": 25.0,
-    "p25": 21,
-    "p75": 44,
+    "value": 64.5,
+    "p25": 42,
+    "p75": 69,
     "n_runs": 20,
-    "version": 1
+    "version": 2
   },
   "discovery_gap": {
     "value": 0.6,
