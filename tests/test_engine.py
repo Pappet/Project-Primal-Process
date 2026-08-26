@@ -308,6 +308,90 @@ class TestSpec3NearMiss:
         assert "Axt" not in msg
 
 
+class TestTier2GateNearMiss:
+    """Tier-2-Volldeckung (Peter-Hebel, PLAN-Ziel 3): Ein UNBEKANNTER,
+    GATE-blockierter Blueprint, dessen Slots sich aus dem Inventar real
+    zuweisen lassen (Permutation, nicht bloß Tag-Vereinigung), feuert einmalig
+    `NEAR_MISS:<id>` statt stumm zu bleiben. Ohne diesen Weg erhalten Spieler
+    nie ein Richtungssignal auf die zweite Entdeckungsschicht (rope/cord_spear):
+    eine voll abgedeckte Signatur ist heute stumm, weil der alte Bereich
+    `o < len(slots)` sie ausschloss. Text bleibt generisch — kein Gate-/Rezept-
+    /Tag-Leak (dieselbe Message-Familie wie SPEC-003)."""
+
+    def _give(self, engine, tpl, qty=1):
+        engine.player.inventory.add(create_item(tpl, qty))
+
+    def _prime_axes_consumed(self, engine):
+        """Die drei Axt-Near-Misses als belegt setzen, damit der
+        Partial-Loop (Priorität bleibt unangetastet) ruhig durchläuft und
+        Block 2b unter echten Bedingungen greift."""
+        engine.player.near_misses.update({"axe", "axe_bone", "axe_stone"})
+
+    def test_rope_gated_full_coverage_fires_near_miss(self):
+        engine = GameEngine()
+        engine.player.inventory.items.clear()
+        for t in ("plant_fiber", "stick"):
+            self._give(engine, t)
+        assert engine.player.stats["survival"] < 0.4  # rope-Gate noch zu
+        self._prime_axes_consumed(engine)
+        res = engine.execute_experiment(list(engine.player.inventory.items))
+        assert res["success"] is False
+        assert res["reason"] == "NEAR_MISS:rope"
+        assert "gehören" in res["message"]
+        # weder Gate-Wert noch Ergebnisname werden verraten
+        for leak in ("0.4", "Survival", "Seil", "Tauwerk"):
+            assert leak not in res["message"]
+
+    def test_rope_hint_fires_once_only(self):
+        engine = GameEngine()
+        engine.player.inventory.items.clear()
+        self._give(engine, "plant_fiber")
+        self._give(engine, "stick")
+        self._prime_axes_consumed(engine)
+        first = engine.execute_experiment(list(engine.player.inventory.items))
+        assert first["reason"] == "NEAR_MISS:rope"
+        assert "rope" in engine.player.near_misses
+        second = engine.execute_experiment(list(engine.player.inventory.items))
+        assert second["reason"] != "NEAR_MISS:rope"
+
+    def test_gate_open_crafts_instead_of_hinting(self):
+        """Gate offen → kein Hinweis nötig: der normale Craft-Pfad nimmt rope."""
+        engine = GameEngine()
+        engine.player.inventory.items.clear()
+        self._give(engine, "plant_fiber")
+        self._give(engine, "stick")
+        self._prime_axes_consumed(engine)
+        engine.player.stats["survival"] = 0.5
+        res = engine.execute_experiment(list(engine.player.inventory.items))
+        assert res["success"] is True
+        assert res["blueprint_id"] == "rope"
+        assert "rope" not in engine.player.near_misses
+
+    def test_feasibility_filters_tag_soup(self):
+        """_overlap sieht stick+plant_fiber für spear 'voll' (RIGID deckt
+        beide Slots in der Vereinigungs-Sicht) — physikalisch unmöglich, weil
+        kein zweites RIGID existiert. Die Permutationsprüfung darf solche
+        Tag-Schatten nicht als Tier-2-Hinweis durchlassen; rope mit denselben
+        beiden Materialien ist dagegen real zuweisbar."""
+        engine = GameEngine()
+        engine.player.inventory.items.clear()
+        self._give(engine, "plant_fiber")
+        self._give(engine, "stick")
+        items = list(engine.player.inventory.items)
+        assert engine._feasible_mapping(items, engine.blueprints["spear"]) is False
+        assert engine._feasible_mapping(items, engine.blueprints["rope"]) is True
+
+    def test_known_rope_does_not_hint(self):
+        engine = GameEngine()
+        engine.player.inventory.items.clear()
+        self._give(engine, "plant_fiber")
+        self._give(engine, "stick")
+        self._prime_axes_consumed(engine)
+        engine.player.known_blueprints.add("rope")
+        res = engine.execute_experiment(list(engine.player.inventory.items))
+        assert res["reason"] != "NEAR_MISS:rope"
+
+
 class TestEngineCore:
     def test_engine_init(self):
         engine = GameEngine()

@@ -367,6 +367,25 @@ class GameEngine:
             "result_template_id": result_template_id,
         }
 
+    def _feasible_mapping(self, selected_items, bp):
+        """True, wenn sich selected_items wie execute_experiment real auf
+        bp.slots zuweisen lassen — Permutation + _slot_satisfied, nur ohne
+        Survival-Gate. Filtert Tag-Schatten heraus, bei denen die
+        Vereinigungs-Tag-Sicht (_overlap) 'voll' suggeriert, aber niemals eine
+        reale Zuordnung existiert (z.B. stick+plant_fiber gegen spear: der
+        RIGID-Bedarf beider Slots ist physikalisch nicht deckbar)."""
+        if len(selected_items) != len(bp.slots):
+            return False
+        for p in itertools.permutations(selected_items):
+            ok = True
+            for i, slot in enumerate(bp.slots.keys()):
+                if not _slot_satisfied(p[i].tags, bp.slots[slot]):
+                    ok = False
+                    break
+            if ok:
+                return True
+        return False
+
     def _no_match_reason(self, selected_items):
         """Bestimmt den konkretesten Reason für einen Fehlschlag.
 
@@ -420,12 +439,50 @@ class GameEngine:
                 continue
             if bp.id in self.player.near_misses:
                 continue
+            # Gate-blockierte Tier-2-Blueprints sprechen ausschließlich über
+            # Block 2b (echte Volldeckung). Ohne diese Linie schiebt sich ein
+            # reiner Tag-Vereinigungs-Schatten vor (z.B. stick+plant_fiber auf
+            # cord_spear: EIN Ast deckt tip+shaft nur virtuell, die Physik
+            # kann es nie) und frisst den One-Shot des Hinweises, bevor der
+            # echte Volldeckungs-Signal (rope) je drankommt.
+            if bp.min_survival_req > self.player.stats["survival"]:
+                continue
             o = _overlap(bp)
             if 2 <= o < len(bp.slots) and o > near_overlap:
                 near_overlap, near = o, bp
         if near is not None:
             self.player.near_misses.add(near.id)
             return f"NEAR_MISS:{near.id}"
+
+        # 2b. Gate-blockierte Tier-2-Volldeckung (Peter-Hebel, PLAN-Ziel 3):
+        #     Die gehaltenen Dinge füllen ALLE Slots wirklich (reale
+        #     Permutations-Zuordnung unten, nicht bloß die Tag-Vereinigung aus
+        #     _overlap) — der Bau scheitert allein am Survival-Gate
+        #     (min_survival_req von rope/cord_spear). Ohne diesen Weg erhalten
+        #     Spieler nie eine Richtungssignal auf die zweite Entdeckungs-
+        #     schicht: ein voll abgedeckter Blueprint ist heute stumm, weil der
+        #     alte Bereich `o < len(slots)` ihn ausschloss. Genau einmal pro
+        #     Blueprint wie jeder Near-Miss; der Text bleibt generisch, kein
+        #     Gate-/Rezept-/Tag-Leak. Nicht-voll-abgedeckte Kandidaten (z.B.
+        #     spear mit einer Sichel an RIGID-Tags) bleiben stumm — der alte
+        #     Zustand bleibt in seiner Priorität unangetastet.
+        full_bp, full_req = None, -1.0
+        for bp in self.blueprints.values():
+            if bp.id in self.player.known_blueprints:
+                continue
+            if bp.id in self.player.near_misses:
+                continue
+            if self.player.stats["survival"] >= bp.min_survival_req:
+                continue                      # Gate offen → Hauptloop hätte gebaut
+            if _overlap(bp) != len(bp.slots):
+                continue                      # nur echte Volldeckung zählt
+            if not self._feasible_mapping(selected_items, bp):
+                continue                      # Tag-Schatten ohne reale Zuordnung
+            if bp.min_survival_req > full_req:
+                full_req, full_bp = bp.min_survival_req, bp
+        if full_bp is not None:
+            self.player.near_misses.add(full_bp.id)
+            return f"NEAR_MISS:{full_bp.id}"
 
         # 3. Generisch — konkretes Merkmal nur, solange kein Beinahe-Treffer
         #    lief (danach genügt der eine Hinweis; kein Dauer-Leak derselben

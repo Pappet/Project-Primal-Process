@@ -70,11 +70,27 @@ SPEC-006 (priorisiert) und forage_pressure v2. Damit ist die Mess-Blockade des N
 - [ ] **PLAY-TOOLING: guided_full Rueckzug-Trigger** (keine Freigabe noetig). Jeder Fix nur am kalten Ort,
       gegengetestet ueber 20-Sweep. Messwerkzeug, keine Metrik.
 
-- [ ] **SPEC-010 — Kaltstart-Bruecke (actions_to_first_craft)** (Research 25.08.). Ein knappbarer
+- [x] **SPEC-010 — Kaltstart-Bruecke (actions_to_first_craft)** (Research 25.08.). Ein knappbarer
       `pebble`-Node im Start-Biome `forest_edge` (STONE+PROJECTILE, max_stock 8, regen 0.04, chance 0.6),
       damit der erste Craft nicht länger den kalten `mountain_peak`-Trip erzwingt. Kein neuer Blueprint,
       kein FLINT-Node. Akzeptanz: `actions_to_first_craft` 34.5 → <20 (Probe: 12.5), reachability/
       content_reachable bleiben 1.0, p75 < 40, pytest gruen. Kein Rezept-Leak.
+      — **umgesetzt 26.08.** (actions_to_first_craft **9.5**, p25 4, p75 13 — besser als Probe;
+      reachability/content_reachable/feedback_quality unverändert 1.0; Stream-Kosten:
+      session_depth 64.5→53.5, craft_variety 5.0→4.5, discovery_gap 0.6→0.65 — bekanntes
+      shared-measurement-stream-Muster, im BACKLOG für den Direktor geflaggt; 245 Tests grün)
+
+- [x] **NEAR_MISS-Erweiterung: Tier-2-Volldeckung** (PLAN-Ziel-3-Hebel „2-Slot-Blueprints", Dev 26.08.).
+      Gate-blockierte Tier-2-Blueprints (`rope`, `cord_spear`) feuerten NIE einen Near-Miss: der alte
+      Bereich `2 <= o < len(slots)` schloss voll abgedeckte Signaturen aus — Spieler mit ALLEN Zutaten
+      blieben stumm Richtung zweiter Schicht. Neu: Block 2b in `_no_match_reason` erlaubt
+      Volldeckungs-Hints nach realem Permutations-Check (`_feasible_mapping`), einmalig pro Blueprint,
+      generischer Text wie gehabt (kein Gate-/Rezept-Leak). Gegenstück: gatete BPs nehmen an PARTIELLEN
+      Union-Hints NICHT mehr teil (sonst frisst ein physikalisch unmöglicher Schatten — stick+fiber auf
+      cord_spear via EINEM Ast für tip+shaft — den One-Shot vor dem echten Signal). Priorität des
+      Alt-Pfads unangetastet (axe/Knife-Hints zuerst wie bisher).
+      Akzeptanz: rope feuert NEAR_MISS bei survival<0.4 und voller Deckung ✓, gate offen → normaler
+      Craft statt Hint ✓, Einmaligkeit ✓, feasibility filtert Tag-Soup ✓; alle 245 Tests grün.
 
 - [~] *(beobachtend)* **warmth_stability** (Probe bis 27.08.) — 0.460 im Band, flach. Kein Ziel.
 - [~] *(beobachtend)* **recovery_stability** (Probe bis 03.09.) — 0.375 im Band, flach. Kein Ziel.

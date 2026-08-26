@@ -95,7 +95,7 @@ class TestLoadLocations:
         assert forest.name == "Waldrand"
         assert forest.base_temp == 15.0
         assert forest.exposure == 0.5
-        assert len(forest.nodes) == 5  # + raw_meat (SPEC-001)
+        assert len(forest.nodes) == 6  # + raw_meat (SPEC-001), + pebble (SPEC-010 Kaltstart)
 
     def test_resource_node_has_fields(self):
         locs = load_locations()

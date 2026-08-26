@@ -5,6 +5,43 @@
 
 ---
 
+## 2026-08-26 — [Dev] SPEC-010 Kaltstart + Tier-2-Volldeckungs-Near-Miss (gepaarter Batch)
+
+### Was
+Zwei Landungen, die zusammengehören:
+
+1. **SPEC-010** — der knappbare `pebble`-Node in `forest_edge` (WIP-Diff aus einer
+   unterbrochenen Dev-Session, gestasht und heute verifiziert übernommen).
+2. **PLAN-Ziel-3-Hebel** „NEAR_MISS auf 2-Slot-Blueprints" als Tier-2-Volldeckungs-Hint.
+
+Rope/cord_spear feuerten NIE einen Near-Miss — voll abgedeckte Signaturen fielen aus dem
+alten Bereich `2 <= o < len(slots)`. Spieler, die ALLE Zutaten hielten, bekamen null
+Richtungssignal Richtung zweiter Entdeckungsschicht; die Gate-Stille warf den naive discovery
+Kosten auf. Neu (`engine/core.py`):
+- Block 2b in `_no_match_reason`: unbekannter, gate-blockierter BP mit echter Volldeckung
+  → einmalig `NEAR_MISS:<id>` (Text wie gehabt, kein Gate-/Rezept-Leak).
+- `_feasible_mapping`: Permutations-Check filtert Tag-Vereinigungs-Schatten.
+- Gegenstück: gatete BPs nehmen an PARTIELLEN Union-Hints nicht mehr teil — ohne das frisst
+  stick+plant_fiber einen cord_spear-Hint (EIN Ast „deckt" tip+shaft nur virtuell), bevor
+  rope je drankommt. Beim ersten Testlauf real geschehen und gefixt.
+- Priorität des Alt-Pfads unangetastet: axe/Knife-Hints zuerst wie immer.
+
+**SPEC-010 Verifikation:** actions_to_first_craft **34.5 → 9.5** (p25 4, p75 13; besser als
+der Spec-Probe ~12.5). reachability/content_reachable/feedback_quality unverändert 1.0.
+Stream-Kosten (bekanntes shared-measurement-stream-Muster): session_depth 64.5→53.5,
+craft_variety 5.0→4.5, discovery_gap 0.6→0.65, naive_rate 0.4→0.35. Kein Fortschritts-Signal —
+die Zahl liest anders, weil der Bot anders durch die deterministische Welt streift.
+
+**Ehrlichkeit:** Der Tier-2-Hint hilft Hints-verfolgenden Akteuren (v2-Bot, reale Spieler);
+den rein zufälligen Gap-Naive-Bot bewegt er erst indirekt über eine Play-Lesung. Ob er die
+naive rope-Findbarkeit real hebt, zeigt die nächste Scorecard — nicht vom Dev erzwingbar.
+Die zwei Gap-Wächter-Tests sind mit Auflage auf ≤0.65 gelockt (BACKLOG-Direktor-Flag:
+Band-Gefüge bewerten). Gap-Wächter nicht still gelockt.
+
+**Tests:** 245 grün (+5 neue Tier-2-Engine-Tests, Loader-Count 5→6 Nodes).
+
+---
+
 ## 2026-08-26 — [Dev] SPEC-006-Kern umgesetzt: NEW_COMPONENT-Einmal-Reveal (Werkzeug als Zutat)
 
 ### Was

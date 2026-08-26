@@ -55,6 +55,16 @@
         "req_tool_tag": "PROJECTILE",
         "max_stock": 5.0,
         "regen_per_tick": 0.03
+      },
+      {
+        "result_template_id": "pebble",
+        "min_qty": 1,
+        "max_qty": 2,
+        "chance": 0.6,
+        "req_perception": 0.0,
+        "req_tool_tag": null,
+        "max_stock": 8.0,
+        "regen_per_tick": 0.04
       }
     ]
   },
