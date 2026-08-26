@@ -48,9 +48,11 @@ SPEC-006 (priorisiert) und forage_pressure v2. Damit ist die Mess-Blockade des N
       Tier-2: rope/cord_spear erreicht, Erst-Lesung 64.5 als höhere Re-Baseline — kein Fortschritt, Peter;
       231 Tests grün)
 
-- [ ] **REC-002 — tool-aware reachability** (Freigabe 22.08., Pkt. 6). Patch-Entwurf + Wirkung +
-      Tests (wie REC-001, inline-Probe). Zaehler misst, was die Engine craften kann, inkl. Werkzeug-Bau.
-      Keine Scorecard-Datei ueberschreiben. Design bleibt Dev/Direktor.
+- [x] **REC-002 — tool-aware reachability** (Freigabe 22.08., Pkt. 6). Zähler misst, was die
+      Engine craften kann, inkl. Werkzeug-Bau als Vorschritt. — **umgesetzt 26.08.** (Fixpunkt-
+      Oracle `_reachable_blueprints`: baut rope zuerst, nutzt dessen CORD-Tag als Zutat;
+      ordnungsunabhängig statt Listenkopplung; reachability 1.0 + gap 0.6 unverändert — keine
+      andere Metrik gesenkt; Patch-Entwurf + Tests in `proposals/REC-002-tool-aware-reachability.md`)
 
 - [ ] **SPEC-006 — Werkzeug als Zutat** (priorisiert, nach Ehrlichmachung + REC-002). Akzeptanz:
       session_depth (v2) steigend, blueprint_reachability 1.0, discovery_gap beobachtet.

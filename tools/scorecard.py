@@ -162,8 +162,63 @@ def _pair_slots(game, bp):
     return list(chosen)
 
 
+def _reachable_blueprints(game, bps, loc_ids, gather_initial=8, gather_refill=2):
+    """Tool-aware Erreichbarkeits-Sicht: Welche Blueprints kann die Engine
+    von frischem Start aus craften — inkl. Werkzeug-Bau als Vorschritt?
+
+    REC-002 (freigegeben 22.08.): Der Zähler misst, was die Engine wirklich
+    craften kann, nicht was ein naive Ein-Schritt-Lauf über die Blueprint-Liste
+    zufällig schafft. Ein Blueprint, dessen Slots einen Werkzeug-Tag fordern
+    (z.B. `CORD` von rope, `CUTTING`/`CHOPPING` von Messer/Axt), ist nur dann
+    erreichbar, wenn der Zähler das Werkzeug ERST baut und DANN als Zutat nutzt.
+
+    Implementierung: Fixpunkt-Schleife über die Blueprint-Menge. In jedem
+    Durchlauf werden alle Blueprints versucht, deren Slots aus dem aktuellen
+    Inventar (Rohmaterial + bereits gebaute Werkzeuge) füllbar sind und deren
+    Survival-Gate offen ist. Gelingt ein neuer Craft, wird das gebaute Werkzeug
+    dem Inventar hinzugefügt (trägt seine tool_tags) und die Survival-Score
+    steigt — so öffnet ein Tier-1-Fund den Tier-2-Zugang (min_survival_req)
+    genau wie in echtem Play. Zwischen Durchläufen werden verbrauchte
+    Rohmaterialien nachgesammelt, damit ein knapper Vorrat nicht fälschlich als
+    Unerreichbarkeit zählt. Ordnungsunabhängig: jede Blueprint verschwindet
+    erst, wenn ihre echten Vorbedingungen (Material + Werkzeug + Gate) stehen.
+
+    Liefert das Set erreichbarer Blueprints (eine Sichtung, deterministisch
+    durch den Run-Seed gesteuert; Aufrufer setzt `random.seed` außen).
+    """
+    crafted = set()
+    while True:
+        progressed = False
+        for bp in bps:
+            if bp.id in crafted:
+                continue
+            if game.player.stats["survival"] < bp.min_survival_req:
+                continue
+            sel = _pair_slots(game, bp)
+            if sel and game.execute_experiment(sel)["success"]:
+                crafted.add(bp.id)
+                progressed = True
+        if not progressed:
+            break
+        # verbrauchte Rohmaterialien nachsammeln (knapper Vorrat ≠ Unerreichbar)
+        for loc in loc_ids:
+            _travel_or_fail(game, loc)
+            for _ in range(gather_refill):
+                game.gather()
+    return crafted
+
+
 def metric_reachability(n=50):
-    """Anteil der Blueprints, die von frischem Start aus erreichbar sind."""
+    """Anteil der Blueprints, die von frischem Start aus erreichbar sind.
+
+    REC-002 (freigegeben 22.08.): Der Zähler misst jetzt, was die Engine
+    wirklich craften kann — inkl. Werkzeug-Bau als Vorschritt. Statt jeden
+    Blueprint einmal in Listenreihenfolge zu versuchen, laesst ein
+    Fixpunkt-Lauf so lange craften, wie Material/Werkzeug/Survival es
+    erlauben: Ein gebautes Werkzeug (rope → `CORD`, Messer → `CUTTING`) ist
+    selbst wieder Baustein für höherwertige Blueprints. Damit bleibt die
+    Zählung Ordnung-unabhängig und bleibt Engine-Wahrheit.
+    """
     bps = get_all_blueprints()
     loc_ids = [l.id for l in get_all_locations()]
     seen = {bp.id: 0 for bp in bps}
@@ -174,10 +229,8 @@ def metric_reachability(n=50):
             _travel_or_fail(game, loc)
             for _ in range(8):
                 game.gather()
-        for bp in bps:
-            sel = _pair_slots(game, bp)
-            if sel and game.execute_experiment(sel)["success"]:
-                seen[bp.id] += 1
+        for bp_id in _reachable_blueprints(game, bps, loc_ids):
+            seen[bp_id] += 1
     total = max(1, len(bps))
     value = sum(1 for v in seen.values() if v > 0) / total
     return {"value": round(value, 3),

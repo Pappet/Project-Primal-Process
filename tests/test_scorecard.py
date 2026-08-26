@@ -414,9 +414,112 @@ class TestRec001FamilyReachability:
         """Wahrer Gap liegt in/am Band (≤ 0.6). SPEC-008 (Tier-2-Satz) hat ihn
         von 0.625 (über Band) auf 0.6 gesenkt — Verbesserung, kein Abschwächen
         der Berechnung; naive_discovery stieg mit dem zusätzlichen Ziel."""
-        from engine.core import GameEngine
         m = sc.metric_discovery_gap()
         assert m["value"] <= 0.6
+
+class TestRec002ToolAwareReachability:
+    """REC-002 (freigegeben 22.08.): Der Reachability-Zähler misst, was die
+    Engine wirklich craften kann — inkl. Werkzeug-Bau als Vorschritt.
+
+    Der alte Ein-Schritt-Lauf versuchte jeden Blueprint einmal in
+    Listenreihenfolge. Ein Blueprint, dessen Slots den Werkzeug-Tag `CORD` nur
+    von `rope` bekommt (cord_spear), war dadurch nur erreichbar, wenn rope
+    zufällig VOR ihm in der Liste stand. REC-002 modelliert Werkzeug-Bau als
+    Vorschritt: ein Fixpunkt-Lauf baut rope zuerst und nutzt dessen `CORD`-Tag
+    dann als Zutat — unabhängig von der Listenordnung.
+    """
+
+    def test_order_independent_closure(self):
+        """Der Fixpunkt-Lauf liefert dieselbe Erreichbarkeit bei beliebiger
+        Blueprint-Reihenfolge — die frühere Listenkopplung ist weg.
+
+        cord_spear's Slot fordert den Werkzeug-Tag `CORD`, der in der Rohwelt
+        nicht existiert — er entsteht erst durchs Craften von `rope`. Der alte
+        Ein-Schritt-Lauf versuchte jeden Blueprint einmal gegen das
+        Roh-Inventar und hätte cord_spear nur erreicht, wenn rope zufällig VOR
+        ihm gepairt wurde. Der Fixpunkt baut dagegen rope zuerst (Survival ≥
+        0.4), `CORD` landet im Inventar — und egal ob rope vor oder nach
+        cord_spear steht, kommt dasselbe Menge heraus.
+        """
+        crafted_native, bps = self._fresh_crafted()
+        crafted_reversed, _ = self._fresh_crafted(reverse=True)
+        assert crafted_native == crafted_reversed
+        assert "rope" in crafted_native
+
+
+    @staticmethod
+    def _fresh_crafted(reverse=False):
+        import random
+        from engine.core import GameEngine
+        from data.locations import get_all_locations
+        from data.blueprints import get_all_blueprints
+        loc_ids = [l.id for l in get_all_locations()]
+        bps = get_all_blueprints()
+        if reverse:
+            bps = list(bps)
+            bps.reverse()
+        random.seed(sc.BASE_SEED + 10_000)  # Seed von metric_reachability-Run 0
+        game = GameEngine()
+        for loc in loc_ids:
+            sc._travel_or_fail(game, loc)
+            for _ in range(8):
+                game.gather()
+        return sc._reachable_blueprints(game, bps, loc_ids), bps
+
+    def test_blueprint_requiring_missing_gear_is_not_reachable(self):
+        """Ein Slot-Tag, dessen Quelle weder Rohwelt noch ein gebautes Werkzeug
+        liefert, macht den Blueprint NICHT erreichbar (kein falsches Positiv).
+
+        Der Kern-Vorteil von REC-002: Der Fixpunkt reicht keine Phantom-Erfolge
+        aus. Ein Blueprint, der einen Slot-Tag fordert, den (a) keine Node als
+        Rohmaterial und (b) kein gebautes Tool als tool_tag trägt, bleibt
+        ehrlich unerreichbar — sonst würde der Zähler Content als erreichbar
+        lügen, den die Engine nicht bauen kann.
+        """
+        import random
+        from engine.core import GameEngine
+        from engine.components import ToolBlueprint
+        from data.locations import get_all_locations
+        from data.blueprints import get_all_blueprints
+        loc_ids = [l.id for l in get_all_locations()]
+        bps = list(get_all_blueprints())
+        # 'ANGELHOOK' getragen von keinem Item und keinem Werkzeug-Tag.
+        shadow = ToolBlueprint(
+            id="phantom_device",
+            result_name="Phantom",
+            slots={"wire": "ANGELHOOK", "hook": "RIGID"},
+            base_efficiency=1.0,
+            tool_tags=["PIERCE"],
+        )
+        bps.append(shadow)
+        random.seed(sc.BASE_SEED)
+        game = GameEngine()
+        game.blueprints["phantom_device"] = shadow
+        for loc in loc_ids:
+            sc._travel_or_fail(game, loc)
+            for _ in range(8):
+                game.gather()
+        crafted = sc._reachable_blueprints(game, bps, loc_ids)
+        assert "phantom_device" not in crafted
+
+    def test_full_set_still_one(self):
+        """Alle aktuellen Blueprints bleiben erreichbar → value bleibt 1.0."""
+        m = sc.metric_reachability()
+        assert m["value"] == 1.0
+        assert all(m["per_blueprint"].values())
+
+    def test_discovery_gap_still_at_band(self):
+        """discovery_gap bleibt ≤ 0.6 — keine andere Metrik gesenkt."""
+        m = sc.metric_discovery_gap()
+        assert m["value"] <= 0.6
+        assert abs(m["blueprint_reachability"] - 1.0) < 1e-9
+
+    def test_closure_is_a_repeatable_set(self):
+        """Fixpunkt-Lauf liefert ein Set und ist bei gleichem Seed stabil."""
+        crafted, _ = self._fresh_crafted()
+        fresh2, _ = self._fresh_crafted()
+        assert crafted == fresh2
+        assert isinstance(crafted, set)
 
 
 

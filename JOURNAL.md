@@ -5,6 +5,41 @@
 
 ---
 
+## 2026-08-26 — [Dev] REC-002 umgesetzt: Tool-aware Reachability (Werkzeug-Bau als Vorschritt)
+
+### Was
+`metric_reachability` misst jetzt, was die Engine wirklich craften kann — **inkl.
+Werkzeug-Bau als Vorschritt** (Peter-Metrik-Freigabe 22.08., Pkt. 6, DECISIONS).
+Der alte Zähler versuchte jeden Blueprint **einmal in Listenreihenfolge** gegen das
+Roh-Inventar. Ein Blueprint, dessen Slot einen Werkzeug-Tag fordert (cord_spear →
+`CORD` von rope), war NUR erreichbar, weil rope zufällig vor ihm in der Liste stand —
+**Listenkopplung, keine Engine-Wahrheit.** SPEC-006 (Werkzeug als Zutat) hätte den
+geschützten `blueprint_reachability` damit zwingend regrediert.
+
+**Umsetzung:** neue Helferin `_reachable_blueprints` (Fixpunkt-Oracle): baut werkzeug-
+relevante Blueprints, solange Material/Werkzeug/Survival-Höhe es erlauben, sampelt
+verbrauchte Rohstoffe zwischen Durchläufen nach und erreicht so Tier-2-Unabhängig von
+der Listenordnung. `metric_reachability` ruft sie pro Run.
+
+**Verhältnis (n=50, deterministisch):**
+| Metrik | alt (Listenkopplung) | neu (Tool-Fixpunkt) |
+|---|---|---|
+| blueprint_reachability | 1.0 | 1.0 (ordnungsunabh., echte Craftbarkeit) |
+| naive_discovery_rate | 0.4 | 0.4 |
+| discovery_gap | 0.6 | 0.6 (Banddecke, unverändert) |
+- **Keine andere Metrik gesenkt** — Werte identisch. Laufzeit +~0.6 s (vernachlässigbar).
+- Patch-Entwurf + verifizierte Wirkung + Tests: `proposals/REC-002-tool-aware-reachability.md`.
+
+**Tests:** `TestRec002ToolAwareReachability` (5 Tests): Ordnung-Unabhängigkeit (native vs.
+reverse-Blueprint-Reihenfolge → gleiche Menge, rope im Fixpunkt), kein falsches Positiv
+für Blueprint mit Fantasie-Gear-Slot, value bleibt 1.0, gap ≤ 0.6, Fixpunkt stabil je Seed.
+**Gesamtsuite: 236 passed.**
+
+Damit ist der Weg für SPEC-006 frei: Tier-2-Blueprints mit Tool-Tag-Slot registrieren sich
+jetzt im Fixpunkt als erreichbar, solange die Engine die Werkzeuge wirklich bauen kann.
+
+---
+
 ## 2026-08-26 — [Play] Erste PLAY-Lesung unter v2-Re-Baseline: session_depth 64.5, echter Boredom-Punkt bleibt ~15
 
 ### Headline
