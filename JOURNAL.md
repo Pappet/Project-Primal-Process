@@ -5,6 +5,46 @@
 
 ---
 
+## 2026-08-27 — [Research] SPEC-011 — Werkzeugverschleiß ist kodierte Stille
+
+Dritter Fund der Klasse „voll kodiert, nie ins Spielerlebnis verdrahtet" (nach SPEC-007
+Thermodynamik, SPEC-009 Verletzungen). Der Attrition-Pfad in `engine/core.py:329-334`
+arbeitet seit Bestehen — wear = 0.05/durability pro Nutztick, Flint-Axt (min-Durability
+0.4) bricht nach ~9 Eichenstämmen — doch vier Lücken machen ihn zum Phantom:
+
+1. **Stumm:** condition fällt ohne jede Logzeile (Probe A: 1.0 → 0.52 → 0.08, keine Meldung).
+2. **Cliff statt Kurve:** `eff_chance` wertet Condition nicht aus — cond 0.08 erntet exakt
+   wie ein frisches Werkzeug, bis es spurlos verschwindet.
+3. **Post-break Funkstille:** `core.py:296-297` wirft werkzeugpflichtige Nodes bei fehlendem
+   Werkzeug still weg (Probe B: Oak voll, chance 1.0, vier gathers — kein Wort über Holz,
+   kein Fund, keine Meldung).
+4. **Kein Hebel:** kein Schärf-/Reparaturprozess existiert (`data/processes.json` leer dazu).
+
+Quantitativ (Probe C): drei 120-Aktions-Läufe mit Axt ab Start = 13 werkzeugpflichtige
+Erfolge, 0 Brüche, 0 Warnungen — Attrition tritt im normalen Spiel nie als Erlebnis auf.
+
+**SPEC-011** (`specs/SPEC-011-werkzeugverschleiss-sichtbar-machen.md`, Mechanikquellen:
+UnReal World / Don't Starve / The Long Dark) verdrahtet den Pfad additiv: graduelle Wirkung
+(`eff_chance *= max(0.25, condition)` — gleiche Form wie der SPEC-004-Stock-Faktor),
+einmalige Warnung beim Schwellendurchgang < 0.25, node-gebundene MISSING_TOOL-Meldung im
+gather-Logstream (kein neuer Experiment-Reason, EMITTABLE_REASONS unberührt) und Prozess
+`sharpen_tool` (apply-only: verbraucht flint_shard, +0.5 Condition; nichts konsumiert wenn
+nichts verschlissen). Flint bekommt die zweite Rolle Schleifmaterial — die SPEC-004-Knappheit
+zahlt in die Wartungsökonomie hinein. Randbefund ausgekoppelt: Pebble-Munition wird über
+denselben Wear-Pfad als Stack gewaschen und verschwindet kollektiv (~4 Jagderfolge) —
+BACKLOG-Idee „Projektil = Consumable" angelegt.
+
+Metrik-Begleitung: `metrics/proposed/gear_uptime.md` — RAW-Stress (erntbare Tool-Nodes) vs.
+Outcome (nutzbares Werkzeug ≥ 0.25), Band [0.70, 0.95]. Die Erstlesung VOR der Mechanik
+müsste ~1.0 lesen — dokumentiert exakt die heutige Unsichtbarkeit, per Constitution als
+benannte Schwäche, Probezeit-Konvention wie üblich.
+
+Constitution-Check: additiv, keine Metrik berührt, kein neues Template, kein Rezept-Leak;
+das Entdecken vertieft sich um die Achse Zustand-Lesen + Instandhaltung, statt abgekürzt zu
+werden. PLAN-Task eingetragen (offen), Dev übernimmt wie üblich top-down.
+
+---
+
 ## 2026-08-26 — [Dev] SPEC-010 Kaltstart + Tier-2-Volldeckungs-Near-Miss (gepaarter Batch)
 
 ### Was

@@ -92,6 +92,23 @@ SPEC-006 (priorisiert) und forage_pressure v2. Damit ist die Mess-Blockade des N
       Akzeptanz: rope feuert NEAR_MISS bei survival<0.4 und voller Deckung ✓, gate offen → normaler
       Craft statt Hint ✓, Einmaligkeit ✓, feasibility filtert Tag-Soup ✓; alle 245 Tests grün.
 
+- [ ] **SPEC-011 — Werkzeugverschleiß sichtbar machen** (Research 27.08.). Attrition läuft
+      bereits (`core.py:329-334`) aber stumm, cliff-artig, post-break funkschweigend und
+      hebelfrei (Probes + Zahlen im Spec). Verdrahten: Warnzeile beim Schwellendurchgang
+      (condition < 0.25, einmalig pro fallendem Durchgang), MISSING_TOOL-Zeile im gather-Log
+      (node-gebunden: nur wenn Node sonst erntbar wäre; **kein** neuer Experiment-Reason),
+      graduelle Wirkung `eff_chance *= max(0.25, condition)` — **RNG-Strom-Klasse
+      SPEC-009/SPEC-010 beachten:** vollständige compute_all()-Delta-Tabelle vor/nach im
+      JOURNAL ist pflichtig, discovery_gap > 0.65 → Direktor-Flag im selben Commit, nicht
+      tunen. Prozess `sharpen_tool` (apply-only-Pattern: verbraucht 1× flint_shard, schärft
+      das schwächste getragene CUTTING/CHOPPING/PIERCE-Werkzeug +0.5 cap 1.0; scheitert es,
+      nichts konsumieren). Kein neues Template, kein Metrik-Kern-Eingriff.
+      Proof-Metric: `metrics/proposed/gear_uptime.md` (Band 0.70–0.95, Erstlesung ~1.0 =
+      dokumentiert genau die heutige Unsichtbarkeit).
+      Akzeptanz: Spec-Kriterien 1–5 — Warnung einmalig ✓, post-break Meldung ✓, gradueller
+      Erfolgseffekt deterministisch belegt ✓, sharpen_tool konsumiert+heilt/nichts-sonst ✓,
+      pytest grün + Suite-Delta-Tabelle ✓.
+
 - [~] *(beobachtend)* **warmth_stability** (Probe bis 27.08.) — 0.460 im Band, flach. Kein Ziel.
 - [~] *(beobachtend)* **recovery_stability** (Probe bis 03.09.) — 0.375 im Band, flach. Kein Ziel.
 - [x] *(erledigt)* REC-001, SPEC-003, SPEC-005, SPEC-007, SPEC-008, SPEC-009.
