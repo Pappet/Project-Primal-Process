@@ -65,11 +65,10 @@ SPEC-006 (priorisiert) und forage_pressure v2. Damit ist die Mess-Blockade des N
       discovery_gap beobachtet. Steigt der Gap über 0.6: Spiel-Signal, Antwort spiel-seitig. Kein Rezept-Leak.
 
 - [ ] **forage_pressure v2** (Freigabe 22.08., Pkt. 8). Gefuehlte Knappheit, nicht stock < max_stock.
-      Das Band wird NICHT geschoben. Schwelle schlaegt Dev/Direktor vor. Probezeit 14 Tage.
-      ⛔ **WARTET AUF PETER:** Nicht implementieren ohne seine Freigabe der Schwelle. Entwurf liegt vor
-      in `.hermes/plans/2026-08-27_183803-cron-dev-open-tasks.md` (Abschnitt A, Zählregel
-      „verweigert ODER erster erntbarer Node stock/max < 0.5") — Vorschlag lesen, Peter entscheidet,
-      dann umsetzen.
+      Das Band wird NICHT geschoben. Probezeit 14 Tage.
+      ✅ **Freigabe erteilt (Peter, 27.08.):** Schwelle „verweigert ODER erster erntbarer Node
+      stock/max < 0.5" bestätigt. Umsetzung gemäß Entwurf in
+      `.hermes/plans/2026-08-27_183803-cron-dev-open-tasks.md` (Abschnitt A, TDD-Schritte).
 
 - [ ] **PLAY-TOOLING: guided_full Rueckzug-Trigger** (keine Freigabe noetig). Jeder Fix nur am kalten Ort,
       gegengetestet ueber 20-Sweep. Messwerkzeug, keine Metrik.
