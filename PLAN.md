@@ -66,6 +66,10 @@ SPEC-006 (priorisiert) und forage_pressure v2. Damit ist die Mess-Blockade des N
 
 - [ ] **forage_pressure v2** (Freigabe 22.08., Pkt. 8). Gefuehlte Knappheit, nicht stock < max_stock.
       Das Band wird NICHT geschoben. Schwelle schlaegt Dev/Direktor vor. Probezeit 14 Tage.
+      ⛔ **WARTET AUF PETER:** Nicht implementieren ohne seine Freigabe der Schwelle. Entwurf liegt vor
+      in `.hermes/plans/2026-08-27_183803-cron-dev-open-tasks.md` (Abschnitt A, Zählregel
+      „verweigert ODER erster erntbarer Node stock/max < 0.5") — Vorschlag lesen, Peter entscheidet,
+      dann umsetzen.
 
 - [ ] **PLAY-TOOLING: guided_full Rueckzug-Trigger** (keine Freigabe noetig). Jeder Fix nur am kalten Ort,
       gegengetestet ueber 20-Sweep. Messwerkzeug, keine Metrik.
