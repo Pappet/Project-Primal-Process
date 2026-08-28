@@ -601,14 +601,40 @@ class TestForagePressure:
 
     def test_registered_with_band_and_probation(self):
         entry = next(m for m in sc.METRICS if m["key"] == "forage_pressure")
-        assert entry["band"] == (0.1, 0.5)
+        assert entry["band"] == (0.1, 0.5)                # unverändert — Band wird NICHT geschoben (Pkt. 8)
         assert entry["direction"] is None
-        assert entry["probation_until"] == "2026-08-20"  # +14 Tage ab 06.08.
+        assert entry["version"] == 2
+        assert entry["probation_until"] == "2026-09-11"   # +14 Tage ab Umsetzung 28.08.
 
     def test_table_shows_probation_label(self):
         table = sc.build_table(sc.compute_all(), None)
         row = [l for l in table.splitlines() if l.startswith("| forage_pressure")]
         assert row and "Probe bis" in row[0]
+
+
+class TestForagePressureV2Classification:
+    """forage_pressure v2 (Pkt. 8): verweigert ODER deutlich gemindert = Knappheit."""
+
+    @staticmethod
+    def _nodes(*specs):
+        from types import SimpleNamespace
+        return [SimpleNamespace(stock=s, max_stock=m, depleted=d) for s, m, d in specs]
+
+    def test_denied_when_all_depleted(self):
+        nodes = self._nodes((0, 5, True), (2, 5, True))
+        assert sc._forage_scarcity_hit(nodes) is True
+
+    def test_diminished_below_half(self):
+        nodes = self._nodes((2, 5, False), (9, 10, False))
+        assert sc._forage_scarcity_hit(nodes) is True   # 0.4 < 0.5 → deutlich gemindert
+
+    def test_healthy_first_node_not_scarce(self):
+        nodes = self._nodes((9, 10, False), (1, 10, False))
+        assert sc._forage_scarcity_hit(nodes) is False  # Referenz = erster erntbarer Node (Policy wie v1)
+
+    def test_exact_half_not_scarce(self):
+        nodes = self._nodes((5, 10, False))
+        assert sc._forage_scarcity_hit(nodes) is False  # "deutlich" = strikt unter 0.5
 
 
 class TestRecoveryStability:

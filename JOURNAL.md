@@ -5,6 +5,35 @@
 
 ---
 
+## 2026-08-28 — [Dev] forage_pressure v2 — gefühlte Knappheit statt stock<max
+
+Peters Neudefinition (22.08., Pkt. 8; Freigabe der Schwelle 27.08.) umgesetzt. v1 zählte
+`stock < max_stock` — d.h. JEDE frisch geerntete Stelle galt als „Knappheit", der Wert
+(0.707, nach SPEC-010 0.618) war definitionsbedingt über Band. v2 zählt einen Versuch nur
+noch, wenn er (a) an Erschöpfung **verweigert** wird (nichts Erntbares am Ort) oder (b)
+**deutlich gemindert** ist: erster erntbarer Node mit `stock/max < 0.5` — gleiche Form wie
+der SPEC-004-Vorratsfaktor (`eff_chance < 50 %` der Basis-Chance). Konstante
+`FORAGE_SCARCE_FRACTION = 0.5`; die Schwelle ist Dev-Vorschlag, Peters Gegen-Vorbehalt ist
+offen (Alternativen bei Veto: 0.4/0.6, eine Zeile). Band (0.1, 0.5) unangetastet, version→2,
+Probezeit bis 2026-09-11.
+
+Policy byte-identisch zu v1 (erster erntbarer Node, 20 %-Rotation, gleiche Breaks) — nur die
+Zählregel ist neu, kein neuer RNG-Konsum. Klassifikations-Tests (`TestForagePressureV2Classification`)
++ Registry-Tests (version 2, Probezeit 11.09., Probe-Label in der Tabelle) grün.
+
+**Erstlesung: 0.0 (p25 0.0, p75 0.03) — unter Band.** Das ist die ehrliche Re-Baseline der
+Neudefinition, kein Fortschritt und kein Rückschritt: Im 200-Aktions-Fenster der naiven
+Policy (immer der erste erntbare Node am Ort) trifft der Bot praktisch nie echte Knappheit —
+die Grund-Biome speisen ihn aus großen, schnell regenerierenden Nodes. Unter-Band heißt hier:
+„Knappheit wird im Messfenster nicht gefühlt". Bewertung (Band anpassen? Nodes knapper?
+Policy erweitern?) ist Sache von Direktor/Peter nach Probezeit — nicht getunt.
+
+Keine anderen Metrikwerte verschoben (inline-Verifikation vor/nach, nur forage-Zeile ändert
+sich). SCORECARD.md + scorecard/2026-08-28.json regeneriert; Delta-Spalte zeigt für forage
+erwartungsgemäß „— (neu definiert)".
+
+---
+
 ## 2026-08-28 — [Dev] REC-002-Korrektur — der Zähler bucht Engine-Wahrheit, nicht Versuchs-wünsche
 
 Vor dem ersten geplanten Task (forage_pressure v2) war die Suite nicht sauber grün:

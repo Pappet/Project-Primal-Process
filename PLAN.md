@@ -68,11 +68,15 @@ SPEC-006 (priorisiert) und forage_pressure v2. Damit ist die Mess-Blockade des N
       Akzeptanz: session_depth (v2) steigend (bei unveränderten Seeds), blueprint_reachability 1.0,
       discovery_gap beobachtet. Steigt der Gap über 0.6: Spiel-Signal, Antwort spiel-seitig. Kein Rezept-Leak.
 
-- [ ] **forage_pressure v2** (Freigabe 22.08., Pkt. 8). Gefuehlte Knappheit, nicht stock < max_stock.
+- [x] **forage_pressure v2** (Freigabe 22.08., Pkt. 8). Gefuehlte Knappheit, nicht stock < max_stock.
       Das Band wird NICHT geschoben. Probezeit 14 Tage.
       ✅ **Freigabe erteilt (Peter, 27.08.):** Schwelle „verweigert ODER erster erntbarer Node
       stock/max < 0.5" bestätigt. Umsetzung gemäß Entwurf in
       `.hermes/plans/2026-08-27_183803-cron-dev-open-tasks.md` (Abschnitt A, TDD-Schritte).
+      — **umgesetzt 28.08.** (Zählregel `_forage_scarcity_hit`, Policy byte-identisch zu v1,
+      version→2, Probezeit bis 11.09.; Erstlesung **0.0** (p25 0.0, p75 0.03) — unter Band,
+      Re-Baseline der Neudefinition, kein Tuning; Schwelle 0.5 als Dev-Vorschlag,
+      Gegen-Vorbehalt bei Peter; alle anderen Metrikwerte unverändert; 249 Tests grün)
 
 - [ ] **PLAY-TOOLING: guided_full Rueckzug-Trigger** (keine Freigabe noetig). Jeder Fix nur am kalten Ort,
       gegengetestet ueber 20-Sweep. Messwerkzeug, keine Metrik.

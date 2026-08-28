@@ -754,46 +754,58 @@ def metric_session_depth():
 
 
 # ----------------------------------------------------------------------------
-# Metrik 9 — forage_pressure (Knappheit wird gefühlt) — SPEC-004, Probezeit
+# Metrik 9 — forage_pressure v2 (gefühlte Knappheit) — SPEC-004 / Pkt. 8, Probezeit
+# v1 zählte `stock < max_stock` → jede frisch geerntete Stelle galt als
+# "Knappheit" (0.707 bzw. 0.618 nach SPEC-010-Stream-Shift, definitionsbedingt
+# über Band). v2 (Peters Neudefinition, 22.08., Freigabe 27.08.): ein Versuch
+# zählt, wenn er an Erschöpfung VERWEIGERT wird (nichts erntbar am Ort) oder
+# DEUTLICH GEMINDERT ist (erster erntbarer Node unter halbem Vorrat →
+# eff_chance < 50 % der Basis-Chance, gleiche Form wie der SPEC-004-Vorrats-
+# faktor). Schwelle 0.5 = Dev-Vorschlag (Pkt. 8: "Schwelle schlägt Dev/Direktor
+# vor, ich gebe sie gegen"). Band (0.1, 0.5) NICHT geschoben.
 # ----------------------------------------------------------------------------
+FORAGE_SCARCE_FRACTION = 0.5
+
+
+def _forage_scarcity_hit(eligible_nodes) -> bool:
+    """v2-Klassifikation eines Gather-Versuchs (siehe _run_forage_pressure)."""
+    harvestable = [n for n in eligible_nodes if not (n.stock <= 0 or n.depleted)]
+    if not harvestable:
+        return True  # (a) verweigert: Erschöpfung, am Ort ist nichts zu holen
+    ref = harvestable[0]
+    return ref.stock / ref.max_stock < FORAGE_SCARCE_FRACTION  # (b) deutlich gemindert
+
 
 def _run_forage_pressure(seed, actions=200):
-    """Anteil der Gather-Versuche an einem nicht-vollen Node (Knappheit greift).
+    """v2: Anteil Gather-Versuche, die verweigert oder deutlich gemindert werden.
 
-    Fixe naive Policy: immer der erste erntbare Node am aktuellen Ort, mit
-    gelegentlichem Ortswechsel (Rotation). Zählt, ob eine Sammel-Aktion auf
-    lokale Knappheit trifft (stock < max_stock) — der Entscheidungsdruck,
-    den SPEC-004 bewusst erzeugen will.
+    Policy byte-identisch zu v1 (erster erntbarer Node, 20 %-Rotation, gleiche
+    Breaks) — NUR die Zählregel ist neu. Kein neuer RNG-Konsum gegenüber v1.
     """
     random.seed(seed)
     rng = random.Random(seed)
     game = GameEngine()
     locs = list(game.locations.keys())
-    n_attempts, n_underperform = 0, 0
+    n_attempts, n_scarce = 0, 0
     for _ in range(actions):
         if _drain_check(game):
             break
-        node = None
-        for n in game.current_location.nodes:
-            if game.player.stats["perception"] < n.req_perception:
-                continue
-            if n.req_tool_tag and not game.player.inventory.find_item_by_tag(n.req_tool_tag):
-                continue
-            node = n
-            break
-        if node is None:
+        eligible = [n for n in game.current_location.nodes
+                    if game.player.stats["perception"] >= n.req_perception
+                    and (not n.req_tool_tag
+                         or game.player.inventory.find_item_by_tag(n.req_tool_tag))]
+        if not eligible:
             break
         n_attempts += 1
-        if node.stock < node.max_stock:
-            n_underperform += 1
+        if _forage_scarcity_hit(eligible):
+            n_scarce += 1
         game.gather()
         if rng.random() < 0.2:
             _travel_or_fail(game, locs[rng.randrange(len(locs))])
-    return n_underperform / max(1, n_attempts)
+    return n_scarce / max(1, n_attempts)
 
 
 def metric_forage_pressure():
-    """Anteil der Sammel-Versuche an einem nicht-vollen Node (Band-Metrik)."""
     return _aggregate(lambda s: _run_forage_pressure(s))
 
 
@@ -983,7 +995,7 @@ METRICS = [
     {"key": "content_reachable", "desc": "Anteil sammelbarer definierter Items (inkl. Node-Ref-Prüfung)", "fn": metric_content_reachable, "direction": "höher = besser", "version": 2},
     {"key": "session_depth", "desc": "Aktionen bis nichts Neues passiert (ziel-bewusster naiver Bot, v2)", "fn": metric_session_depth, "direction": "höher = besser", "version": 2, "probation_until": "2026-09-08"},
     {"key": "discovery_gap", "desc": "Abstand erreichbar vs. tatsächlich gefunden", "fn": metric_discovery_gap, "direction": None, "version": 1, "band": (0.2, 0.6)},
-    {"key": "forage_pressure", "desc": "Anteil Sammel-Versuche an nicht-volem Node (Knappheit)", "fn": metric_forage_pressure, "direction": None, "version": 1, "band": (0.1, 0.5), "probation_until": "2026-08-20"},
+    {"key": "forage_pressure", "desc": "Anteil Sammel-Versuche, die an Erschöpfung verweigert oder deutlich gemindert werden (gefühlte Knappheit)", "fn": metric_forage_pressure, "direction": None, "version": 2, "band": (0.1, 0.5), "probation_until": "2026-09-11"},
     {"key": "warmth_stability", "desc": "Anteil Kälte-Stress-Ticks, die warm überstanden werden (Feuer/Isolation)", "fn": metric_warmth_stability, "direction": None, "version": 1, "band": (0.4, 0.9), "probation_until": "2026-08-27"},
     {"key": "recovery_stability", "desc": "Anteil Verletzungs-Ticks, die Behandlung + Ruhe abwenden (Verband/Umschlag)", "fn": metric_recovery_stability, "direction": None, "version": 1, "band": (0.3, 0.7), "probation_until": "2026-09-03"},
 ]

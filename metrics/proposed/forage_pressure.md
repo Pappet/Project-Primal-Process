@@ -1,6 +1,9 @@
 # Metrik-Vorschlag: forage_pressure
 
 STATUS: Vorschlag (Explorations-Modus) · zu SPEC-004 · Probezeit ab Umsetzung
+**v2 umgesetzt am 28.08. (Pkt. 8, Freigabe 27.08.): verweigert ODER erster erntbarer Node
+stock/max < 0.5; Schwelle 0.5 = Dev-Vorschlag, Peters Gegen-Vorbehalt offen; Band (0.1, 0.5)
+unverändert; Erstlesung 0.0 (p25 0.0, p75 0.03) — unter Band, beobachtend, kein Tuning.**
 
 ## Definition
 **`forage_pressure`** misst, wie oft eine Sammel-Aktion vom **lokalen** Vorratszustand beschränkt wird — d.h. der Anteil der Gather-Versuche, die an einem nicht vollständig gefüllten Node stattfinden (`stock < max_stock` im Moment des Versuchs, also skalierte Chance oder leere Stelle). Sie quantifiziert, ob Ressourcenknappheit im Spiel **tatsächlich gefühlt** wird und Sammel-Entscheidungen (Doumt-wechseln vs. bleiben/warten) erzwungen werden.
