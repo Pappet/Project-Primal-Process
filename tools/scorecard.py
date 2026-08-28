@@ -14,6 +14,7 @@ Output:
   - scorecard/latest.json       (Kopie des aktuellsten Runs)
   - SCORECARD.md                (Markdown-Tabelle mit Delta zur Vorwoche)
 """
+import itertools
 import json
 import random
 import statistics
@@ -24,7 +25,8 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(ROOT))
 
-from engine.core import GameEngine, _label_for, TAG_LABELS, TAG_FAMILIES  # noqa: E402
+from engine.core import (GameEngine, _label_for, TAG_LABELS, TAG_FAMILIES,  # noqa: E402
+                         _slot_satisfied)
 from data.items import TEMPLATE_DB, create_item  # noqa: E402
 from data.blueprints import get_all_blueprints  # noqa: E402
 from data.locations import get_all_locations    # noqa: E402
@@ -119,12 +121,44 @@ def metric_first_craft():
 # Metrik 2 — blueprint_reachability (N=50, einzelner deterministischer Lauf)
 # ----------------------------------------------------------------------------
 
+def _engine_first_match(game, selected):
+    """Rein: Welchen Blueprint würde die Engine mit dieser Auswahl craften?
+
+    Spiegelt execute_experiments Dict-Order-Präzedenz (Länge, Survival-Gate,
+    Permutationen, _slot_satisfied) OHNE State-Mutation — selbe Slot-Logik
+    (importiert), nur die Schleife ist kopiert. Der Zähler braucht sie, um
+    Shadowing zu erkennen: Eine Auswahl, die einen FRÜHEREN Blueprint voll
+    trifft, craftet in der Engine diesen — nicht den beabsichtigten.
+    (BROKEN_ITEM/NOT_ENOUGH_QUANTITY können hier nicht auftreten: _pair_slots
+    filtert condition <= 0 und wählt nur distinkte Objekte.)
+    """
+    for bp in game.blueprints.values():
+        if len(selected) != len(bp.slots):
+            continue
+        if game.player.stats["survival"] < bp.min_survival_req:
+            continue
+        for p in itertools.permutations(selected):
+            if all(_slot_satisfied(p[i].tags, slot_value)
+                   for i, slot_value in enumerate(bp.slots.values())):
+                return bp.id
+    return None
+
+
 def _pair_slots(game, bp):
     """Findet je ein distinctes Item pro Slot-Tag, Familien aufgelöst.
 
     Slot-Tags können Tag-Familien sein (`SHARP_OR_RIGID`, `RIGID_OR_FIBER`…);
     das lösen wir wie die Engine auf die Mitglieder auf, damit der Zähler exakt
     das misst, was die Engine wirklich craften kann (REC-001, freigegeben).
+
+    REC-002-Korrektur (28.08.): Familien werden SORTIERT iteriert — Set-
+    Iteration hing am PYTHONHASHSEED und machte den Zähler prozessabhängig
+    flaky. Und: Eine fundige Paarung zählt nur, wenn die Engine sie WIRKLICH
+    als diesen Blueprint craftet (Dict-Order-Präzedenz!). Gegenbeispiel:
+    ropes naive Paarung (reeds=FIBER, stick=RIGID) trifft Spear voll — die
+    Engine baute Spear, gebucht wurde rope, und die Ordnungsunabhängigkeit
+    war nur Seed-Glück. Shadowende Auswahlen werden verworfen, die Suche
+    läuft weiter (Backtrack über die restlichen Kandidaten).
     """
     inv = [it for it in game.player.inventory.items
            if it.quantity >= 1 and it.condition > 0]
@@ -135,7 +169,7 @@ def _pair_slots(game, bp):
 
     candidates = []
     for _slot, tag in bp.slots.items():
-        members = TAG_FAMILIES.get(tag, {tag})
+        members = sorted(TAG_FAMILIES.get(tag, {tag}))
         pool = []
         for m in members:
             pool.extend(by_tag.get(m, []))
@@ -145,19 +179,25 @@ def _pair_slots(game, bp):
 
     def backtrack(i, used):
         if i == len(candidates):
-            return True
+            # Erst die Engine-Präzedenz prüfen, dann akzeptieren: Die Auswahl
+            # muss in der Engine WIRKLICH diesen Blueprint ergeben.
+            return _engine_first_match(game, list(chosen)) == bp.id
         for it in candidates[i]:
-            if id(it) in used:
+            # SPEC-005-Konform: Derselbe Stack darf mehrere Slots füllen,
+            # solange quantity reicht (Engine validiert das exakt so). Früher
+            # untersagte der Zähler jede Wiedernutzung und unterdeckte die
+            # Engine dadurch (Spear aus EINEM stick-Stack war "unerreichbar").
+            if used.get(id(it), 0) >= it.quantity:
                 continue
-            used.add(id(it))
+            used[id(it)] = used.get(id(it), 0) + 1
             chosen.append(it)
             if backtrack(i + 1, used):
                 return True
-            used.remove(id(it))
+            used[id(it)] -= 1
             chosen.pop()
         return False
 
-    if not backtrack(0, set()):
+    if not backtrack(0, {}):
         return None
     return list(chosen)
 
@@ -180,24 +220,40 @@ def _reachable_blueprints(game, bps, loc_ids, gather_initial=8, gather_refill=2)
     steigt — so öffnet ein Tier-1-Fund den Tier-2-Zugang (min_survival_req)
     genau wie in echtem Play. Zwischen Durchläufen werden verbrauchte
     Rohmaterialien nachgesammelt, damit ein knapper Vorrat nicht fälschlich als
-    Unerreichbarkeit zählt. Ordnungsunabhängig: jede Blueprint verschwindet
-    erst, wenn ihre echten Vorbedingungen (Material + Werkzeug + Gate) stehen.
+    Unerreichbarkeit zählt.
+
+    Ordnungsunabhängigkeit (Korrektur 28.08.): Die Versuche laufen in der
+    KANONISCHEN Engine-Dict-Order, unabhängig davon, in welcher Reihenfolge
+    der Aufrufer die Blueprint-Liste übergibt. Die Engine-eigene Präzedenz
+    (execute_experiment matcht in Dict-Order) IST die Engine-Wahrheit — ein
+    Zähler, der die Versuchsreihenfolge selbst dreht, dreht auch, WEM knappe
+    Rohstoffe (flint_shard: Axt oder Messer?) in die Hände fallen, und das
+    Ergebnis hing an der zufälligen Listenordnung. Buchung: was die Engine
+    WIRKLICH gebaut hat (blueprint_id), nie der Versuchs-id.
 
     Liefert das Set erreichbarer Blueprints (eine Sichtung, deterministisch
     durch den Run-Seed gesteuert; Aufrufer setzt `random.seed` außen).
     """
+    canonical = {bid: i for i, bid in enumerate(game.blueprints)}
+    ordered = sorted(bps, key=lambda b: canonical.get(b.id, len(canonical)))
     crafted = set()
     while True:
         progressed = False
-        for bp in bps:
+        for bp in ordered:
             if bp.id in crafted:
                 continue
             if game.player.stats["survival"] < bp.min_survival_req:
                 continue
             sel = _pair_slots(game, bp)
-            if sel and game.execute_experiment(sel)["success"]:
-                crafted.add(bp.id)
-                progressed = True
+            if sel:
+                res = game.execute_experiment(sel)
+                if res["success"]:
+                    # REC-002-Korrektur (28.08.): buche, was die Engine
+                    # WIRKLICH gebaut hat (blueprint_id) — nie den Versuchs-id.
+                    # Nach der _pair_slots-Verifikation sind beide identisch;
+                    # gebucht wird trotzdem die Engine-Wahrheit.
+                    crafted.add(res.get("blueprint_id") or bp.id)
+                    progressed = True
         if not progressed:
             break
         # verbrauchte Rohmaterialien nachsammeln (knapper Vorrat ≠ Unerreichbar)

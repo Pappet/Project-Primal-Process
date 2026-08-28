@@ -53,6 +53,10 @@ Dinge die kaputt sind und gefixt werden müssen.
 
 - [2026-08-24] (Dev) **`core.gather()` ruft `_feedback_message("INJURED")` beim Auslösen einer Schnitt- oder Zerrungs-Verletzung (SPEC-009), aber `_feedback_message` hat keinen `INJURED`-Zweig** → fällt auf den UNKNOWN-Fallback `"Das geht so nicht."`. Der Spieler bekommt statt einer Verletzungs-Meldung einen Sinnlos-Text. Betrifft nicht `feedback_quality` (nur Experimente zählen), aber ein echter Feedback-Qualitätsbug der Verletzungs-Ökonomie. **Fix-Richtung:** `_feedback_message`-Zweig für `INJURED` ergänzen (z. B. `"Du verletzt dich."`), ohne die Verletzungs-Wahrscheinlichkeit anzutasten. Kein Metrik-Eingriff.
 
+### 🔴 B09 — REC-002-Zähler: hash-seed-flaky + Buchung ohne Engine-Präzedenz
+
+- ~~[2026-08-28] (Dev) **`_reachable_blueprints` buchte den versuchten `bp.id`, während die Engine bei Dict-Order-Vorrang ein ANDERES Blueprint craftete** (rope-Paarung via reeds=RIGID+FIBER trifft Spear voll → Engine baute Spear, gebucht wurde rope, CORD nie gebaut). Zusätzlich iterierte `_pair_slots` Tag-Familien als Set → Pool-Reihenfolge hing am PYTHONHASHSEED → `test_order_independent_closure` flakte prozessabhängig. **Fix-Richtung:** Familien sorted iterieren, Auswahlen gegen reine Engine-Präzedenz-Spiegel verifizieren, kanonische Engine-Dict-Order als Versuchsordnung, Buchung via `res["blueprint_id"]`.~~ — **✅ erledigt** in Dev-Session 2026-08-28 (alle drei Richtungen umgesetzt + Same-Stack nach SPEC-005; 247 Tests grün unter 6 Hash-Seeds; `compute_all()` byte-identisch, kein Metrikwert verschoben — siehe JOURNAL 28.08.).
+
 ---
 
 ## 🟡 Ideas

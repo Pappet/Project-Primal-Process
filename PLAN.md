@@ -53,6 +53,10 @@ SPEC-006 (priorisiert) und forage_pressure v2. Damit ist die Mess-Blockade des N
       Oracle `_reachable_blueprints`: baut rope zuerst, nutzt dessen CORD-Tag als Zutat;
       ordnungsunabhängig statt Listenkopplung; reachability 1.0 + gap 0.6 unverändert — keine
       andere Metrik gesenkt; Patch-Entwurf + Tests in `proposals/REC-002-tool-aware-reachability.md`)
+      **Korrektur 28.08. (Dev, B09):** die Landung buchte Versuchs-ids statt Engine-Wahrheit
+      und war hash-seed-flaky (Set-Iteration). Jetzt: Engine-Präzedenz-Spiegel + kanonische
+      Engine-Dict-Order + `blueprint_id`-Buchung + Same-Stack nach SPEC-005; `compute_all()`
+      byte-identisch, 247 Tests grün unter 6 Hash-Seeds.
 
 - [x] **SPEC-006 — Werkzeug als Zutat** (priorisiert, nach Ehrlichmachung + REC-002). Die
       Tier-2-Layer existiert seit SPEC-008 (`rope`→`cord_spear`, cord_spear konsumiert rope-CORD als

@@ -5,6 +5,43 @@
 
 ---
 
+## 2026-08-28 — [Dev] REC-002-Korrektur — der Zähler bucht Engine-Wahrheit, nicht Versuchs-wünsche
+
+Vor dem ersten geplanten Task (forage_pressure v2) war die Suite nicht sauber grün:
+`TestRec002ToolAwareReachability::test_order_independent_closure` flappte je nach
+`PYTHONHASHSEED` (bei Seeds 0/1/3 rot, 2/4/5 grün). Ursachenanalyse, zwei echte Bugs in
+der REC-002-Landung vom 26.08.:
+
+1. **Set-Iteration in `_pair_slots`:** Familien (`{SHARP, RIGID}`) wurden als Set iteriert —
+   die Pool-Reihenfolge hing am Prozess-Hash. Fix: `sorted(...)`.
+2. **Buchung ohne Engine-Präzedenz:** Der Fixpunkt buchte den VERSUCHTEN `bp.id`, aber die
+   Engine craftet bei Dict-Order-Vorrang oft ein ANDERES Blueprint: ropes naive Paarung
+   (reeds=FIBER, stick=RIGID) trifft SPEAR voll (reeds ist RIGID+FIBER) — die Engine baute
+   Spear Nr. 2, gebucht wurde rope, und CORD existierte nie. Ordnungsunabhängigkeit war
+   Seed-Glück, kein Feature. Bei verdrehter Liste frisst zudem der knappe `flint_shard`
+   je nach Versuchsordnung mal die Axt, mal das Messer.
+
+Fix (`tools/scorecard.py`): `_engine_first_match()` spiegelt die Dict-Order-Präzedenz
+rein (gleiche `_slot_satisfied`-Logik importiert); `_pair_slots` akzeptiert nur Auswahlen,
+die die Engine WIRKLICH als den beabsichtigten Blueprint craftet, und erlaubt jetzt
+Same-Stack-Mehrfachnutzung nach SPEC-005 (früher unterdeckte der Zähler die Engine:
+Spear aus EINEM stick-Stack war ihm "unerreichbar"). `_reachable_blueprints` versucht in
+kanonischer Engine-Dict-Order (die Engine-Präzedenz IST Engine-Wahrheit) und bucht
+`res["blueprint_id"]`. Ein REC-001-Test wurde an die neue Semantik angepasst (stick Menge 3,
+kommentiert); `TestRec002EngineTruth` kommt neu dazu (rope-Shadowing-Regression +
+Multi-Seed-Ordnungsunabhängigkeit).
+
+**Verifikation:** 247 Tests grün, deterministisch unter PYTHONHASHSEED 0/1/2/3/4/5.
+`compute_all()` vor/nach **byte-identisch** (`/tmp/metrics_before_rec002fix.json` vs
+after) — alle Metrikwerte unverändert: reachability 1.0 (jetzt ehrlich, nicht
+side-effect-glücklich), gap 0.65, session_depth 53.5, craft_variety 4.5, forage 0.618,
+warmth 0.46, recovery 0.375, skill_spread 0.175, feedback 1.0, first_craft 9.5,
+content 1.0. Kein Stream-Shift, kein Tuning. Der Implementierungsplan
+`.hermes/plans/2026-08-27_183803-cron-dev-open-tasks.md` wird mit diesem Commit
+eingebürgert (Contract: Plan-Datei commitet der ausführende Dev-Lauf).
+
+---
+
 ## 2026-08-27 — [Research] SPEC-011 — Werkzeugverschleiß ist kodierte Stille
 
 Dritter Fund der Klasse „voll kodiert, nie ins Spielerlebnis verdrahtet" (nach SPEC-007

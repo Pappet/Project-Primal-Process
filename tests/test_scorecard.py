@@ -393,17 +393,26 @@ class TestDiscoveryGap:
 
 class TestRec001FamilyReachability:
     def test_pair_slots_resolves_family(self):
-        """Slot-Tag SHARP_OR_RIGID akzeptiert ein SHARP- oder RIGID-Item."""
+        """Slot-Tag SHARP_OR_RIGID akzeptiert ein SHARP- oder RIGID-Item.
+
+        28.08. angepasst (REC-002-Engine-Truth): stick als Stack mit Menge 3 —
+        der Spear wird über denselben RIGID-Stack für tip UND shaft gebaut
+        (SPEC-005-Same-Stack, Engine-Verhalten). Mit Menge 1 wäre die einzige
+        nicht-schattierte Auswahl [flint, stick] — und die craftet die Engine
+        als KNIFE (Dict-Order-Präzedenz), nicht als Spear: Genau das Shadowing,
+        das der Zähler jetzt ehrlich erkennt."""
         from engine.core import GameEngine, TAG_FAMILIES
         from data.items import create_item
         engine = GameEngine()
-        # stick = RIGID, flint_shard = SHARP+HARD → beide erfüllen SHARP_OR_RIGID
-        engine.player.inventory.add(create_item("stick"))
+        # stick = RIGID (Menge 3: tip+shaft aus einem Stack), flint_shard = SHARP+HARD
+        engine.player.inventory.add(create_item("stick", 3))
         engine.player.inventory.add(create_item("flint_shard"))
         from data.blueprints import get_all_blueprints
         spear = next(bp for bp in get_all_blueprints() if bp.id == "spear")
         sel = sc._pair_slots(engine, spear)
         assert sel is not None, "spear (Familien-Slots) muss im Fresh-Gather auflösbar sein"
+        res = engine.execute_experiment(sel)
+        assert res["success"] and res["blueprint_id"] == "spear"
 
     def test_reachability_is_one_for_current_set(self):
         """Nach Familien-Fix: alle 8 aktuellen Blueprints erreichbar → 1.0."""
@@ -453,7 +462,7 @@ class TestRec002ToolAwareReachability:
 
 
     @staticmethod
-    def _fresh_crafted(reverse=False):
+    def _fresh_crafted(reverse=False, seed_offset=0):
         import random
         from engine.core import GameEngine
         from data.locations import get_all_locations
@@ -463,7 +472,7 @@ class TestRec002ToolAwareReachability:
         if reverse:
             bps = list(bps)
             bps.reverse()
-        random.seed(sc.BASE_SEED + 10_000)  # Seed von metric_reachability-Run 0
+        random.seed(sc.BASE_SEED + 10_000 + seed_offset)  # metric_reachability-Run-Seed
         game = GameEngine()
         for loc in loc_ids:
             sc._travel_or_fail(game, loc)
@@ -527,6 +536,58 @@ class TestRec002ToolAwareReachability:
         fresh2, _ = self._fresh_crafted()
         assert crafted == fresh2
         assert isinstance(crafted, set)
+
+
+class TestRec002EngineTruth:
+    """REC-002-Nachschuss (28.08., Dev-Session): Der Fixpunkt buchte den
+    VERSUCHTEN bp.id, während die Engine bei Dict-Order-Präzedenz oft ein
+    ANDERES Blueprint craftete (Spear frisst ropes naive Paarung via
+    reeds=RIGID+FIBER). Folge: Ordnungsunabhängigkeit war nicht wirklich
+    gegeben — test_order_independent_closure flappte je nach
+    PYTHONHASHSEED (Familien-Set-Iteration in _pair_slots). Der Zähler muss
+    (a) Familien deterministisch (sorted) auflösen und (b) nur Auswahlen
+    akzeptieren, die die Engine WIRKLICH als den beabsichtigten Blueprint
+    craftet — und das tatsächlich Gebaute buchen.
+    """
+
+    def test_pair_slots_finds_engine_true_selection_for_rope(self):
+        """Shadowing-Regression: Die erste fundige Paarung für rope
+        (reeds für FIBER, stick für RIGID) trifft in Dict-Order SPEAR voll —
+        die Engine baute Spear, gebucht wurde rope. _pair_slots muss eine
+        Auswahl liefern, die die Engine wirklich als rope craftet."""
+        import random
+        from engine.core import GameEngine
+        from data.items import create_item
+        from data.blueprints import get_all_blueprints
+        random.seed(1)
+        game = GameEngine()
+        game.travel("forest_edge")
+        # Zuspiel in der Reihenfolge, die die naive Pool-Reihenfolge ins
+        # Shadowing laufen lässt: reeds zuerst → FIBER-Pool tippt reeds für
+        # ropes FIBER-Slot, stick für RIGID → Spear-trifft-voll-Auswahl.
+        for tid, qty in (("reeds", 5), ("stick", 5), ("plant_fiber", 5)):
+            game.player.inventory.add(create_item(tid, qty))
+        game.player.stats["survival"] = 0.4   # rope-Gate offen
+        rope = next(b for b in get_all_blueprints() if b.id == "rope")
+        sel = sc._pair_slots(game, rope)
+        assert sel is not None, "rope ist mit plant_fiber+reeds craftbar — Auswahl muss existieren"
+        res = game.execute_experiment(sel)
+        assert res["success"] and res["blueprint_id"] == "rope", (
+            f"Engine craftete {res.get('blueprint_id')}, nicht rope — "
+            "Shadowing-Auswahl nicht verworfen")
+
+    def test_order_independent_closure_multi_seed(self):
+        """Ordnungsunabhängigkeit über mehrere Seeds, nicht nur einen."""
+        for offset in (0, 5, 11):
+            crafted_native, _ = TestRec002ToolAwareReachability._fresh_crafted(
+                reverse=False, seed_offset=offset)
+            crafted_rev, _ = TestRec002ToolAwareReachability._fresh_crafted(
+                reverse=True, seed_offset=offset)
+            assert crafted_native == crafted_rev, (
+                f"Seed-Offset {offset}: {crafted_native ^ crafted_rev} nur in "
+                "einer Reihenfolge erreichbar")
+            assert "rope" in crafted_native
+            assert "cord_spear" in crafted_native
 
 
 
