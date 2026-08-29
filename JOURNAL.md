@@ -5,6 +5,45 @@
 
 ---
 
+## 2026-08-28 — [Dev] guided_full Rückzug-Trigger: 4 Varianten, alle strikt schlechter — bewusst nicht gelandet
+
+### Aufgabe
+PLAN-Task „PLAY-TOOLING: guided_full Rueckzug-Trigger" (keine Freigabe nötig): Kälte-Retreat
+am kalten Ort auch bei „aktivem aber ungenügendem Feuer" (BACKLOG 🔵 21.08., manifestiert
+seed 20260808). Auftragsrahmen: Fix nur am kalten Ort, gegengetestet über 20-Sweep.
+Vorhandene uncommitted Test-Vorbereitung (`TestColdRetreat`, 4 Fälle) genommen, Fix gebaut,
+alle 4 Fälle grün.
+
+### Befund: nicht landbar
+Vier Varianten gegen die HEAD-Baseline (Seeds 20260801–20260820):
+
+| Variante | Tode/20 | voll | cook |
+|---|---|---|---|
+| Baseline (HEAD) | **14** | 0 | 20/20 |
+| V1: Trigger bt<35 + Ort kälter als WARM | 16 | 0 | 20/20 |
+| V2: V1 + exposure≥0.5-Klammer (Höhle aus) | 16 | 0 | 20/20 |
+| V3: V2 + Zunder-Nachschub in `_fire_at` | 16 | 0 | 20/20 |
+| V4: V3 + Versorgungs-Reparatur (sticks/reeds) | **19** | 0 | 18/20 |
+
+Der dokumentierte Gipfel-Fall ist real, aber NICHT der Todes-Kanal: **alle 14 Baseline-Tode
+passieren am warmen Waldrand** (bt 2.8–26.8, injuries leer) in einer Feuer-Versorgungsspirale:
+Gipfel-Trip im STORM → Waldrand-Feuer brennt ohne stick-Nachschub ab → FIRE_OUT → start_fire
+unmöglich (tinder/reeds/sticks leer) → bt-Kollaps → HP-Drain. Seed 20260814 tot bei Aktion 1
+nach ~30 ungeschützten WARTUNG-Ticks. Trigger-Varianten erzeugen zusätzlich Pendel (Gipfel↔
+Waldrand), das dieselbe Spirale beschleunigt.
+
+Entscheidung nach Repo-Präzedenz (18.08.: „bewusst NICHT gehärtet"): kein Fix gelandet,
+`guided_full.py` und die Test-Vorbereitung zurückgesetzt. BACKLOG 🔵 21.08. mit Befund
+präzisiert: der nächste Ansatz ist Feuer-Ökonomie (Versorgung VOR dem Trip sichern), kein
+Rückzug-Trigger mehr. 20-Sweep-Zahlen stehen dort vollständig.
+
+### Verifikation
+`python -m pytest` vor/nach: 254/255 passed auf HEAD (der 1 Failure war der uncommitted
+Vorbereitungs-Test, mit revert sauber). Keine Metrik, kein Scorecard-Delta — Messwerkzeug-
+Pflicht bleibt im Task.
+
+---
+
 ## 2026-08-28 — [Dev] forage_pressure v2 — gefühlte Knappheit statt stock<max
 
 Peters Neudefinition (22.08., Pkt. 8; Freigabe der Schwelle 27.08.) umgesetzt. v1 zählte

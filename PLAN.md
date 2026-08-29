@@ -79,7 +79,10 @@ SPEC-006 (priorisiert) und forage_pressure v2. Damit ist die Mess-Blockade des N
       Gegen-Vorbehalt bei Peter; alle anderen Metrikwerte unverändert; 249 Tests grün)
 
 - [ ] **PLAY-TOOLING: guided_full Rueckzug-Trigger** (keine Freigabe noetig). Jeder Fix nur am kalten Ort,
-      gegengetestet ueber 20-Sweep. Messwerkzeug, keine Metrik.
+      gegengetestet ueber 20-Sweep. Messwerkzeug, keine Metrik. — **Befund 28.08. (Dev): Trigger allein
+      nicht landbar** — chirurgischer Fix war 16/20 Tode vs. 14/20 Baseline, Versorgungs-Reparatur sogar
+      19/20; alle Baseline-Tode passieren am warmen Waldrand (Feuer-Versorgungsspirale, siehe BACKLOG
+      🔵 21.08. + Befund). Task offen, braucht neuen Ansatz: Feuer-Ökonomie vor dem Trip sichern.
 
 - [x] **SPEC-010 — Kaltstart-Bruecke (actions_to_first_craft)** (Research 25.08.). Ein knappbarer
       `pebble`-Node im Start-Biome `forest_edge` (STONE+PROJECTILE, max_stock 8, regen 0.04, chance 0.6),
