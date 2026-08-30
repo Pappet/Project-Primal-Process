@@ -1,6 +1,7 @@
 # SPEC-010 — Kaltstart-Brücke: Knappbarer Startstein im Waldrand (actions_to_first_craft)
 
 > **Modus:** Research (Metrik-Modus) · **Datum:** 2026-08-25
+> **STATUS: erledigt (Dev 2026-08-26, gepaarter Batch mit NEAR_MISS-Volldeckung; actions_to_first_craft 34.5 → 9.5)**
 > **Ziel-Metrik:** `actions_to_first_craft` (34.5, flach, `niedriger = besser`)
 > **Grenze:** CONSTITUTION.md — keine Metrik-Redefinition, kein Rezept-Leak, kein GUI, stdlib only.
 

@@ -1,6 +1,6 @@
 # SPEC-009 — Verletzung & Heilung: persistente Wunden als Gegen-Schleife zur Überlastung
 
-STATUS: offen · angelegt 2026-08-20 · Quelle: Explorations-Modus (free research, nicht an eine bestehende Metrik gebunden)
+STATUS: erledigt (Dev 20.08.) · angelegt 2026-08-20 · Quelle: Explorations-Modus (free research, nicht an eine bestehende Metrik gebunden)
 
 ## Problem
 

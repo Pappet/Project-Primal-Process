@@ -1,6 +1,6 @@
 # SPEC-003 — Partieller Match: Erkennung von „Beinahe-Treffern" (Discovery)
 
-STATUS: offen · angelegt 2026-08-04 · Quelle: Scorecard 2026-08-03 (Band-Metrik `discovery_gap`)
+STATUS: erledigt (Dev 17.08., NEAR_MISS; Tier-2-Volldeckung 26.08.) · angelegt 2026-08-04 · Quelle: Scorecard 2026-08-03 (Band-Metrik `discovery_gap`)
 
 ## Problem
 **Metrik:** `discovery_gap` = 0.5 (Band 0.2–0.6, obere Kante). Zerlegt: `blueprint_reachability` = 1.0 (Orakel erreicht alles), `naive_discovery_rate` = 0.5, **`naive_p25` = 0.0, `naive_p75` = 1.0**.

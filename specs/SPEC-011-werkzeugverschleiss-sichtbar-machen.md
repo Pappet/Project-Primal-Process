@@ -1,6 +1,7 @@
 # SPEC-011 — Werkzeugverschleiß sichtbar machen (Attrition wird zum System)
 
 > Research (free-exploration Modus), 2026-08-27. Feldliste-Kandidat „Werkzeugverschleiß".
+> **STATUS: umgesetzt 2026-08-29 (Dev-Lauf crashte vor Commit; Nachcommit durch Direktor 30.08., Delta-Tabelle im JOURNAL). Erstlesung gear_uptime 0.994 (Probe bis 11.09.) = dokumentierte Unsichtbarkeit.**
 > Constitution-Check: bestehende Werkzeuge/Materialien bleiben; **kein** neues Template,
 > **keine** neuen Reason-Codes, **kein** Metrik-Eingriff — der Code-Pfad existiert bereits
 > (`core.py:329-334`); diese Spec verdrahtet ihn in Wahrnehmung und Hebel.

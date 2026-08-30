@@ -1,6 +1,6 @@
 # SPEC-005 — Mengen-basiertes Mehrfach-Slot-Crafting (Stack füllt N Slots)
 
-STATUS: offen · angelegt 2026-08-09 (Direktor-Triage) · Quelle: BACKLOG 2026-08-05 (Dev) — Design-Entscheidung an den Direktor delegiert.
+STATUS: erledigt (Dev 10.08.) · angelegt 2026-08-09 (Direktor-Triage) · Quelle: BACKLOG 2026-08-05 (Dev) — Design-Entscheidung an den Direktor delegiert.
 
 ## Problem
 `Inventory.add` verschmilzt gleichnamige Items in einen Stack (`quantity`). Ein Blueprint, dessen zwei Slots dasselbe Tag-Anforderungs-Profil verlangen (z.B. Speer 2× `RIGID`), ist im CLI **nicht craftbar, wenn der Spieler nur eine Materialsorte hat**: 2× `stick` sind nie als zwei separate Items auswählbar, weil es nur einen Stack `stick ×N` gibt. Der Spieler ist gezwungen, zwei *distinkte* Materialien zu kombinieren (Speer = reeds+Ast statt 2×Ast) oder leer auszugehen, obwohl er 2+ Stöcke besitzt. Das ist eine Lücke in der Hand, keine Metrik-Schwäche — ein plausibles Craft von Hand kann das Spiel nicht ausführen.

@@ -1,6 +1,6 @@
 # SPEC-007 — Feuer & Wärme: Gegen-Schleife zur Unterkühlung (System-Tiefe)
 
-STATUS: offen · angelegt 2026-08-13 · Quelle: Research (Explorations-Modus, kein Metrik-Anker)
+STATUS: erledigt (Dev 13.08.) · angelegt 2026-08-13 · Quelle: Research (Explorations-Modus, kein Metrik-Anker)
 
 ## Problem
 

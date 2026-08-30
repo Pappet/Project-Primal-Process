@@ -1,6 +1,6 @@
 # SPEC-008 — Wissens-Gate: Überlebens-Skill schaltet höherstufige Blueprints frei (Session-Tiefe)
 
-STATUS: offen · angelegt 2026-08-18 · Quelle: Scorecard 2026-08-17 + Play-Report 2026-08-17 (Metrik `session_depth`, Metrik-Modus)
+STATUS: erledigt (Dev 18.08.) · angelegt 2026-08-18 · Quelle: Scorecard 2026-08-17 + Play-Report 2026-08-17 (Metrik `session_depth`, Metrik-Modus)
 
 ## Problem
 **Metrik:** `session_depth` = 25, stagnierend über **vier** Messungen (24 → 26 → 25 → 25 → 25). Richtung „höher = besser“. PLAN-Priorität #1.

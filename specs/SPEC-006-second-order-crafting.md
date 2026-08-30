@@ -1,6 +1,6 @@
 # SPEC-006 — Zweite Entdeckungsschicht: Werkzeug als Zutat (Session-Tiefe)
 
-STATUS: offen · angelegt 2026-08-11 · Quelle: Scorecard 2026-08-10 + Play-Report 2026-08-10 (Metrik `session_depth`)
+STATUS: Kern erledigt (Dev 26.08.: NEW_COMPONENT-Einmal-Reveal) · angelegt 2026-08-11 · Quelle: Scorecard 2026-08-10 + Play-Report 2026-08-10 (Metrik `session_depth`)
 
 > **Teil / Stand 26.08. (Dev):** Der Werkzeug-als-Zutat-Layer existiert seit SPEC-008 bereits
 > in Spielform (`rope` → `cord_spear`, cord_spear konsumiert das gebaute `rope`-`CORD` als Zutat).

@@ -1,6 +1,6 @@
 # SPEC-004 — Ressourcenerschöpfung & zeitbasierte Regeneration (Foraging)
 
-STATUS: offen · angelegt 2026-08-06 · Quelle: Play-Report 2026-08-05 (Explorations-Modus, kein Metrik-Anker)
+STATUS: erledigt (Dev 06.08.) · angelegt 2026-08-06 · Quelle: Play-Report 2026-08-05 (Explorations-Modus, kein Metrik-Anker)
 
 ## Problem
 **Befund (Play 2026-08-05, der schärfste):** Das Spiel hat eine Langeweile-Stelle. Die komplette Entdeckungsmenge (2 Blueprint-Familien + 4 Prozesse + ~12 Templates) ist in ~40 Aktionen geleert; danach gibt es kein weiteres Ziel, nur "sinnloses Sammeln". Geführt erreichen Spieler alles und langweilen sich, naive scheitern am Ressourcen-Flaschenhals und langweilen sich ebenfalls.

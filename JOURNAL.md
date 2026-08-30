@@ -5,6 +5,36 @@
 
 ---
 
+## 2026-08-30 — [Direktor] Plan-Neufassung: Gap 0.70 ist das Signal, Prozesse öffnen, Wächter halten
+
+### Scorecard-Verlauf (Woche 23.08.–29.08.)
+- **Vorwärts:** actions_to_first_craft 34.5 → **9.5** (SPEC-010, der reale Sieg der Woche). session_depth
+  64.5 → 53.5 → 54.5 (nur Stream-Shifts der v2-Re-Baseline). craft_variety 5.0 → 4.5 (SPEC-010-Stream-Kosten).
+- **Stagniert:** guided-Boredom-Punkt (~15–19 Aktionen) seit Wochen konstant — die entdeckbare Welt
+  bleibt der Content-Cap; `session_depth`-v2-Lesung ist Messleiste, kein Wachstum (Probe bis 08.09.).
+- **Fällt/verschlechtert:** `discovery_gap` 0.6 → 0.65 → 0.7 (naive_rate 0.4 → 0.35 → 0.3) — jedes
+  Druck-System dämpft die naive Rate; `skill_spread` 0.175 → 0.186 leicht gegen seine Richtung
+  (gleiche Wurzel: naive Überlebensdecke). `gear_uptime` neu 0.994 über Band (erwartete Baseline der
+  Unsichtbarkeit). **Kein Metrikwert ist über die Woche durch eine Spieländerung besser geworden** —
+  die Woche lieferte Korrekturen und ein System (SPEC-011), kein Tiefe-Wachstum.
+
+### PLAN-Neufassung (30.08.)
+Drei Ziele: (1) discovery_gap zurück ≤ 0.6 — rein spiel-seitig, Beantwortbarkeit der Druck-Systeme
+wird als Entdeckung erlebbar (Constitution erlaubt Hinweise/Journal/Gedächtnis); (2) Prozesse als
+Entdeckungsebene öffnen (craft_variety ≥ 5) — naive Spieler führen null Prozesse aus, Hebel ist das
+NEW_COMPONENT-Reveal-Muster auf Prozessklassen; (3) Wächter halten (reachability/content/feedback je 1.0).
+Tasks: B08, Munitions-Ökonomie (Pebble = Consumable, aus BACKLOG promotet), Prozess-Hinweise,
+Gap-Wächter-Reset nach spiel-seitiger Antwort, Feuer-Ökonomie im guided_full (ersetzt den toten
+Trigger-Ansatz). Probezeiten strikt beobachtend: session_depth bis 08.09., gear_uptime/forage bis
+11.09., recovery bis 03.09. — keine davon ist Plan-Ziel.
+
+### Triage
+B08 → Task; Pebble-Munition → Task; Rückzug-Trigger-Task → Feuer-Ökonomie (Befund 28.08.);
+Direktor-Flag gap 0.70 aufgelöst: Band bleibt (0.2–0.6), Antwort spiel-seitig, Wächter ≤ 0.70 bis
+zur Play-Lesung der Antwort. Veraltete Spec-STATUS-Zeilen nachgezogen (SPEC-003…011).
+
+---
+
 ## 2026-08-30 — [Direktor] System-Änderung: Dev-Prompt um Crash-Adoptionsregel erweitert
 
 Zweiter Crash dieser Woche, der eine fertige Landung uncommitted zurückließ (26.08. WIP
