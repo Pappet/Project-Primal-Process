@@ -41,6 +41,15 @@ TAG_LABELS = {
 # unaufhaltsamen Unterkühlung. Detail-Balance in Peters Sinne liegt beim Dev.
 FIRE_HEAT = 40.0          # Wärmebeitrag des aktiven Feuers zur Umgebungstemperatur
 START_FIRE_FUEL = 24.0    # Brennstoff-Ticks beim Entzünden (≈ 4 In-Game-Stunden)
+
+# SPEC-011: Werkzeugverschleiß als lesbarer Zustand (Druck ohne Wahrnehmung).
+# Threshold: darunter gilt ein Werkzeug als stark abgenutzt (einmalige Warnung
+# pro fallendem Durchgang). Min-Factor: stumpfe Werkzeuge ernten gedämpft
+# weiter (min Faktor), statt bis zum Bruch volle Chance zu liefern.
+WEAR_WARN_THRESHOLD = 0.25
+WEAR_MIN_FACTOR = 0.25
+SHARPEN_RESTORE = 0.5     # condition-Zugewinn durch sharpen_tool (cap 1.0)
+SHARPEN_TOOL_TAGS = ("CUTTING", "CHOPPING", "PIERCE")
 STOKE_FUEL = 8.0          # Brennstoff-Ticks, die nachgelegtes Holz/Machtsgut bringt
 
 # Verletzung & Heilung (SPEC-009): pro-Instanz Wund-Zustand (Player.injuries)
@@ -136,6 +145,8 @@ def _feedback_message(reason: str, broken_names: "List[str] | None" = None) -> s
         return "Hier brennt kein Feuer."
     if reason == "MISSING_FUEL":
         return "Es fehlt dir Brennholz zum Nachlegen."
+    if reason == "MISSING_TOOL":
+        return "Du brauchst ein Werkzeug dafür."
     if reason.startswith("MISSING_ENV:"):
         tag = reason.split(":", 1)[1]
         return f"Hier fehlt {_label_for(tag)} in der Umgebung."
@@ -294,7 +305,15 @@ class GameEngine:
             used_tool = None
             if node.req_tool_tag:
                 used_tool = self.player.inventory.find_item_by_tag(node.req_tool_tag)
-                if not used_tool: continue
+                if not used_tool:
+                    # SPEC-011 (C): die Stillstell-Falle schließen — ohne Werkzeug
+                    # schweigte der gather komplett. Node-gebundene ehrliche
+                    # Meldung: nur wenn der Node sonst erntbar wäre (perception
+                    # ist oben geprüft, Vorrat hier). Nur Logstream, KEIN neuer
+                    # Experiment-Reason (EMITTABLE_REASONS unangetastet).
+                    if node.stock > 0 and not node.depleted:
+                        logs.append(_feedback_message("MISSING_TOOL"))
+                    continue
 
             # Vorratsbasierter Node (SPEC-004): erschöpft → ehrliche Meldung,
             # nie stilles "nichts". Bleibt erschöpft, bis Regeneration ihn
@@ -306,6 +325,11 @@ class GameEngine:
             # Erfolgswahrscheinlichkeit skaliert mit dem Vorratsanteil:
             # voller Vorrat = node.chance, geleerter = 0.
             eff_chance = node.chance * (node.stock / node.max_stock)
+            # SPEC-011 (A): Attrition wirkt graduell — ein stumpfes Werkzeug
+            # erntet schlechter, lange bevor es bricht (cliff → kurve).
+            # Gleiche Form wie der Vorratsfaktor (SPEC-004), zweite Achse.
+            if used_tool is not None:
+                eff_chance *= max(WEAR_MIN_FACTOR, used_tool.condition)
             if random.random() <= eff_chance:
                 qty = random.randint(node.min_qty, node.max_qty)
                 item = create_item(node.result_template_id, qty)
@@ -327,11 +351,18 @@ class GameEngine:
                         if self._inflict("strain"):
                             logs.append("!!! " + _feedback_message("INJURED") + " !!!")
                     if used_tool:
+                        # SPEC-011 (B): Verschleiß wird lesbar — die Warnung
+                        # feuert einmalig an dem gather-Tick, der die Schwelle
+                        # unterschreitet (vorher >=, danach <), kein Spam.
+                        prev_cond = used_tool.condition
                         wear = 0.05 / used_tool.get_attr("durability", 0.5)
                         used_tool.condition = max(0, used_tool.condition - round(wear, 2))
                         if used_tool.condition <= 0:
                             self.player.inventory.items.remove(used_tool)
                             logs.append(f"!!! {used_tool.name} zerbrochen !!!")
+                        elif (prev_cond >= WEAR_WARN_THRESHOLD
+                              and used_tool.condition < WEAR_WARN_THRESHOLD):
+                            logs.append(f"!!! {used_tool.name} ist stark abgenutzt !!!")
         return logs
 
     def eat(self, item_index: int) -> str:
@@ -802,6 +833,28 @@ class GameEngine:
                         "reason": "NO_INJURY"}
             self.player.injuries["strain"]["treated"] = True
 
+        # SPEC-011: Schärfen als Instandhaltungshebel (apply-only, Behandlungs-
+        # Muster). Das am meisten abgenutzte getragene Schneid-/Stemm-/Stich-
+        # werkzeug unter Volllast wird geschärft. Scheitert es (kein
+        # verschlissenes Werkzeug da), wird der Flint-Splitter NICHT verbraucht
+        # — ehrliches Feedback statt verschwendetem Material.
+        sharpened_name = None
+        if process_id == "sharpen_tool":
+            worn = None
+            for it in self.player.inventory.items:
+                if not (set(SHARPEN_TOOL_TAGS) & set(it.tags)):
+                    continue
+                if it.condition >= 1.0:
+                    continue
+                if worn is None or it.condition < worn.condition:
+                    worn = it
+            if worn is None:
+                return {"success": False,
+                        "message": "Nichts hier, das zu schärfen wäre.",
+                        "reason": "NO_WORN_TOOL"}
+            worn.condition = min(1.0, worn.condition + SHARPEN_RESTORE)
+            sharpened_name = worn.name
+
         # Inputs verbrauchen, dann Zeit/Energie kosten (wie Crafting anstrengend)
         for item_id, qty in proc.inputs.items():
             self._consume_template(item_id, qty)
@@ -814,7 +867,10 @@ class GameEngine:
             self.player.known_processes.add(process_id)
             self.player.stats["survival"] += 0.1
 
-        return {"success": True, "message": f"Prozess ausgeführt: {proc.name}",
+        msg = f"Prozess ausgeführt: {proc.name}"
+        if sharpened_name:
+            msg = f"{sharpened_name} geschärft."
+        return {"success": True, "message": msg,
                 "reason": "SUCCESS", "process_id": process_id}
 
     def travel(self, tid: str):

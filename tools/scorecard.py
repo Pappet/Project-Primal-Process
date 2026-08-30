@@ -953,6 +953,61 @@ def metric_recovery_stability():
 
 
 # ----------------------------------------------------------------------------
+# Metrik 12 — gear_uptime (SPEC-011, Probezeit)
+# "Werkzeugverschleiß ist spürbar (Warnung/Graduierung) und bleibt planbar."
+# ----------------------------------------------------------------------------
+
+# Stress-Tick = ein gather-Tick mit erntbarer werkzeugpflichtiger Node am Ort
+# (Bedarf existiert im Terrain, egal was man besitzt). Outcome: nutzbares
+# Werkzeug für den Node vorhanden UND condition >= WEAR_WARN_THRESHOLD — d.h.
+# die Attrition ist noch nicht in die Downtime gekippt. Band [0.70, 0.95]:
+# über 0.95 (inkl. 1.0) spürt niemand Attrition (Werkzeuge faktisch
+# unsterblich), unter 0.70 straft die Mechanik in Grindfalle.
+# Policy (Proposal-Skizze): naiver Bot mit EINEM gecrafteten Werkzeug (keine
+# Reserve, keine Instandhaltung — misst die Untergrenze ohne Spielerreife),
+# feste Locations-Rotation, reines gather(), Horizon 150 Ticks.
+GEAR_HORIZON = 150
+GEAR_ROTATE_EVERY = 40
+GEAR_ROTATION = ("forest_edge", "mountain_peak", "hidden_cave")
+
+
+def _run_gear_uptime(seed, horizon=GEAR_HORIZON):
+    random.seed(seed)
+    game = GameEngine()
+    inv = game.player.inventory
+
+    def give(tpl, qty=1):
+        inv.add(create_item(tpl, qty))
+
+    # EIN Werkzeug via Discovery (kein Reservewerkzeug, kein Flint-Nachschub —
+    # keine Instandhaltung, also ehrliche Attrition-Untergrenze).
+    give("flint_shard"); give("stick"); give("plant_fiber")
+    mats = [i for i in inv.items if i.template_id in ("flint_shard", "stick", "plant_fiber")]
+    game.execute_experiment(mats)
+    if inv.find_item_by_tag("CHOPPING") is None:
+        return None  # Seed ohne Werkzeug: kein Attrition-Messfenster
+
+    stress = uptime = 0
+    for tick in range(horizon):
+        if tick and tick % GEAR_ROTATE_EVERY == 0:
+            game.travel(GEAR_ROTATION[(tick // GEAR_ROTATE_EVERY) % len(GEAR_ROTATION)])
+        game.gather()
+        for node in game.current_location.nodes:
+            if (node.req_tool_tag and node.stock > 0 and not node.depleted
+                    and game.player.stats["perception"] >= node.req_perception):
+                stress += 1
+                t = inv.find_item_by_tag(node.req_tool_tag)
+                if t is not None and t.condition >= 0.25:
+                    uptime += 1
+    return uptime / stress if stress else None
+
+
+def metric_gear_uptime():
+    """Anteil werkzeugpflichtiger Stress-Ticks mit nutzbarem Werkzeug (>= 0.25)."""
+    return _aggregate(lambda s: _run_gear_uptime(s))
+
+
+# ----------------------------------------------------------------------------
 # Aggregation über Seeds (Median + p25/p75)
 # ----------------------------------------------------------------------------
 
@@ -998,6 +1053,7 @@ METRICS = [
     {"key": "forage_pressure", "desc": "Anteil Sammel-Versuche, die an Erschöpfung verweigert oder deutlich gemindert werden (gefühlte Knappheit)", "fn": metric_forage_pressure, "direction": None, "version": 2, "band": (0.1, 0.5), "probation_until": "2026-09-11"},
     {"key": "warmth_stability", "desc": "Anteil Kälte-Stress-Ticks, die warm überstanden werden (Feuer/Isolation)", "fn": metric_warmth_stability, "direction": None, "version": 1, "band": (0.4, 0.9), "probation_until": "2026-08-27"},
     {"key": "recovery_stability", "desc": "Anteil Verletzungs-Ticks, die Behandlung + Ruhe abwenden (Verband/Umschlag)", "fn": metric_recovery_stability, "direction": None, "version": 1, "band": (0.3, 0.7), "probation_until": "2026-09-03"},
+    {"key": "gear_uptime", "desc": "Anteil werkzeugpflichtiger Stress-Ticks mit nutzbarem Werkzeug (>= Warnschwelle)", "fn": metric_gear_uptime, "direction": None, "version": 1, "band": (0.70, 0.95), "probation_until": "2026-09-11"},
 ]
 
 METRIC_VERSIONS = {m["key"]: m["version"] for m in METRICS}

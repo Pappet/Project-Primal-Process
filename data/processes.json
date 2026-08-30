@@ -1,75 +1,126 @@
 [
-  {
-    "id": "make_sharp_stone",
-    "name": "Stein schlagen (Knapping)",
-    "inputs": {"pebble": 2},
-    "tools": [],
-    "outputs": {"sharp_stone": 1},
-    "duration_ticks": 2
+ {
+  "id": "make_sharp_stone",
+  "name": "Stein schlagen (Knapping)",
+  "inputs": {
+   "pebble": 2
   },
-  {
-    "id": "create_tinder",
-    "name": "Zunder vorbereiten",
-    "inputs": {"reeds": 2},
-    "tools": ["CUTTING"],
-    "outputs": {"tinder": 3},
-    "duration_ticks": 1
+  "tools": [],
+  "outputs": {
+   "sharp_stone": 1
   },
-  {
-    "id": "start_fire",
-    "name": "Feuer bohren",
-    "inputs": {"tinder": 1, "stick": 2},
-    "tools": ["KINDLING"],
-    "outputs": {"fire_pit": 1},
-    "duration_ticks": 5
+  "duration_ticks": 2
+ },
+ {
+  "id": "create_tinder",
+  "name": "Zunder vorbereiten",
+  "inputs": {
+   "reeds": 2
   },
-  {
-    "id": "cook_meat",
-    "name": "Fleisch braten",
-    "inputs": {"raw_meat": 1},
-    "tools": [],
-    "outputs": {"cooked_meat": 1},
-    "duration_ticks": 3,
-    "required_tag_in_env": "HEAT_SOURCE"
+  "tools": [
+   "CUTTING"
+  ],
+  "outputs": {
+   "tinder": 3
   },
-  {
-    "id": "make_fur_cloak",
-    "name": "Fellumhang nähen",
-    "inputs": {"raw_meat": 1, "plant_fiber": 2},
-    "tools": ["CUTTING"],
-    "outputs": {"fur_cloak": 1},
-    "duration_ticks": 4
+  "duration_ticks": 1
+ },
+ {
+  "id": "start_fire",
+  "name": "Feuer bohren",
+  "inputs": {
+   "tinder": 1,
+   "stick": 2
   },
-  {
-    "id": "make_bandage",
-    "name": "Verband weben",
-    "inputs": {"plant_fiber": 2},
-    "tools": [],
-    "outputs": {"bandage": 1},
-    "duration_ticks": 1
+  "tools": [
+   "KINDLING"
+  ],
+  "outputs": {
+   "fire_pit": 1
   },
-  {
-    "id": "make_poultice",
-    "name": "Umschlag anrühren",
-    "inputs": {"mushroom": 1, "clay_lump": 1},
-    "tools": [],
-    "outputs": {"poultice": 1},
-    "duration_ticks": 1
+  "duration_ticks": 5
+ },
+ {
+  "id": "cook_meat",
+  "name": "Fleisch braten",
+  "inputs": {
+   "raw_meat": 1
   },
-  {
-    "id": "treat_cut",
-    "name": "Verband anlegen",
-    "inputs": {"bandage": 1},
-    "tools": [],
-    "outputs": {},
-    "duration_ticks": 1
+  "tools": [],
+  "outputs": {
+   "cooked_meat": 1
   },
-  {
-    "id": "treat_strain",
-    "name": "Umschlag auflegen",
-    "inputs": {"poultice": 1},
-    "tools": [],
-    "outputs": {},
-    "duration_ticks": 1
-  }
+  "duration_ticks": 3,
+  "required_tag_in_env": "HEAT_SOURCE"
+ },
+ {
+  "id": "make_fur_cloak",
+  "name": "Fellumhang nähen",
+  "inputs": {
+   "raw_meat": 1,
+   "plant_fiber": 2
+  },
+  "tools": [
+   "CUTTING"
+  ],
+  "outputs": {
+   "fur_cloak": 1
+  },
+  "duration_ticks": 4
+ },
+ {
+  "id": "make_bandage",
+  "name": "Verband weben",
+  "inputs": {
+   "plant_fiber": 2
+  },
+  "tools": [],
+  "outputs": {
+   "bandage": 1
+  },
+  "duration_ticks": 1
+ },
+ {
+  "id": "make_poultice",
+  "name": "Umschlag anrühren",
+  "inputs": {
+   "mushroom": 1,
+   "clay_lump": 1
+  },
+  "tools": [],
+  "outputs": {
+   "poultice": 1
+  },
+  "duration_ticks": 1
+ },
+ {
+  "id": "treat_cut",
+  "name": "Verband anlegen",
+  "inputs": {
+   "bandage": 1
+  },
+  "tools": [],
+  "outputs": {},
+  "duration_ticks": 1
+ },
+ {
+  "id": "treat_strain",
+  "name": "Umschlag auflegen",
+  "inputs": {
+   "poultice": 1
+  },
+  "tools": [],
+  "outputs": {},
+  "duration_ticks": 1
+ },
+ {
+  "id": "sharpen_tool",
+  "name": "Werkzeug schärfen",
+  "inputs": {
+   "flint_shard": 1
+  },
+  "tools": [],
+  "outputs": {},
+  "duration_ticks": 2
+ }
 ]

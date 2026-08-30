@@ -117,7 +117,7 @@ class TestLoadLocations:
 class TestLoadProcesses:
     def test_loads_all_processes(self):
         procs = load_processes()
-        assert len(procs) == 9
+        assert len(procs) == 10  # 9 + sharpen_tool (SPEC-011, 28.08.)
         ids = [p.id for p in procs]
         assert "make_sharp_stone" in ids
         assert "create_tinder" in ids
@@ -156,7 +156,7 @@ class TestLoadProcesses:
         """Public API builds ProcessDef objects from JSON (no hardcoded defs)."""
         from data.processes import get_all_processes, ProcessDef
         procs = get_all_processes()
-        assert len(procs) == 9
+        assert len(procs) == 10  # 9 + sharpen_tool (SPEC-011, 28.08.)
         assert all(isinstance(p, ProcessDef) for p in procs)
         sharp = next(p for p in procs if p.id == "make_sharp_stone")
         assert sharp.inputs == {"pebble": 2}

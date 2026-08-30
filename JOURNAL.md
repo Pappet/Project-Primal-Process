@@ -5,6 +5,57 @@
 
 ---
 
+## 2026-08-30 — [Direktor] SPEC-011-Landung übernommen: Dev-Lauf 29.08. brach vor Commit ab
+
+Der Dev-Lauf vom 29.08. 14:00 crashte nach Task 1 (guided_full-Befund, Commit b3176b6) mit
+RuntimeError, während Task 2 (SPEC-011) bereits fertig implementiert war — Arbeitsbaum
+uncommitted vorgefunden, ohne JOURNAL, ohne Commit. Der Session-Report des Abbruchs
+(erhalten im Cron-Fehler-Log) dokumentiert Umsetzung + Delta-Tabelle vollständig.
+
+### Übernahme-Verifikation (Direktor, 30.08.)
+- `python -m pytest`: **261 passed** auf dem Arbeitsbaum (test_wear 10 Tests, Loader 9→10 Prozesse).
+- Delta-Tabelle unabhängig nachgerechnet aus `scorecard/2026-08-28.json` vs. `scorecard/2026-08-29.json`
+  — deckt sich exakt mit der Delta-Tabelle des abgebrochenen Laufs (unten).
+- Constitution-Check: Metrik nur **ergänzt** (`gear_uptime`, Probezeit bis 11.09., benannte Schwäche
+  in `metrics/proposed/gear_uptime.md`, Band 0.70–0.95) — nichts entfernt, umdefiniert oder
+  abgeschwächt. Nach Dev-Prompt-Konvention (Freigabe-Pflicht nur bei Entfernen/Umdefinieren)
+  zulässig; Peter hat Veto.
+
+### Delta-Tabelle compute_all() vor (28.08.) / nach (29.08.)
+
+| Metrik | vor | nach | |
+|---|---|---|---|
+| actions_to_first_craft | 9.5 | 9.5 | — |
+| blueprint_reachability | 1.0 | 1.0 | — |
+| content_reachable | 1.0 | 1.0 | — (keine dangling) |
+| craft_variety | 4.5 | 4.5 | p25 4→3, p75 6→5 |
+| **discovery_gap** | **0.65** | **0.70** | **über Band → Direktor-Flag, siehe PLAN 30.08.** |
+| feedback_quality | 1.0 | 1.0 | p25 0.978→1.0 |
+| forage_pressure | 0.0 | 0.0 | — |
+| gear_uptime | — | 0.994 | neu, Probe bis 11.09., über Band (0.95) = dokumentierte Unsichtbarkeit |
+| recovery_stability | 0.375 | 0.375 | — |
+| session_depth | 53.5 | 54.5 | leicht besser (Stream-Shift) |
+| skill_spread | 0.175 | 0.186 | leicht verschoben (naive_rate 0.35→0.3) |
+| warmth_stability | 0.46 | 0.46 | — |
+
+### Direktor-Flag (discovery_gap 0.70)
+Dritte Lesung über Band in Folge (0.6 → 0.65 → 0.70). Ursache ist dieselbe Klasse wie bei
+SPEC-010: die Attrition-Graduierung dämpft die naive Werkzeug-Nutzung (naive_rate 0.35→0.3).
+Band-Gefüge-Bewertung (meine Lesung): **Band bleibt (0.2–0.6), keine Abschwächung.** 0.70 ist
+ein Spiel-Signal — die kumulierten Druck-Systeme (Kälte, Verletzung, Verschleiß) entfernen den
+naiven Spieler von der zweiten Schicht. Antwort spiel-seitig, siehe PLAN-Ziel 1. Die
+Gap-Wächter-Tests bleiben bei ≤ 0.70, bis die spiel-seitige Antwort eine Play-Lesung zeigt,
+dann zurückverschärfen.
+
+### Inhalt des Nachcommits
+`engine/core.py` (A Graduierung `eff_chance *= max(0.25, condition)`, B einmalige Warnung an der
+Schwelle, C node-gebundene MISSING_TOOL-Zeile, D `sharpen_tool` apply-only), `data/processes.json`
+(+sharpen_tool), `tests/test_wear.py` (10 Tests), Loader-Tests 9→10 Prozesse,
+`tools/scorecard.py` (+gear_uptime v1, Probe 11.09.), SCORECARD.md + `scorecard/2026-08-29.json`
+regeneriert (Erstlesung 0.994 = ehrliche Baseline der Unsichtbarkeit).
+
+---
+
 ## 2026-08-28 — [Dev] guided_full Rückzug-Trigger: 4 Varianten, alle strikt schlechter — bewusst nicht gelandet
 
 ### Aufgabe

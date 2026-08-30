@@ -6,21 +6,22 @@
 
 | Metrik | Wert | Δ Vorwoche | Richtung | Beschreibung |
 |--------|------|-----------|----------|--------------|
-| actions_to_first_craft (v1) | 9.500 | -25.000 ↑ besser | niedriger | Aktionen bis zum ersten erfolgreichen Craft (naiv) |
+| actions_to_first_craft (v1) | 9.500 | ±0 | niedriger | Aktionen bis zum ersten erfolgreichen Craft (naiv) |
 | blueprint_reachability (v1) | 1.000 | ±0 | höher | Anteil erreichbarer Blueprints (N=50) |
-| craft_variety (v2) | 4.500 | -0.500 ↓ schlechter | höher | Unterschiedliche Craft-Typen (Blueprints + Prozesse) in 100 Aktionen |
-| skill_spread (v1) | 0.175 | -0.041 ↑ besser | niedriger | Überlebens-Spanne optimal vs. zufällig (fallend = gehobene Einsteiger-Decke) |
+| craft_variety (v2) | 4.500 | ±0 | höher | Unterschiedliche Craft-Typen (Blueprints + Prozesse) in 100 Aktionen |
+| skill_spread (v1) | 0.186 | +0.011 ↓ schlechter | niedriger | Überlebens-Spanne optimal vs. zufällig (fallend = gehobene Einsteiger-Decke) |
 | feedback_quality (v3) | 1.000 | ±0 | höher | Anteil informativer Rückmeldungen (Label-Stimmt, inkl. NEAR_MISS) |
 | content_reachable (v2) | 1.000 | ±0 | höher | Anteil sammelbarer definierter Items (inkl. Node-Ref-Prüfung) |
-| session_depth (v2) (Probe bis 08.09.) | 53.500 | -11.000 ↓ schlechter | höher | Aktionen bis nichts Neues passiert (ziel-bewusster naiver Bot, v2) |
-| discovery_gap (v1) | 0.650 | +0.050 | über Band | Abstand erreichbar vs. tatsächlich gefunden |
-| forage_pressure (v2) (Probe bis 11.09.) | 0.000 | — (neu definiert) | unter Band | Anteil Sammel-Versuche, die an Erschöpfung verweigert oder deutlich gemindert werden (gefühlte Knappheit) |
+| session_depth (v2) (Probe bis 08.09.) | 54.500 | +1.000 ↑ besser | höher | Aktionen bis nichts Neues passiert (ziel-bewusster naiver Bot, v2) |
+| discovery_gap (v1) | 0.700 | +0.050 | über Band | Abstand erreichbar vs. tatsächlich gefunden |
+| forage_pressure (v2) (Probe bis 11.09.) | 0.000 | ±0 | unter Band | Anteil Sammel-Versuche, die an Erschöpfung verweigert oder deutlich gemindert werden (gefühlte Knappheit) |
 | warmth_stability (v1) (Probe bis 27.08.) | 0.460 | ±0 | im Band | Anteil Kälte-Stress-Ticks, die warm überstanden werden (Feuer/Isolation) |
 | recovery_stability (v1) (Probe bis 03.09.) | 0.375 | ±0 | im Band | Anteil Verletzungs-Ticks, die Behandlung + Ruhe abwenden (Verband/Umschlag) |
+| gear_uptime (v1) (Probe bis 11.09.) | 0.994 | — (Baseline) | über Band | Anteil werkzeugpflichtiger Stress-Ticks mit nutzbarem Werkzeug (>= Warnschwelle) |
 
 ## discovery_gap — Zielband
 
-**Band: 0.2 – 0.6.** Keine Richtung (kein "höher = besser"). Unter 0.2 nimmt das Spiel den Spieler an die Hand; über 0.6 ist es faktisch unentdeckbar. `blueprint_reachability` (1.0) misst, was ein Orakel erreichen kann; `naive_discovery_rate` (0.35) was ein Spieler wirklich findet. Der Abstand dazwischen ist das eigentliche Spiel.
+**Band: 0.2 – 0.6.** Keine Richtung (kein "höher = besser"). Unter 0.2 nimmt das Spiel den Spieler an die Hand; über 0.6 ist es faktisch unentdeckbar. `blueprint_reachability` (1.0) misst, was ein Orakel erreichen kann; `naive_discovery_rate` (0.3) was ein Spieler wirklich findet. Der Abstand dazwischen ist das eigentliche Spiel.
 
 
 ## forage_pressure — Zielband
@@ -38,7 +39,12 @@
 **Band: 0.3 – 0.7.** Keine Richtung (kein "höher = besser"). Unter 0.3 nimmt das Spiel den Spieler an die Hand; über 0.7 ist es faktisch unentdeckbar. `blueprint_reachability` (None) misst, was ein Orakel erreichen kann; `naive_discovery_rate` (None) was ein Spieler wirklich findet. Der Abstand dazwischen ist das eigentliche Spiel.
 
 
-## Details (2026-08-28)
+## gear_uptime — Zielband
+
+**Band: 0.7 – 0.95.** Keine Richtung (kein "höher = besser"). Unter 0.7 nimmt das Spiel den Spieler an die Hand; über 0.95 ist es faktisch unentdeckbar. `blueprint_reachability` (None) misst, was ein Orakel erreichen kann; `naive_discovery_rate` (None) was ein Spieler wirklich findet. Der Abstand dazwischen ist das eigentliche Spiel.
+
+
+## Details (2026-08-29)
 
 ```json
 {
@@ -67,21 +73,21 @@
   },
   "craft_variety": {
     "value": 4.5,
-    "p25": 4,
-    "p75": 6,
+    "p25": 3,
+    "p75": 5,
     "n_runs": 20,
     "version": 2
   },
   "skill_spread": {
-    "value": 0.175,
-    "p25": 0.129,
-    "p75": 0.219,
+    "value": 0.186,
+    "p25": 0.142,
+    "p75": 0.223,
     "n_runs": 20,
     "version": 1
   },
   "feedback_quality": {
     "value": 1.0,
-    "p25": 0.978,
+    "p25": 1.0,
     "p75": 1.0,
     "n_runs": 20,
     "version": 3
@@ -115,16 +121,16 @@
     "version": 2
   },
   "session_depth": {
-    "value": 53.5,
-    "p25": 42,
+    "value": 54.5,
+    "p25": 40,
     "p75": 68,
     "n_runs": 20,
     "version": 2
   },
   "discovery_gap": {
-    "value": 0.65,
+    "value": 0.7,
     "blueprint_reachability": 1.0,
-    "naive_discovery_rate": 0.35,
+    "naive_discovery_rate": 0.3,
     "naive_p25": 0.3,
     "naive_p75": 0.4,
     "band": [
@@ -151,6 +157,13 @@
     "value": 0.375,
     "p25": 0.375,
     "p75": 0.375,
+    "n_runs": 20,
+    "version": 1
+  },
+  "gear_uptime": {
+    "value": 0.994,
+    "p25": 0.994,
+    "p75": 1.0,
     "n_runs": 20,
     "version": 1
   }
