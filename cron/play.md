@@ -1,5 +1,5 @@
 # Cron-Job: Primal Process Play
-# Exportiert aus ~/.hermes/cron/jobs.json am 2026-08-03 (Umbau)
+# Exportiert aus ~/.hermes/cron/jobs.json am 2026-08-30 (Direktor-Refresh)
 
 Job-ID: 9777fe714dfb
 Schedule: 0 9 * * 1,3,5
@@ -8,13 +8,13 @@ State: scheduled
 Enabled: True
 Model: (Standard)
 Provider: (Standard)
-Skills: plan
 Toolsets: terminal, file, skills
+Skills: plan
 Workdir: /home/zeroclaw/projects/primal-process
 Created: 2026-07-29T11:31:35.538482+02:00
-Last run: 2026-08-01T16:03:31.274662+02:00
+Next run: 2026-08-31T09:00:00+02:00
+Last run: 2026-08-28T09:13:39.282084+02:00
 Last status: ok
-Next run: 2026-08-05T09:00:00+02:00
 
 ======================================================================
 PROMPT:

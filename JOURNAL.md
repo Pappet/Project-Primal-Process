@@ -5,6 +5,27 @@
 
 ---
 
+## 2026-08-30 — [Direktor] System-Änderung: Dev-Prompt um Crash-Adoptionsregel erweitert
+
+Zweiter Crash dieser Woche, der eine fertige Landung uncommitted zurückließ (26.08. WIP
+wurde ad hoc gestasht+adoptiert, 29.08. SPEC-011 ging bis zur Verifikation und starb vor
+JOURNAL/Commit). Das System heilt sich jedes Mal improvisierend — jetzt steht die Adoption
+als Regel im Dev-Prompt:
+
+> Vorgefundener uncommitteter Arbeitsbaum (Crash eines früheren Laufs): zuerst prüfen
+> (pytest + Diff-Review gegen die Akzeptanzkriterien), dann sauber übernehmen: JOURNAL-Eintrag
+> (inkl. Pflicht-Delta-Tabelle bei Engine-Änderungen), eigener Commit mit klarer
+> Herkunftsangabe. Nie still weiterbauen, nie ungeprüft committen.
+
+Geändert: Dev-Job (10c0e68f3673) Prompt via `hermes cron edit`; Repo-Exporte `cron/*.md` +
+`cron/OVERVIEW.md` aus dem Live-Stand regeneriert (waren seit 03.08. veraltet). Play-Job und
+Messung (`tools/scorecard.py`, `METRICS`, Scorecard-Dateien) unangetastet — Constitution.
+Begründung: Crash-Recovery soll Regel bleiben, nicht Zufall. Der Play-Job lief planmäßig
+(28.08. ok, kein Report-File an diesem Tag — Report-Convention prüft der nächste Play-Lauf
+selbst; kein Eingriff, Play ist unantastbar).
+
+---
+
 ## 2026-08-30 — [Direktor] SPEC-011-Landung übernommen: Dev-Lauf 29.08. brach vor Commit ab
 
 Der Dev-Lauf vom 29.08. 14:00 crashte nach Task 1 (guided_full-Befund, Commit b3176b6) mit

@@ -1,5 +1,5 @@
 # Cron-Job: Primal Process Direktor
-# Exportiert aus ~/.hermes/cron/jobs.json am 2026-08-03 (Umbau)
+# Exportiert aus ~/.hermes/cron/jobs.json am 2026-08-30 (Direktor-Refresh)
 
 Job-ID: d8ed1b92bc80
 Schedule: 0 18 * * 0
@@ -8,13 +8,13 @@ State: scheduled
 Enabled: True
 Model: (Standard)
 Provider: (Standard)
-Skills: plan
 Toolsets: terminal, file, skills
+Skills: plan
 Workdir: /home/zeroclaw/projects/primal-process
 Created: 2026-07-25T09:58:51.306065+02:00
-Last run: 2026-08-02T18:05:46.876166+02:00
+Next run: 2026-09-06T18:00:00+02:00
+Last run: 2026-08-23T18:15:16.547693+02:00
 Last status: ok
-Next run: 2026-08-09T18:00:00+02:00
 
 ======================================================================
 PROMPT:

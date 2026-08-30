@@ -1,5 +1,5 @@
 # Cron-Job: Primal Process Research-Metric
-# Exportiert aus ~/.hermes/cron/jobs.json am 2026-08-03 (Finalisierung)
+# Exportiert aus ~/.hermes/cron/jobs.json am 2026-08-30 (Direktor-Refresh)
 
 Job-ID: c837d9d8dde1
 Schedule: 0 10 * * 2
@@ -8,13 +8,13 @@ State: scheduled
 Enabled: True
 Model: (Standard)
 Provider: (Standard)
-Skills: plan
 Toolsets: browser, terminal, file, search, skills, web
+Skills: plan
 Workdir: /home/zeroclaw/projects/primal-process
 Created: 2026-07-25T09:58:26.664072+02:00
-Last run: 2026-07-30T10:09:30.350180+02:00
+Next run: 2026-09-01T10:00:00+02:00
+Last run: 2026-08-25T10:38:32.356783+02:00
 Last status: ok
-Next run: 2026-08-04T10:00:00+02:00
 
 ======================================================================
 PROMPT:

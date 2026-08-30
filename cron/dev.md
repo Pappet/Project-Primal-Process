@@ -1,5 +1,5 @@
 # Cron-Job: Primal Process Dev
-# Exportiert aus ~/.hermes/cron/jobs.json am 2026-08-03 (Umbau)
+# Exportiert aus ~/.hermes/cron/jobs.json am 2026-08-30 (Direktor-Refresh)
 
 Job-ID: 10c0e68f3673
 Schedule: 0 14 * * 1,2,3,4,5,6
@@ -8,13 +8,13 @@ State: scheduled
 Enabled: True
 Model: (Standard)
 Provider: (Standard)
-Skills: plan
 Toolsets: terminal, file, browser, skills, web, cronjob
+Skills: none
 Workdir: /home/zeroclaw/projects/primal-process
 Created: 2026-07-25T09:58:40.499867+02:00
-Last run: 2026-08-03T14:08:09.008231+02:00
-Last status: ok
-Next run: 2026-08-04T14:00:00+02:00
+Next run: 2026-08-31T14:00:00+02:00
+Last run: 2026-08-29T14:35:37.498234+02:00
+Last status: error
 
 ======================================================================
 PROMPT:
@@ -39,3 +39,10 @@ Du bist der Dev-Implementierer für Project Primal Process (~/projects/primal-pr
 ```
 cd ~/projects/primal-process && git add -A && git commit -m "dev: <task> (cron)" && git push
 ```
+
+
+**Vorgefundener uncommitteter Arbeitsbaum (Crash eines früheren Laufs):**
+zuerst prüfen (`python -m pytest` + Diff-Review gegen die geforderten Akzeptanzkriterien),
+dann sauber übernehmen: JOURNAL-Eintrag (inkl. Pflicht-Delta-Tabelle bei Engine-Änderungen),
+eigener Commit mit klarer Herkunftsangabe ("Nachcommit des abgebrochenen Laufs"). Nie still
+auf einem fremden Halbfertig-Stand weiterbauen, nie einen Arbeitsbaum ungeprüft committen.
