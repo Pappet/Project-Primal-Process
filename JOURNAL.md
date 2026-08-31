@@ -5,6 +5,49 @@
 
 ---
 
+## 2026-08-31 — [Dev] Munitions-Ökonomie: Pebble = Consumable — Projektil pro Schuss, nicht Wear auf den Stack
+
+**Task:** PLAN „Munitions-Ökonomie" (BACKLOG 27.08., promoted). Die Jagd (PROJECTILE-Node) wusch den
+kompletten Pebble-Stack über den Werkzeug-Wear-Pfad (0.05/durability 0.2 = 0.25/Erfolg) — nach ~4
+Schüssen war der ganze Munitionsbestand still weg („zerbrochen"), plus Condition-Fragmente im Inventar
+(zwei Pebble-Stacks mit condition 0.75/1.0, kein Merge mehr möglich).
+
+**Änderung:** `engine/core.py::gather()` — Werkzeug-Wear-Block verzweigt jetzt:
+- `PROJECTILE`-Werkzeuge: pro Ernteerfolg (ein Wurf) `quantity -= 1`; letzte Einheit → Item entfernt
+  mit ehrlicher Meldung „!!! Kieselstein aufgebraucht !!!". Condition bleibt unberührt (kein Wear,
+  kein NaN, kein Stack-Fragment).
+- alle anderen Werkzeuge: unveränderter SPEC-011-(B)-Wear-Pfad (Warnung/Zerbrechen).
+- Downstream unverändert: leerer Munitions-Stack → `find_item_by_tag` findet nichts → SPEC-011-(C)-
+  MISSING_TOOL-Meldung. Kein neuer Reason-Code, `EMITTABLE_REASONS` unangetastet, kein Rezept-Leak.
+
+**RNG-Strom-Klasse:** keine neuen Würfe, keine entfernten Würfe (Wear war reine Arithmetik).
+Die Verschiebung kommt aus dem Zustand: Pebble-Condition bleibt 1.0 → `eff_chance` der Jagd bleibt
+voll (vorher sank sie mit der Condition) → mehr Jagd-Ernten → downstream Sequenz-Drift der Mess-Bots.
+Dokumentiert, nicht kompensiert.
+
+**Delta-Tabelle `compute_all()` vor/nach** (Pflicht):
+
+| Metrik | vor | nach | Δ | Lesung |
+|---|---|---|---|---|
+| actions_to_first_craft | 9.5 | 9.5 | 0 | |
+| blueprint_reachability | 1.0 | 1.0 | 0 | Wächter hält |
+| craft_variety | 4.5 | **5.0** | +0.5 ↑ | Ziel-2-Marke ≥ 5 erreicht (mehr Fleisch-Ernte → mehr Rezept-Signale) |
+| skill_spread | 0.186 | **0.202** | +0.016 | gleiche Wurzel wie Gap-Historie (naive Überlebensdecke) |
+| feedback_quality | 1.0 | 1.0 | 0 | Experiment-only, unangetastet |
+| content_reachable | 1.0 | 1.0 | 0 | Wächter hält |
+| session_depth | 54.5 | **52.5** | -2.0 | v2-Re-Baseline Stream-Shift, Messleiste (Probe bis 08.09.) |
+| discovery_gap | 0.7 | **0.6** | -0.1 ↓ | zurück im Band (≤ 0.6) — kein Direktor-Flag nötig |
+| forage_pressure | 0.0 | 0.0 | 0 | Probe bis 11.09. |
+| warmth_stability | 0.46 | 0.46 | 0 | |
+| recovery_stability | 0.375 | 0.375 | 0 | Probe bis 03.09. |
+| gear_uptime | 0.994 | 0.994 | 0 | Probe bis 11.09. |
+
+**Tests:** +6 (`TestAmmoEconomy` in `tests/test_injury.py`) — genau ein Projektil pro Schuss, kein
+kollektives Stack-Entfernen, keine Condition-Artefakte/NaN, Leer-Meldung beim letzten Schuss, kein
+Jagd-Ertrag ohne Munition, keine „zerbrochen"-Meldung für Munition. pytest: **270 passed** (264 + 6).
+
+---
+
 ## 2026-08-31 — [Dev] B08: INJURED-Feedback-Zweig — Fallback „Das geht so nicht." ersetzt
 
 **Task:** PLAN B08 (kleiner Fix, keine Freigabe nötig). `core.gather()` rief `_feedback_message("INJURED")`,

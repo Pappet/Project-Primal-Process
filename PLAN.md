@@ -57,7 +57,7 @@ bleibt (Probe bis 11.09.). Der echte Boredom-Punkt ist unverändert klein (~15�
       pytest grün; Delta-Tabelle compute_all() vor/nach im JOURNAL (alle Werte müssen identisch bleiben).
       **umgesetzt 31.08.** — alle Werte identisch, 264 Tests grün.
 
-- [ ] **Munitions-Ökonomie: Pebble = Consumable** (BACKLOG 27.08., Research-Befund, promotet).
+- [x] **Munitions-Ökonomie: Pebble = Consumable** (BACKLOG 27.08., Research-Befund, promotet).
       Die Jagd wäscht den ganzen Pebble-Stack über den Werkzeug-Wear-Pfad (~0.25/Erfolg,
       durability 0.2) — der komplette Munitionsbestand verschwindet nach ~4 Schüssen still und
       ohne Vorwarnung. Ein Projektil ist Consumable, kein dauerhaftes Werkzeug.
@@ -68,6 +68,9 @@ bleibt (Probe bis 11.09.). Der echte Boredom-Punkt ist unverändert klein (~15�
       compute_all()-Delta-Tabelle vor/nach im JOURNAL (RNG-Strom-Klasse!) — verschiebt eine
       Metrik: Lesung dokumentieren, nicht kompensieren; discovery_gap > 0.70 → Direktor-Flag im
       selben Commit. Kein Rezept-Leak.
+      **umgesetzt 31.08.** — PROJECTILE konsumiert quantity-- pro Schuss, Wear-Pfad unangetastet;
+      discovery_gap 0.7 → 0.6 (Band, kein Flag), craft_variety 5.0, Delta-Tabelle im JOURNAL,
+      270 Tests grün.
 
 - [ ] **Ziel-2-Hebel: Prozesse für naive Spieler sichtbar machen** (keine Freigabe nötig, aber
       Mechanik-Design sauber halten). Der NEW_COMPONENT-Reveal (SPEC-006) zeigt Werkzeug-Potenzial

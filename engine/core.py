@@ -355,18 +355,32 @@ class GameEngine:
                         if self._inflict("strain"):
                             logs.append("!!! " + _feedback_message("INJURED") + " !!!")
                     if used_tool:
-                        # SPEC-011 (B): Verschleiß wird lesbar — die Warnung
-                        # feuert einmalig an dem gather-Tick, der die Schwelle
-                        # unterschreitet (vorher >=, danach <), kein Spam.
-                        prev_cond = used_tool.condition
-                        wear = 0.05 / used_tool.get_attr("durability", 0.5)
-                        used_tool.condition = max(0, used_tool.condition - round(wear, 2))
-                        if used_tool.condition <= 0:
-                            self.player.inventory.items.remove(used_tool)
-                            logs.append(f"!!! {used_tool.name} zerbrochen !!!")
-                        elif (prev_cond >= WEAR_WARN_THRESHOLD
-                              and used_tool.condition < WEAR_WARN_THRESHOLD):
-                            logs.append(f"!!! {used_tool.name} ist stark abgenutzt !!!")
+                        if "PROJECTILE" in used_tool.tags:
+                            # Munitions-Ökonomie: Ein Projektil ist Consumable,
+                            # kein dauerhaftes Werkzeug. Pro Ernteerfolg (ein
+                            # Wurf) genau eine Einheit weg — NICHT Condition-
+                            # Wear auf den gemergten Stack (vorher verschwand
+                            # der komplette Munitionsbestand nach ~4 Schüssen
+                            # still als „zerbrochen", inkl. Condition-Fragmente
+                            # im Inventar). Die Leer-Meldung ist ehrlich und
+                            # feuert nur beim letzten Schuss.
+                            used_tool.quantity -= 1
+                            if used_tool.quantity <= 0:
+                                self.player.inventory.items.remove(used_tool)
+                                logs.append(f"!!! {used_tool.name} aufgebraucht !!!")
+                        else:
+                            # SPEC-011 (B): Verschleiß wird lesbar — die Warnung
+                            # feuert einmalig an dem gather-Tick, der die Schwelle
+                            # unterschreitet (vorher >=, danach <), kein Spam.
+                            prev_cond = used_tool.condition
+                            wear = 0.05 / used_tool.get_attr("durability", 0.5)
+                            used_tool.condition = max(0, used_tool.condition - round(wear, 2))
+                            if used_tool.condition <= 0:
+                                self.player.inventory.items.remove(used_tool)
+                                logs.append(f"!!! {used_tool.name} zerbrochen !!!")
+                            elif (prev_cond >= WEAR_WARN_THRESHOLD
+                                  and used_tool.condition < WEAR_WARN_THRESHOLD):
+                                logs.append(f"!!! {used_tool.name} ist stark abgenutzt !!!")
         return logs
 
     def eat(self, item_index: int) -> str:

@@ -153,3 +153,66 @@ class TestInjuredFeedbackBranch:
         logs = e.gather()
         for line in logs:
             assert "Das geht so nicht." not in line
+
+
+def _pebble_stacks(e):
+    return [it for it in e.player.inventory.items if "PROJECTILE" in it.tags]
+
+
+def _deterministic_gather(monkeypatch):
+    """Jeder Wurf trifft, jede Menge = min. Randint-Mock, damit der
+    pebble-Ground-Node (Nachschub ohne Tool-Req) nicht stört."""
+    monkeypatch.setattr("engine.core.random.random", lambda: 0.0)
+    monkeypatch.setattr("engine.core.random.randint", lambda a, b: a)
+
+
+class TestAmmoEconomy:
+    """Munitions-Ökonomie: Ein Projektil ist Consumable, kein dauerhaftes
+    Werkzeug. Vorher lief die Jagd (PROJECTILE-Node) über den Werkzeug-Wear-
+    Pfad (~0.25/Erfolg) — der komplette Pebble-Stack verschwand nach ~4
+    Schüssen still als „zerbrochen"."""
+
+    def test_shot_consumes_exactly_one_unit(self, monkeypatch):
+        _deterministic_gather(monkeypatch)
+        e = engine_with([("pebble", 4)])
+        e.gather()  # forest_edge: 1 Schuss (-1), Ground-Node liefert +1
+        assert sum(it.quantity for it in _pebble_stacks(e)) == 4
+
+    def test_stack_not_collectively_removed(self, monkeypatch):
+        _deterministic_gather(monkeypatch)
+        e = engine_with([("pebble", 4)])
+        e.gather()
+        stacks = _pebble_stacks(e)
+        assert stacks, "Pebble-Stack darf nach einem Schuss nicht kollektiv weg sein"
+        assert len(stacks) == 1, "Munition bleibt ein gemergter Stack (keine Condition-Fragmente)"
+        assert stacks[0].quantity == 4
+
+    def test_condition_untouched_no_wear_artifacts(self, monkeypatch):
+        _deterministic_gather(monkeypatch)
+        e = engine_with([("pebble", 4)])
+        for _ in range(3):
+            e.gather()
+        for it in _pebble_stacks(e):
+            assert it.condition == it.condition  # kein NaN
+            assert it.condition == 1.0  # kein Wear auf Munition
+
+    def test_last_unit_depletes_with_message(self, monkeypatch):
+        _deterministic_gather(monkeypatch)
+        e = engine_with([("pebble", 1)])
+        logs = e.gather()
+        assert any("aufgebraucht" in l for l in logs), \
+            "Letzte Munitionseinheit feuert ehrliche Leer-Meldung"
+
+    def test_no_ammo_no_hunt_yield(self, monkeypatch):
+        _deterministic_gather(monkeypatch)
+        e = engine_with([])
+        e.gather()
+        meat = [it for it in e.player.inventory.items if it.template_id == "raw_meat"]
+        assert not meat, "Ohne Munition kein Jagd-Ertrag (MISSING_TOOL-Zweig)"
+
+    def test_no_zerbrochen_for_ammo(self, monkeypatch):
+        _deterministic_gather(monkeypatch)
+        e = engine_with([("pebble", 4)])
+        logs = e.gather()
+        assert not any("zerbrochen" in l for l in logs), \
+            "Munition wird verbraucht, nicht zerbrochen"
