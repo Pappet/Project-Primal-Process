@@ -72,7 +72,7 @@ bleibt (Probe bis 11.09.). Der echte Boredom-Punkt ist unverändert klein (~15�
       discovery_gap 0.7 → 0.6 (Band, kein Flag), craft_variety 5.0, Delta-Tabelle im JOURNAL,
       270 Tests grün.
 
-- [ ] **Ziel-2-Hebel: Prozesse für naive Spieler sichtbar machen** (keine Freigabe nötig, aber
+- [x] **Ziel-2-Hebel: Prozesse für naive Spieler sichtbar machen** (keine Freigabe nötig, aber
       Mechanik-Design sauber halten). Der NEW_COMPONENT-Reveal (SPEC-006) zeigt Werkzeug-Potenzial
       einmalig beim ersten Werkzeugbau — das analoge Signal für Prozesse fehlt: Besitz + Umgebung
       (z. B. rohes Fleisch + aktives Feuer, Reeds + CUTTING-Werkzeug) erzeugen null Richtungssignal.
@@ -82,6 +82,9 @@ bleibt (Probe bis 11.09.). Der echte Boredom-Punkt ist unverändert klein (~15�
       Akzeptanz: naive Bots führen in Mess-Läufen Prozesse aus, ohne dass Rezepte geleakt werden;
       craft_variety bewegt sich (Ziel: ≥ 5) ohne dass blueprint_reachability/content_reachable sinken;
       keine neue Metrik nötig.
+      **umgesetzt 31.08.** — Prozess-Potenzial-Hinweise (einmalig, generisch pro Klasse, kein Leak);
+      v2-Bot: 0 → 7/10 Prozesse über 5 Seeds; session_depth 52.5 → 63.0 (Re-Baseline, Probe bis 08.09.);
+      Wächter/Gap/variety unverändert; Delta-Tabelle + Design-Skizze im JOURNAL, 277 Tests grün.
 
 - [ ] **Gap-Wächter zurücksetzen, sobald Ziel 1 liest** (Auflage aus den gelockten Tests ≤ 0.70).
       Nachdem eine spiel-seitige Antwort (B08 + Prozess-Hinweise + ggf. Überlebens-Hinweise) eine

@@ -216,3 +216,66 @@ class TestAmmoEconomy:
         logs = e.gather()
         assert not any("zerbrochen" in l for l in logs), \
             "Munition wird verbraucht, nicht zerbrochen"
+
+
+def _craft_hint_engine(engine, template_id, qty):
+    e = engine_with([(template_id, qty)])
+    return e
+
+
+class TestProcessPotenzialHints:
+    """Ziel-2-Hebel: Besitz + Umgebung erzeugen einen einmaligen, generischen
+    Hinweis pro Prozess-Klasse („hier ließe sich etwas …"), sobald die
+    Prozess-Anforderungen vollständig erfüllt sind. Kein Rezept-Leak:
+    Text nennt keine Items/Mengen/Prozess-IDs."""
+
+    def test_no_hints_on_fresh_start(self):
+        e = GameEngine()
+        assert e.take_process_hints() == []
+
+    def test_bandage_input_met_fires_generic_hint(self):
+        e = _craft_hint_engine(None, "plant_fiber", 2)
+        hints = e.take_process_hints()
+        pids = [pid for pid, _ in hints]
+        assert "make_bandage" in pids
+        text = next(t for pid, t in hints if pid == "make_bandage")
+        low = text.lower()
+        assert "pflanzenfaser" not in low and "bandage" not in low and "verband" not in low
+
+    def test_hint_is_once_per_category(self):
+        e = _craft_hint_engine(None, "plant_fiber", 2)
+        first = e.take_process_hints()
+        assert any(pid == "make_bandage" for pid, _ in first)
+        # zweiter Aufruf: Kategorie bereits gesehen → still
+        assert e.take_process_hints() == []
+        # nach der Ausführung: treat_cut ist eine NEUE Kategorie → feuert
+        e.execute_process("make_bandage")
+        second = e.take_process_hints()
+        assert any(pid == "treat_cut" for pid, _ in second)
+
+    def test_cook_meat_needs_env_and_meat(self):
+        e = _craft_hint_engine(None, "raw_meat", 1)
+        assert not any(pid == "cook_meat" for pid, _ in e.take_process_hints())
+        e._light_fire()  # Umgebung erfüllt (HEAT_SOURCE)
+        assert any(pid == "cook_meat" for pid, _ in e.take_process_hints())
+
+    def test_tinder_needs_input_and_tool(self):
+        from engine.components import Item
+        e = _craft_hint_engine(None, "reeds", 2)
+        assert not any(pid == "create_tinder" for pid, _ in e.take_process_hints())
+        e.player.inventory.add(Item("Messer", 0.3, {"CUTTING": True}))
+        assert any(pid == "create_tinder" for pid, _ in e.take_process_hints())
+
+    def test_hint_does_not_execute_or_consume(self):
+        e = _craft_hint_engine(None, "plant_fiber", 2)
+        before = e._count_template("plant_fiber")
+        e.take_process_hints()
+        assert e._count_template("plant_fiber") == before
+        assert e.tick_counter == GameEngine().tick_counter  # keine Zeit verbraucht
+
+    def test_available_processes_unchanged_by_refactor(self):
+        """Der Hint-Check darf die available_processes-Semantik nicht ändern."""
+        e = _craft_hint_engine(None, "plant_fiber", 2)
+        assert "make_bandage" in e.available_processes()
+        e.take_process_hints()
+        assert "make_bandage" in e.available_processes()

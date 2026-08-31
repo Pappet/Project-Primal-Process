@@ -80,6 +80,10 @@ class Player:
         
         self.known_blueprints: Set[str] = set()
         self.known_processes: Set[str] = set()
+        # Ziel-2-Hebel: Einmal-Hinweise pro Prozess-Klasse. Speichert die
+        # Kategorien (nicht PIDs), deren generisches Potenzial-Signal („hier
+        # ließe sich etwas …") der Spieler schon erhalten hat — danach still.
+        self.process_hints_seen: Set[str] = set()
         # SPEC-003: Experimentiergedächtnis für Beinahe-Treffer. Blueprint-IDs,
         # für die der Spieler schon einmal eine latente ≥2/3-Teilkombination
         # gemeldet bekommen hat (NEAR_MISS). Der Hinweis feuert pro Blueprint

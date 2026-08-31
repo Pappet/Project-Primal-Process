@@ -4,6 +4,13 @@ main.py
 import os
 from engine.core import GameEngine
 
+def _show_process_hints(game):
+    """Ziel-2-Hebel: einmalige, generische Potenzial-Hinweise pro Prozess-
+    Klasse — dass Besitz + Umgebung eine Transformation erlauben. Nennt
+    weder Items noch Prozess-IDs (kein Rezept-Leak)."""
+    for _pid, text in game.take_process_hints():
+        print(f"  !!! Hinweis: {text}")
+
 def main():
     game = GameEngine()
     while True:
@@ -27,6 +34,7 @@ def main():
         
         if cmd == 'g':
             for line in game.gather(): print(f"  {line}")
+            _show_process_hints(game)
             input("\nWeiter...")
             
         elif cmd == 'f':
@@ -55,6 +63,7 @@ def main():
                 sel = [p.inventory.items[int(i)] for i in idx_str.split(",")]
                 res = game.execute_experiment(sel)
                 print(f"\n{res['message']}")
+                _show_process_hints(game)
             except: print("Fehler bei Auswahl.")
             input("\nWeiter...")
 
@@ -83,6 +92,7 @@ def main():
                     idx = int(input("Prozess > "))
                     res = game.execute_process(procs[idx])
                     print(f"\n{res['message']}")
+                    _show_process_hints(game)
                 except Exception:
                     print("Ungültig.")
             input("\nWeiter...")

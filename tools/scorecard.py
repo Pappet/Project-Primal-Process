@@ -704,7 +704,11 @@ def _run_session_depth(seed, stall_limit=15, cap=1500):
     naiver Bot — verfolgt NEAR_MISS-Hinweise, versucht Blueprints, für die er
     >= 2/3 Materialien hält, und darf ab survival >= 0.4 auch gated Blueprints
     versuchen. Kein Orakel, kein Rezeptbuch — nur ein Spieler, der nicht
-    'kalt' aufgibt. (Spec session_depth v2, Peter 22.08.)"""
+    'kalt' aufgibt. (Spec session_depth v2, Peter 22.08.)
+    Ziel-2-Hebel (31.08.): reagiert auf den generischen Prozess-Potenzial-
+    Hinweis („hier ließe sich etwas …") wie ein Spieler, der das Signal liest —
+    er führt den gemeldeten Prozess aus. Die Antwort ist spiel-seitig sichtbar
+    (Hinweistext im Logstream), der Bot nutzt dieselbe Engine-API wie die CLI."""
     random.seed(seed)
     rng = random.Random(seed)
     game = GameEngine()
@@ -742,6 +746,10 @@ def _run_session_depth(seed, stall_limit=15, cap=1500):
                 game.execute_experiment(sel)
             else:
                 game.gather()
+        # Potenzial-Signal beantworten: Hinweise feuern nur, wenn Besitz +
+        # Umgebung einen Prozess komplett erlauben (einmalig pro Klasse).
+        for pid, _text in game.take_process_hints():
+            game.execute_process(pid)
         after = _novelty_set(game)
         stall = stall + 1 if after == before else 0
         if stall >= stall_limit:

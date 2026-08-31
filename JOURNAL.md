@@ -5,6 +5,65 @@
 
 ---
 
+## 2026-08-31 — [Dev] Ziel-2-Hebel: Prozesse für naive Spieler sichtbar — Prozess-Potenzial-Hinweise
+
+**Design-Skizze (Pflicht vor TDD):** Das NEW_COMPONENT-Reveal (SPEC-006) meldet Werkzeug-Potenzial
+einmalig beim ersten Werkzeugbau — für Prozesse fehlte das analoge Signal, obwohl `available_processes`
+sie bereits korrekt listen würde: der Trigger-Moment (Besitz + Umgebung erfüllt) trat ein, aber niemand
+meldete ihn aktiv; naive Spieler führen 0 Prozesse aus. Antwort: die Engine hält pro **Prozess-Klasse**
+(bearbeiten/verarbeiten/entzünden/zubereiten/anfertigen/verbinden/wundbehandeln/instandhalten) einen
+generischen Einmal-Hinweis bereit — „Hier ließe sich etwas zubereiten." — der feuert, wenn die
+Anforderungen vollständig erfüllt sind. Kein Rezept-Leak: der Text nennt weder Items, Mengen, Prozess-
+IDs noch fehlende Tags. Kein neuer Reason-Code: Zusatz-Meldung im Logstream, `EMITTABLE_REASONS` und
+feedback_quality unangetastet. Konsum über `GameEngine.take_process_hints()` → (pid, text); die CLI
+druckt den Text, der session_depth-v2-Bot reagiert auf das Signal wie ein Spieler (führt den Prozess
+aus) — der Gap-Bot (`_run_naive_discovery`) reagiert absichtlich NICHT: er misst Blueprint-Entdeckung,
+Prozess-Aktionen würden nur seine Aktionen verbrauchen und den Gap künstlich strafen.
+
+**Änderung:**
+- `engine/core.py`: `PROCESS_HINT_CATEGORY`/`PROCESS_HINT_TEXT` (10 Prozesse → 8 Kategorien);
+  `_process_requirements_met()` (Refaktor aus `available_processes`, Semantik unverändert, 
+  Regressionstest vorhanden); `take_process_hints()` — evaluiert on-demand, markiert Kategorie als
+  gesehen, konsumiert nichts, kostet keine Zeit, würfelt nicht.
+- `engine/components.py`: `Player.process_hints_seen: Set[str]` (Kategorien, nicht PIDs —
+  „einmalig pro Prozess-Klasse" laut Plan).
+- `main.py`: Hinweise erscheinen nach gather/experiment/process (auch Prozess-Ketten: Verband →
+  Behandlung).
+- `tools/scorecard.py::_run_session_depth`: v2-Bot beantwortet das Signal nach jeder Aktion
+  (`execute_process(pid)`), Kommentar im Docstring.
+
+**RNG-Strom-Klasse:** `take_process_hints()` würfelt nicht. Der Bot-Shift entsteht, weil
+`execute_process` echte Zeit kostet (`_advance_time` → Wetterwürfe auf dem globalen Strom) und
+Prozess-Outputs/Knowledge Novelty erzeugen. Dokumentiert, nicht kompensiert.
+
+**Akzeptanz-Proof:** v2-Bot führt jetzt Prozesse aus — 7/10 Prozess-IDs über 5 Seeds
+(make_sharp_stone, create_tinder, start_fire, make_bandage, make_poultice, make_fur_cloak,
+sharpen_tool; Vorher: 0 in Blind-Runs). Kein Rezept-Leak (Text-Regressionstests).
+
+**Delta-Tabelle `compute_all()` vor/nach** (Pflicht; vor = Stand nach Munitions-Fix):
+
+| Metrik | vor | nach | Δ | Lesung |
+|---|---|---|---|---|
+| actions_to_first_craft | 9.5 | 9.5 | 0 | |
+| blueprint_reachability | 1.0 | 1.0 | 0 | Wächter hält |
+| craft_variety | 5.0 | 5.0 | 0 | Ziel-2-Marke ≥ 5 gehalten |
+| skill_spread | 0.202 | 0.202 | 0 | |
+| feedback_quality | 1.0 | 1.0 | 0 | Kern unangetastet |
+| content_reachable | 1.0 | 1.0 | 0 | Wächter hält |
+| session_depth | 52.5 | **63.0** | +10.5 ↑ | Prozess-Ebene ist entdeckt — Novelty-Kette verzögert den Stall. Re-Baseline in Probezeit (bis 08.09.): Direktor bewertet nach Probe-Ende |
+| discovery_gap | 0.6 | 0.6 | 0 | Band (Gap-Bot absichtlich ohne Prozess-Reaktion) |
+| forage_pressure | 0.0 | 0.0 | 0 | |
+| warmth_stability | 0.46 | 0.46 | 0 | |
+| recovery_stability | 0.375 | 0.375 | 0 | |
+| gear_uptime | 0.994 | 0.994 | 0 | |
+
+**Tests:** +7 (`TestProcessPotenzialHints` in `tests/test_injury.py`) — frischer Start still,
+generischer Text ohne Leak, Einmaligkeit pro Kategorie, Kette (bandage → treat), env-/tool-gated
+(cook_meat braucht Feuer, tinder braucht CUTTING), kein Verbrauch/keine Zeit, available_processes-
+Semantik unverändert. pytest: **277 passed** (270 + 7).
+
+---
+
 ## 2026-08-31 — [Dev] Munitions-Ökonomie: Pebble = Consumable — Projektil pro Schuss, nicht Wear auf den Stack
 
 **Task:** PLAN „Munitions-Ökonomie" (BACKLOG 27.08., promoted). Die Jagd (PROJECTILE-Node) wusch den

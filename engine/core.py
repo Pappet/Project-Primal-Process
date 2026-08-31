@@ -48,6 +48,36 @@ START_FIRE_FUEL = 24.0    # Brennstoff-Ticks beim Entzünden (≈ 4 In-Game-Stun
 # weiter (min Faktor), statt bis zum Bruch volle Chance zu liefern.
 WEAR_WARN_THRESHOLD = 0.25
 WEAR_MIN_FACTOR = 0.25
+
+# Ziel-2-Hebel: Prozess-Potenzial-Hinweise. Besitz + Umgebung erzeugen ein
+# einmaliges, generisches Richtungssignal pro Prozess-Klasse — das analoge
+# Signal zum NEW_COMPONENT-Reveal (SPEC-006), das Werkzeug-Potenzial meldet.
+# Kein Rezept-Leak: der Text nennt weder Item, Menge, Prozess-ID noch
+# fehlende Tags — nur die Zweck-Kategorie. Kein neuer Reason-Code: der
+# Hinweis ist eine Zusatz-Meldung im Logstream, `EMITTABLE_REASONS` und der
+# feedback_quality-Kern bleiben unangetastet.
+PROCESS_HINT_CATEGORY = {
+    "make_sharp_stone": "bearbeiten",
+    "create_tinder": "verarbeiten",
+    "start_fire": "entzünden",
+    "cook_meat": "zubereiten",
+    "make_fur_cloak": "anfertigen",
+    "make_bandage": "verbinden",
+    "make_poultice": "wundbehandeln",
+    "treat_cut": "wundbehandeln",
+    "treat_strain": "wundbehandeln",
+    "sharpen_tool": "instandhalten",
+}
+PROCESS_HINT_TEXT = {
+    "bearbeiten": "Einiges davon ließe sich wohl weiter bearbeiten.",
+    "verarbeiten": "Einiges davon ließe sich weiter verarbeiten — mit dem richtigen Werkzeug.",
+    "entzünden": "Damit ließe sich hier etwas entzünden.",
+    "zubereiten": "Hier ließe sich etwas zubereiten.",
+    "anfertigen": "Damit ließe sich etwas anfertigen.",
+    "verbinden": "Einiges davon ließe sich verbinden.",
+    "wundbehandeln": "Damit ließe sich eine Wunde behandeln.",
+    "instandhalten": "Damit ließe sich ein Werkzeug instand halten.",
+}
 SHARPEN_RESTORE = 0.5     # condition-Zugewinn durch sharpen_tool (cap 1.0)
 SHARPEN_TOOL_TAGS = ("CUTTING", "CHOPPING", "PIERCE")
 STOKE_FUEL = 8.0          # Brennstoff-Ticks, die nachgelegtes Holz/Machtsgut bringt
@@ -787,18 +817,40 @@ class GameEngine:
         msg += (time_msg if time_msg else "")
         return {"success": True, "message": msg.strip(), "reason": "SUCCESS"}
 
+    def _process_requirements_met(self, proc) -> bool:
+        """Alle Input-/Werkzeug-/Umgebungs-Anforderungen eines Prozesses erfüllt?"""
+        if any(self._count_template(i) < q for i, q in proc.inputs.items()):
+            return False
+        if any(not self.player.inventory.find_item_by_tag(t) for t in proc.tools):
+            return False
+        if proc.required_tag_in_env and not self._env_satisfied(proc.required_tag_in_env):
+            return False
+        return True
+
     def available_processes(self) -> List[str]:
         """Prozesse, deren Inputs, Werkzeug- und Umgebungs-Anforderungen erfüllt sind."""
-        avail = []
+        return [pid for pid, proc in self.processes.items()
+                if self._process_requirements_met(proc)]
+
+    def take_process_hints(self) -> List[tuple]:
+        """Einmalige, generische Potenzial-Hinweise pro Prozess-Klasse (Ziel-2-Hebel).
+
+        Feuert für Prozesse, deren Besitz- und Umgebungs-Anforderungen JETZT
+        vollständig erfüllt sind und deren Kategorie noch nie gemeldet wurde —
+        derselbe Trigger-Moment, in dem `available_processes` sie listen würde,
+        aber als aktives Richtungssignal statt passiver Liste. Liefert
+        (process_id, text)-Paare und markiert die Kategorie als gesehen.
+        Konsumiert nichts, kostet keine Zeit, würfelt nicht.
+        """
+        hints = []
         for pid, proc in self.processes.items():
-            if any(self._count_template(i) < q for i, q in proc.inputs.items()):
+            cat = PROCESS_HINT_CATEGORY.get(pid)
+            if cat is None or cat in self.player.process_hints_seen:
                 continue
-            if any(not self.player.inventory.find_item_by_tag(t) for t in proc.tools):
-                continue
-            if proc.required_tag_in_env and not self._env_satisfied(proc.required_tag_in_env):
-                continue
-            avail.append(pid)
-        return avail
+            if self._process_requirements_met(proc):
+                self.player.process_hints_seen.add(cat)
+                hints.append((pid, PROCESS_HINT_TEXT[cat]))
+        return hints
 
     def execute_process(self, process_id: str) -> Dict[str, Any]:
         """Führt einen Prozess aus: konsumiert Inputs, nutzt Werkzeuge, erzeugt Outputs.
