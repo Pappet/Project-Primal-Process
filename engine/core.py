@@ -152,6 +152,10 @@ def _feedback_message(reason: str, broken_names: "List[str] | None" = None) -> s
         return f"Hier fehlt {_label_for(tag)} in der Umgebung."
     if reason == "NO_INJURY":
         return "Du bist nicht verletzt."
+    if reason == "INJURED":
+        # B08: gather()-Verletzung hat bisher den generischen Fallback gelesen.
+        # Eigene Meldung, generisch (kein Rezept-/Mechanik-Leak).
+        return "Du verletzt dich bei der Arbeit."
     if reason == "BLEEDING":
         # Generisch, kein Rezept-Leak: sagt nur, dass eine Behandlung fehlt,
         # nicht welche Kombination sie herstellt.

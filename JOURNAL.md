@@ -5,6 +5,42 @@
 
 ---
 
+## 2026-08-31 — [Dev] B08: INJURED-Feedback-Zweig — Fallback „Das geht so nicht." ersetzt
+
+**Task:** PLAN B08 (kleiner Fix, keine Freigabe nötig). `core.gather()` rief `_feedback_message("INJURED")`,
+aber es gab keinen INJURED-Zweig → Spieler las den generischen Fallback „Das geht so nicht." statt
+einer Verletzungs-Meldung.
+
+**Änderung:**
+- `engine/core.py::_feedback_message`: eigener `INJURED`-Zweig neben `NO_INJURY`/`BLEEDING` →
+  „Du verletzt dich bei der Arbeit." Generisch, kein Rezept-/Mechanik-Leak (graduation der
+  Ziel-1-Antwort „Überlebens-Lektionen beantworten statt nur strafen").
+- `tests/test_injury.py`: 3 neue Tests (`TestInjuredFeedbackBranch`) — Label vorhanden/kein Fallback,
+  kein Rezept-Leak, gather-Log enthält nie den Fallback.
+
+**Nicht angefasst:** Verletzungswahrscheinlichkeit, Injury-RNG-Strom, Reason-Codes, Metriken.
+
+**Delta-Tabelle `compute_all()` vor/nach** (Pflicht bei Engine-Änderung; alle Werte identisch):
+
+| Metrik | vor | nach | Δ |
+|---|---|---|---|
+| actions_to_first_craft | 9.5 | 9.5 | 0 |
+| blueprint_reachability | 1.0 | 1.0 | 0 |
+| craft_variety | 4.5 | 4.5 | 0 |
+| skill_spread | 0.186 | 0.186 | 0 |
+| feedback_quality | 1.0 | 1.0 | 0 |
+| content_reachable | 1.0 | 1.0 | 0 |
+| session_depth | 54.5 | 54.5 | 0 |
+| discovery_gap | 0.7 | 0.7 | 0 |
+| forage_pressure | 0.0 | 0.0 | 0 |
+| warmth_stability | 0.46 | 0.46 | 0 |
+| recovery_stability | 0.375 | 0.375 | 0 |
+| gear_uptime | 0.994 | 0.994 | 0 |
+
+pytest: 264 passed (261 + 3 neue).
+
+---
+
 ## 2026-08-30 — [Direktor] Plan-Neufassung: Gap 0.70 ist das Signal, Prozesse öffnen, Wächter halten
 
 ### Scorecard-Verlauf (Woche 23.08.–29.08.)

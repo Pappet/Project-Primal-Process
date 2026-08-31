@@ -129,3 +129,27 @@ class TestTreatmentProcess:
             low = msg.lower()
             assert "bandage" not in low and "poultice" not in low
             assert "pflanzenfaser" not in low and "tonklumpen" not in low
+
+
+class TestInjuredFeedbackBranch:
+    """B08: gather() ruft _feedback_message("INJURED"), aber es gab keinen
+    INJURED-Zweig — der Spieler las den generischen Fallback „Das geht so
+    nicht." statt einer Verletzungs-Meldung."""
+
+    def test_injured_has_own_label_no_fallback(self):
+        from engine.core import _feedback_message
+        msg = _feedback_message("INJURED")
+        assert "verletzt" in msg.lower()
+        # kein generischer Fallback
+        assert msg != "Das geht so nicht."
+
+    def test_injured_no_recipe_leak(self):
+        from engine.core import _feedback_message
+        low = _feedback_message("INJURED").lower()
+        assert "bandage" not in low and "pflanzenfaser" not in low
+
+    def test_gather_injury_log_uses_branch_not_fallback(self):
+        e = engine_with([("plant_fiber", 2)])
+        logs = e.gather()
+        for line in logs:
+            assert "Das geht so nicht." not in line

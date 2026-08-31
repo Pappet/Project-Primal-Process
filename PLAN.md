@@ -49,12 +49,13 @@ bleibt (Probe bis 11.09.). Der echte Boredom-Punkt ist unverändert klein (~15�
       im JOURNAL 30.08.). Erstlesung `gear_uptime` 0.994 über Band = dokumentierte Unsichtbarkeit,
       Probe bis 11.09. — beobachtend, kein Tuning.
 
-- [ ] **B08 — INJURED-Feedback-Zweig** (keine Freigabe nötig, kleiner Fix). `core.gather()` ruft
+- [x] **B08 — INJURED-Feedback-Zweig** (keine Freigabe nötig, kleiner Fix). `core.gather()` ruft
       `_feedback_message("INJURED")`, aber `_feedback_message` hat keinen INJURED-Zweig → Spieler
       liest den Fallback „Das geht so nicht." statt einer Verletzungs-Meldung.
       Akzeptanz: eigener `INJURED`-Zweig (z. B. „Du verletzt dich."), kein generischer Fallback mehr;
       Verletzungswahrscheinlichkeit unangetastet; `feedback_quality` unverändert 1.0 (Experiment-only);
       pytest grün; Delta-Tabelle compute_all() vor/nach im JOURNAL (alle Werte müssen identisch bleiben).
+      **umgesetzt 31.08.** — alle Werte identisch, 264 Tests grün.
 
 - [ ] **Munitions-Ökonomie: Pebble = Consumable** (BACKLOG 27.08., Research-Befund, promotet).
       Die Jagd wäscht den ganzen Pebble-Stack über den Werkzeug-Wear-Pfad (~0.25/Erfolg,
