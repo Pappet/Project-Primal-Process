@@ -126,6 +126,7 @@ Code-Qualität, Architektur, Refactoring-Bedarf.
 Spiele, Artikel, Mechaniken die man sich ansehen sollte.
 
 <!-- Session-Einträge hier drunter -->
+- [2026-09-01] (Dev) **Brennstoff-Ökonomie-Decke: reeds-Produktion vs. Feuer-Verbrauch hat keine Netto-Reserve** — nach dem Feuer-Ökonomie-Fix (guided_full, warmes-Fenster-Versorgung) sterben 4/20 Seeds noch an Brennstoff-Kollaps (tinder=0, reeds=0 bei tick 381–993): Produktion ≈ 0.1 reeds/tick (≈ 1.2 fuel-Ticks/tick über reeds×2 → tinder×3) vs. durchgehender Feuer-Verbrauch 1.0 fuel/tick — knapp positiv, aber ohne Puffer, solange nicht ALLE reeds geerntet werden. Ein WOOD-Fuel-Pfad (log_oak, chance 1.0, nur mit Axt) las sich als Lösung, war im 20-Sweep aber Tode-neutral-schlechter (14/20 vs. 12/20) — RNG-Stream komplett verschoben, 6 Seeds liefen dafür voll durch (Voll-Decke bleibt 11/20). Nächster Versuch, wenn Direktor Play-Tode wieder priorisiert: logs NUR als STOKE-Polster (tinder-Schwelle getrennt lassen), oder fuel-Effizienz via Isolation — jeder Versuch über 20-Sweep gegengetestet, Overfitting-Gefahr benannt. (Play-Messwerkzeug + evtl. künftige Balance-Frage für einen Spec.)
 - [2026-08-01] (Review) **Valheim**: Boss-gated Biom-Progression + gestuftes primitives Crafting — Vorlage für Tech-Gating ohne Tech-Tree → M3.1
 - [2026-08-01] (Review) **The Long Dark**: Kälte-/Condition-Survival mit Temperatur-Druck — Referenz für M2.4 Gesundheit & Start-Balance
 - [2026-08-01] (Review) **Green Hell**: Body-Part-Schaden, Krankheiten, Erkundungs-UI ohne Minimap → M2.4/M3.3

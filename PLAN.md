@@ -92,7 +92,7 @@ bleibt (Probe bis 11.09.). Der echte Boredom-Punkt ist unverändert klein (~15�
       auf die dann aktuelle ehrliche Marke zurücksetzen bzw. verschärfen — keine stille
       Abwärtsanpassung, Auflage-Kommentar in `tests/test_scorecard.py` ablösen.
 
-- [ ] **PLAY-TOOLING: Feuer-Ökonomie statt Rückzug-Trigger** (keine Freigabe nötig; ersetzt den
+- [x] **PLAY-TOOLING: Feuer-Ökonomie statt Rückzug-Trigger** (keine Freigabe nötig; ersetzt den
       toten Trigger-Ansatz). Befund 28.08.: alle 14 Baseline-Tode sind die Feuer-Versorgungsspirale
       am Waldrand (Gipfel-Trip im STORM → Feuer ohne stick-Nachschub → FIRE_OUT → bt-Kollaps);
       der Trigger war 16/20 Tode vs. 14/20 Baseline strikt schlechter. Neuer Ansatz: Versorgung
@@ -100,6 +100,10 @@ bleibt (Probe bis 11.09.). Der echte Boredom-Punkt ist unverändert klein (~15�
       Jeder Fix nur am kalten Ort bzw. im Warmup, gegengetestet über 20-Sweep.
       Akzeptanz: Tode/20 < 14 Baseline ODER dokumentiert nicht landbar (wie 28.08.); 20-Sweep-Pflicht;
       Messwerkzeug, keine Metrik.
+      **umgesetzt 01.09.** — warmes-Fenster-Versorgung (Reserven pflegen, SOLANGE das eigene Feuer
+      brennt; nie am kalten Feuer reparieren — erster Ansatz war 14/20 strikt schlechter):
+      Tode 13/20 (Tages-HEAD-Baseline) → **12/20**, voll-Decke 8/20 → **11/20**, cook 20/20;
+      285 Tests grün. JOURNAL 01.09. mit Varianten-Protokoll.
 
 - [~] *(beobachtend)* **session_depth** (v2, Probe bis 08.09.) — 54.5, Re-Baseline, kein Ziel vor Probe-Ende.
       Erster Ziel-Check beim Direktor nach Probe-Ende; Play-Lesung (echter Boredom-Punkt ~15–19)

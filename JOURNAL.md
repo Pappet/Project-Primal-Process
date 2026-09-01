@@ -5,6 +5,70 @@
 
 ---
 
+## 2026-09-01 — [Dev] Feuer-Ökonomie: warmes-Fenster-Versorgung — Tode 13→12, voll-Decke 8→11
+
+### Task
+PLAN „PLAY-TOOLING: Feuer-Ökonomie statt Rückzug-Trigger" (28.08.-Befund: alle Baseline-Tode
+sind die Versorgungsspirale am Waldrand — Gipfel-Trip im STORM → Waldrand-Feuer ohne Brennstoff
+abgebrannt → FIRE_OUT → start_fire unmöglich → bt-Kollaps). Diagnose am Tag bestätigt: alle
+Sterbe-Seeds liegen am `forest_edge`, `fire_active=False`, **tinder=0** (Seed 20260814 hatte
+sogar 16 sticks — der Engpass ist ZUNDER, nicht Sticks; tinder/reeds sind zugleich die einzigen
+Fuel-Items ohne Axt: `_find_fuel_item` nimmt WOOD/KINDLING, stick ist nur RIGID).
+
+### Design-Skizze (1 Absatz, vor TDD)
+Der Bot hält **Feuer-Reserven im Inventar** (sticks ≥ 2 für start_fire, tinder ≥ 2 zum
+Entzünden/Nachlegen; Kette reeds×2 → create_tinder → tinder×3). Die Pflege geschieht im
+**warmen Fenster**: solange das eigene Feuer brennt und genug fuel übrig ist (fuel > 10),
+füllt `_warm_here` → `_ensure_fire_supply` die Reserven nach — Versorgung bei Wärme, weil
+kalte Versorgungs-Trips (15+ ungeschützte Ticks ohne Feuer, Höhle/Gipfel) exakt die Spirale
+sind, die der Task brechen soll. Vor dem Gipfel-Trip im Warmup wird explizit versorgt
+(„Versorgung VOR der Reise"). Am kalten Ort wird nie gesammelt (kein Pendel — Lektion der
+vier gescheiterten Trigger-Varianten vom 28.08.); dort zündet `_fire_at` nur aus dem Inventar,
+sonst greift der bestehende Rückzug (bt < 35 → Waldrand, dort Relight aus Reserve).
+Template-exakte Sammel-Schleifen statt `gather_tag` (das akzeptiert JEDES Inventar-Item der
+Tag-Familie — reeds für {"RIGID"} — und kehrte ohne Nachkauf zurück). Guard gegen
+Re-Entrancy (Versorgung → gather → Wärme-Pflege → Versorgung-Loop) über
+`game._fire_supply_pending`.
+
+### Varianten-Protokoll (20-Sweep, Seeds 20260801–20260820, je voller Run)
+
+| Variante | Tode/20 | voll | cook | Lesung |
+|---|---|---|---|---|
+| Baseline HEAD (nach 31.08.-Landungen) | 13 | 8 | 20/20 | Tages-Baseline, keine Spirale behoben |
+| V1 Versorgung sobald Feuer aus („Reparatur") | 14 | 7 | 18/20 | **strikte schlechter** — kalte Versorgungs-Trips ersetzen die Spirale: 15+ ungeschützte Ticks (Höhlen-Trip + Sammeln ohne Feuer), HP-Verluste bis −9332 |
+| V2 warmes Fenster (V1-Trigger invertiert), tinder ≥ 2 | **12** | **11** | 20/20 | gelandet |
+| V3 V2 + tinder ≥ 4 + WOOD-Fuel (log_oak) | 14 | 11 | 20/20 | verworfen: Tode schlechter, voll gleich; RNG-Stream komplett neu gewürfelt (6 Seeds liefen voll durch, aber Marginal-Tode zogen an) — Sweep-Overfitting-Risiko, Primärkanal ist Tode |
+
+**Gelandet (V2):** Tode 13/20 → 12/20 (28.08.-Referenz: 14 — Task-Ziel < 14 erfüllt),
+voll-Decke 8/20 → 11/20, cook 20/20. HP-Profile verschoben: 8/12 Tode sind jetzt Marginal-Tode
+(hp −1 bis −69 statt Kollaps −588/−2412) — die Versorgungsspirale ist weitgehend gebrochen,
+übrig bleiben 4 Brennstoff-Kollapstode (tinder=0, reeds=0, tick 381–993) und Marginal-Verluste.
+
+### Befunde (→ BACKLOG)
+1. **Marginal-Tode:** die verbleibenden Tode sterben knapp (hp −2 … −31) NACH vollständiger
+   Blueprint-Discovery (bps 8–10) — nicht mehr die Feuer-Spirale, sondern leichte Kälte-/
+   Blutungs-Episoden über lange Runs.
+2. **Ökonomie-Decke:** die reeds-Ökonomie ist knapp kalkuliert — Produktion ≈ 0.1 reeds/tick
+   (≈ 1.2 fuel-Ticks/tick über die Zunder-Kette) vs. durchgehender Feuer-Verbrauch 1.0/tick;
+   keine Netto-Reserve, Runs > ~400 Ticks kollabieren brennstoffseitig. Ein WOOD-Fuel-Pfad
+   (log_oak, chance 1.0, `FUEL_MIN_WOOD`) war im Sweep Tode-neutral-schlechter (14/20) —
+   Idee nicht verworfen, braucht aber einen besseren Versuch (z. B. logs nur als STOKE-Polster,
+   tinder-Schwelle getrennt). BACKLOG 🔵.
+3. **Gap-Wächter-Task bleibt offen:** die Vorbedingung (eine Play-Scorecard, die Ziel-1 liest)
+   ist nicht erfüllt — letzte ECHTE Play-Lesung ist 26.08. (Scorecard 29.08.: 0.70); die
+   31.08.-Werte sind Dev-Delta-Arithmetik. Kein Wächter-Reset auf Delta-Arithmetik.
+
+### Verifikation
+- `python -m pytest`: **285 passed** (277 + 8 neue `TestFireEconomy` in `tests/test_guided_full.py`:
+  Reserve-Ketten (tinder aus reeds, sticks am Waldrand), Relight aus Reserve, warmes-Fenster-
+  Versorgung, kalte-Reparatur-Verbot, kein Sammeln am kalten Ort, Versorgung VOR dem Gipfel-Trip
+  (monkeypatch-Spy auf den Fell-Trip), + bestehender eat/cook-Sweep unverändert grün).
+- Kein Engine-/Metrik-/Content-Code angefasst — `guided_full.py` ist Play-Messwerkzeug.
+  CONSTITUTION: Messwerkzeug frei, nichts entfernt/umdefiniert, kein Rezeptbuch-Leak.
+- Kein Scorecard-Delta (keine Engine-Änderung → keine Delta-Tabelle-Pflicht).
+
+---
+
 ## 2026-09-01 — [Dev] Nachcommit: Research-Plan SPEC-012 Faserschlinge (abgebrochener Plan-Mode-Lauf)
 
 Der Dev-Cron-Lauf 01.09. fand einen uncommitteten Arbeitsbaum vor: `.hermes/plans/

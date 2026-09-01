@@ -76,8 +76,43 @@ def _go(game, loc):
     if game.current_location_id != loc:
         game.travel(loc)
 
+# Brennstoff-Ökonomie (PLAN-Task „Feuer-Ökonomie statt Rückzug-Trigger", 31.08.):
+# Die Baseline-Tode (28.08.-Befund) sind die Versorgungsspirale am Waldrand —
+# Feuer brennt während des Gipfel-Trips ab, tinder/reeds leer → start_fire
+# unmöglich → bt-Kollaps. Gegenmittel: Reserven im Inventar, nachgeschoben VOR
+# Reisen und vor jedem Zündversuch am warmen Ort. Am kalten Ort wird nie
+# gesammelt (kein Pendel — Lektion aus den vier gescheiterten Trigger-Varianten).
+FUEL_MIN_TINDER = 2
+FUEL_MIN_STICKS = 2
+
+def _ensure_fire_supply(game):
+    """Feuer-Reserven im Inventar auffüllen (sticks, tinder-Kette aus reeds).
+
+    Template-exakte Sammel-Schleifen statt gather_tag: gather_tag akzeptiert
+    JEDES Inventar-Item der Tag-Familie (z. B. reeds für {"RIGID"}) und würde
+    dann ohne Nachkauf zurückkehren — die Reserve bliebe leer. Best-effort:
+    erschöpfte Nodes liefern nichts, der Zündversuch bleibt ehrlich (False),
+    es gibt keinen Endlos-Loop."""
+    if not have_qty(game, "stick", FUEL_MIN_STICKS):
+        _go(game, WARM)
+        for _ in range(4):
+            game.gather()
+            if have_qty(game, "stick", FUEL_MIN_STICKS):
+                break
+    if not have_qty(game, "tinder", FUEL_MIN_TINDER) and not have_qty(game, "reeds", 2):
+        _go(game, "hidden_cave")                    # reeds gibt es nur in der Höhle
+        for _ in range(6):
+            game.gather()
+            if have_qty(game, "reeds", 2):
+                break
+    if (not have_qty(game, "tinder", FUEL_MIN_TINDER)
+            and "create_tinder" in game.available_processes()):
+        game.execute_process("create_tinder")
+
 def _fire_at(game):
-    """Sichert am aktuellen Ort ein aktives Feuer (nachlegen/entzünden)."""
+    """Sichert am aktuellen Ort ein aktives Feuer (nachlegen/entzünden).
+    Zündet nur aus dem Inventar — keine Sammel-Trips mehr von hier: die
+    Versorgung gehört ins warme Fenster (_warm_here, siehe dort)."""
     loc = game.current_location
     if loc.fire_active:
         if loc.fire_fuel < 15:
@@ -87,13 +122,31 @@ def _fire_at(game):
         return bool(game.execute_process("start_fire").get("success"))
     return False
 
+def _needs_fire_supply(game):
+    return (not have_qty(game, "stick", FUEL_MIN_STICKS)
+            or not have_qty(game, "tinder", FUEL_MIN_TINDER))
+
 def _warm_here(game):
     """Feuer am aktuellen Arbeits-Ort unterhalten (SPEC-007: erst bei 0 erlischt es;
     SOLANGE es brennt, hebt es die eff. Temperatur um FIRE_HEAT). Ohne Feuer frisst
     die Kälte (exposure 1.0 am Gipfel) die body_temp — die Wärme-Haltung ist also
     hier der entscheidende Hebel, nicht der Rückzug."""
     _treat_if_injured(game)
-    _fire_at(game)
+    fire_ok = _fire_at(game)
+    # Brennstoff-Ökonomie — warmes Fenster: Reserven pflegen, SOLANGE das eigene
+    # Feuer brennt und genug fuel für die Versorgungs-Trips übrig bleibt. Nie am
+    # kalten Feuer reparieren: der erste Ansatz (Versorgung, sobald Feuer aus)
+    # erzeugte kalte Versorgungs-Trips (15+ ungeschützte Ticks) und war im
+    # 20-Sweep strikt schlechter als die Baseline. Guard gegen Re-Entrancy.
+    if (fire_ok and game.current_location_id == WARM
+            and game.current_location.fire_fuel > 10
+            and _needs_fire_supply(game)
+            and not getattr(game, "_fire_supply_pending", False)):
+        game._fire_supply_pending = True
+        try:
+            _ensure_fire_supply(game)
+        finally:
+            game._fire_supply_pending = False
     # Kein Feuer möglich → kurzer Rückzug an den warmen Waldrand (base 15)
     loc = game.current_location
     if not (loc.fire_active and loc.fire_fuel > 0) and game.player.body_temp < 35.0:
@@ -153,7 +206,10 @@ def _warmup(game):
     game.execute_process("create_tinder")
     _go(game, WARM)
     _fire_at(game)
-    # Fell-Umhang: kurzer Gipfel-Ausflug nur für einen Kiesel (PROJECTILE)
+    # Fell-Umhang: kurzer Gipfel-Ausflug nur für einen Kiesel (PROJECTILE).
+    # Brennstoff-Ökonomie: Versorgung VOR der Reise sichern — die 28.08.-Spirale
+    # startete genau hier (Basis-Feuer verlosch unbefestigt während des Trips).
+    _ensure_fire_supply(game)
     if not game.player.inventory.get_total_insulation():
         pb = item_with(game, {"PROJECTILE"})
         if pb is None:
