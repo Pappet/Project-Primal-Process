@@ -5,6 +5,25 @@
 
 ---
 
+## 2026-09-01 — [Dev] Nachcommit: Research-Plan SPEC-012 Faserschlinge (abgebrochener Plan-Mode-Lauf)
+
+Der Dev-Cron-Lauf 01.09. fand einen uncommitteten Arbeitsbaum vor: `.hermes/plans/
+2026-09-01_104324-research-spec012-faserschlinge.md` — der Research-Plan-Mode-Lauf
+(Di 01.09. 10:43) hat den Plan geschrieben und laut eigener Kopfzeile nicht committet
+(Plan-Modus gewinnt gegen das Execute-Mandat). Crash-Adoptionsregel befolgt:
+
+- **Verifikation:** `python -m pytest` grün (277 auf dem vorgefundenen Stand); Diff-Review
+  des Plans: selbst-kohärentes Arbeitsdokument (Probe-Daten P1–P4, Go/No-Go-Gate,
+  Spec-Volltext, Task-Zeilen für PLAN/JOURNAL). Kein Code, keine Engine-Berührung.
+- **Übernahme:** Datei unverändert übernommen, eigener Commit mit Herkunftsangabe.
+  Der ausführende Research-Run nimmt den Plan als Work-Contract (steht im Plan-Kopf);
+  der Commit verhindert nur, dass das Dokument im Arbeitsbaum verwest.
+
+Keine Engine-/Metrik-Änderung → keine Delta-Tabelle. PLAN-Tasks unberührt (SPEC-012
+ist noch nicht als Plan-Task freigeschrieben — das macht der Research-Run selbst).
+
+---
+
 ## 2026-08-31 — [Dev] Ziel-2-Hebel: Prozesse für naive Spieler sichtbar — Prozess-Potenzial-Hinweise
 
 **Design-Skizze (Pflicht vor TDD):** Das NEW_COMPONENT-Reveal (SPEC-006) meldet Werkzeug-Potenzial
