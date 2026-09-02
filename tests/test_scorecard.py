@@ -420,18 +420,24 @@ class TestRec001FamilyReachability:
         assert m["value"] == 1.0
 
     def test_discovery_gap_in_or_at_band(self):
-        """Wahrer Gap liegt in/am Band. SPEC-008 senkte ihn 0.625→0.6;
-        SPEC-010 (Kaltstart-Pebble, 26.08.) resequestriert den deterministischen
-        Naive-Bot-RNG-Stream → Lesung 0.65. Bekanntes Messmuster (Dev-Pitfall
-        'shared measurement-stream'), KEINE reale Spiel-Verschlechterung.
-        SPEC-011 (28.08.) dämpft die naive Werkzeug-Nutzung zusätzlich
-        (Attrition-Graduierung) → Lesung 0.70; die Meldung läuft als
-        Direktor-Flag im selben Commit (BACKLOG 28.08.), NICHT getunt.
-        Grenze hier bewusst bei 0.70: Sobald der Direktor das Band-Gefüge
-        bewertet hat, ist diese Marke zu verschärfen oder zurückzusetzen —
-        keine stille Abwärtsanpassung erlaubt."""
+        """Wahrer Gap liegt in/am Band (Band 0.2–0.6).
+
+        Historie: SPEC-008 senkte ihn 0.625→0.6; SPEC-010 (Kaltstart-Pebble,
+        26.08.) resequestrierte den deterministischen Naive-Bot-RNG-Stream →
+        Lesung 0.65 (bekanntes Messmuster, Dev-Pitfall 'shared
+        measurement-stream', KEINE reale Spiel-Verschlechterung); SPEC-011
+        (28.08.) dämpfte die naive Werkzeug-Nutzung zusätzlich (Attrition-
+        Graduierung) → Lesung 0.70, Wächter notgedrungen auf ≤ 0.70 gelockert
+        (Auflage: zurücksetzen bzw. verschärfen, sobald eine spiel-seitige
+        Antwort eine Play-Scorecard liest — keine stille Abwärtsanpassung).
+
+        Auflage eingelöst 02.09.: Die spiel-seitige Antwort (B08
+        INJURED-Feedback-Zweig 31.08. + Prozess-Potenzial-Hinweise 31.08.)
+        hat in der Play-Scorecard 02.09. die Lesung 0.60 gezeigt — wieder im
+        Band. Wächter zurück auf der ehrlichen Marke ≤ 0.60 (PLAN-Task
+        'Gap-Wächter zurücksetzen, sobald Ziel 1 liest')."""
         m = sc.metric_discovery_gap()
-        assert m["value"] <= 0.70
+        assert m["value"] <= 0.60
 
 class TestRec002ToolAwareReachability:
     """REC-002 (freigegeben 22.08.): Der Reachability-Zähler misst, was die
@@ -525,12 +531,16 @@ class TestRec002ToolAwareReachability:
         assert all(m["per_blueprint"].values())
 
     def test_discovery_gap_still_at_band(self):
-        """discovery_gap ≤ 0.70 (SPEC-010-Kaltstart-Pebble 26.08. und SPEC-011-
-        Attrition-Graduierung 28.08. verschieben den Naive-Bot-RNG-Stream,
-        Lesung 0.70 mit Direktor-Flag — siehe Rec001-Test für die
-        Reconciliation-Auflage) und reachability bleibt 1.0."""
+        """discovery_gap ≤ 0.60 und reachability bleibt 1.0.
+
+        Historie: SPEC-010 (26.08.) und SPEC-011 (28.08.) verschoben den
+        Naive-Bot-RNG-Stream → Lesung 0.70 mit Direktor-Flag, Wächter
+        notgedrungen auf ≤ 0.70 (siehe Rec001-Test für die volle
+        Reconciliation-Historie). Auflage eingelöst 02.09.: spiel-seitige
+        Antwort (B08 + Prozess-Hinweise) liest 0.60 in der Play-Scorecard —
+        Wächter zurück auf der ehrlichen Marke."""
         m = sc.metric_discovery_gap()
-        assert m["value"] <= 0.70
+        assert m["value"] <= 0.60
         assert abs(m["blueprint_reachability"] - 1.0) < 1e-9
 
     def test_closure_is_a_repeatable_set(self):

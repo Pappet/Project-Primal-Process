@@ -5,6 +5,41 @@
 
 ---
 
+## 2026-09-02 — [Dev] Gap-Wächter zurück auf 0.60 — Auflage eingelöst
+
+### Kontext
+Letzter offener PLAN-Task: 'Gap-Wächter zurücksetzen, sobald Ziel 1 liest'. Die Vorbedingung
+(echte Play-Lesung der spiel-seitigen Antwort, keine Delta-Arithmetik) hat der Play-Lauf heute
+Morgen erbracht: `discovery_gap` **0.600**, wieder im Band (0.2–0.6) — getragen von B08
+(INJURED-Feedback-Zweig) und den Prozess-Potenzial-Hinweisen (beide 31.08.). Session-Start:
+Arbeitsbaum sauber, kein Crash-Nachcommit nötig; pytest 285 passed vor Writes.
+
+### Änderung (nur Mess-Guardrails, null Engine-Berührung)
+- `TestRec001FamilyReachability::test_discovery_gap_in_or_at_band`: ≤ 0.70 → **≤ 0.60**
+- `TestRec002ToolAwareReachability::test_discovery_gap_still_at_band`: ≤ 0.70 → **≤ 0.60**
+- Beide Auflage-Kommentare ersetzt durch die vollständige Reconciliation-Historie
+  (SPEC-008: 0.625→0.6 · SPEC-010: Stream-Shift → 0.65 · SPEC-011: Attrition → 0.70 ·
+  Einlösung 02.09.), damit die Verschärfung nicht als stille Abwärtsanpassung misslesbar ist.
+
+### Verifikation
+- Live-Lesung vor dem Setzen der Marke: `metric_discovery_gap()` = 0.6 deterministisch
+  (reach 1.0, naive 0.4, p25 0.3 / p75 0.4) — identisch zur Play-Scorecard 02.09., kein Drift.
+  Marke auf belegten Messwert gesetzt, nicht geraten.
+- pytest: **285 passed** (inkl. beider verschärften Wächter).
+
+### Delta-Tabelle
+Nicht erforderlich — kein `compute_all()`-Eingriff, keine Engine-Änderung, kein neuer
+RNG-Wurf; alle 12 Metrikwerte unverändert. Scorecard 02.09. bleibt die gültige Lesung.
+
+### Ausblick
+0.6 sitzt an der OBEREN Bandkante (Play-Befund: getragen von Hint-Layern, nicht neuer Tiefe);
+SPEC-012 (Faserschlinge) wird die Marke wieder testen. Das ist der Sinn des Wächters: er schlägt
+an, dann wird spiel-seitig geantwortet. PLAN-Taskliste ist jetzt leer; nächste Plan-Neufassung:
+Direktor So 06.09. Probezeiten laufen weiter (session_depth bis 08.09., gear_uptime/
+forage_pressure bis 11.09.).
+
+---
+
 ## 2026-09-02 — [Play] Scorecard: Gap zurück im Band (0.6, erste echte Lesung) — Langeweile-Stelle bleibt ~20
 
 ### Was diese Session ist

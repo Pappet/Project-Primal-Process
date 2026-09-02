@@ -86,11 +86,15 @@ bleibt (Probe bis 11.09.). Der echte Boredom-Punkt ist unverändert klein (~15�
       v2-Bot: 0 → 7/10 Prozesse über 5 Seeds; session_depth 52.5 → 63.0 (Re-Baseline, Probe bis 08.09.);
       Wächter/Gap/variety unverändert; Delta-Tabelle + Design-Skizze im JOURNAL, 277 Tests grün.
 
-- [ ] **Gap-Wächter zurücksetzen, sobald Ziel 1 liest** (Auflage aus den gelockten Tests ≤ 0.70).
+- [x] **Gap-Wächter zurücksetzen, sobald Ziel 1 liest** (Auflage aus den gelockten Tests ≤ 0.70).
       Nachdem eine spiel-seitige Antwort (B08 + Prozess-Hinweise + ggf. Überlebens-Hinweise) eine
       Play-Scorecard gezeigt hat: die beiden Gap-Wächter-Tests (TestRec001/TestRec002) von ≤ 0.70
       auf die dann aktuelle ehrliche Marke zurücksetzen bzw. verschärfen — keine stille
       Abwärtsanpassung, Auflage-Kommentar in `tests/test_scorecard.py` ablösen.
+      **umgesetzt 02.09.** — Play-Scorecard 02.09. liest 0.600 (im Band, naive_rate 0.4); beide
+      Wächter von ≤ 0.70 auf die ehrliche Marke ≤ 0.60 verschärft, Auflage-Kommentare durch
+      Einlösungs-Historie abgelöst; 285 Tests grün. Kein Engine-Eingriff, Delta-Tabelle nicht
+      erforderlich (Messwerte unverändert).
 
 - [x] **PLAY-TOOLING: Feuer-Ökonomie statt Rückzug-Trigger** (keine Freigabe nötig; ersetzt den
       toten Trigger-Ansatz). Befund 28.08.: alle 14 Baseline-Tode sind die Feuer-Versorgungsspirale
