@@ -5,6 +5,45 @@
 
 ---
 
+## 2026-09-02 — [Play] Scorecard: Gap zurück im Band (0.6, erste echte Lesung) — Langeweile-Stelle bleibt ~20
+
+### Was diese Session ist
+Erste offizielle Play-Scorecard seit den vier Dev-Landungen (B08, Munitions-Ökonomie,
+Prozess-Potenzial-Hinweise am 31.08., Feuer-Ökonomie am 01.09.). Die 31.08-Werte waren
+Delta-Arithmetik; der 01.09-JOURNAL-Befund "Kein Wächter-Reset auf Delta-Arithmetik" machte
+eine echte Lesung zur Vorbedingung des Gap-Wächter-Tasks. pytest 285 passed vor Writes.
+
+### Scorecard 2026-09-02 (alle 12 identisch mit Dev-Delta-Tabellen — kein Drift)
+| Metrik | Wert | Δ vs. 29.08 |
+|---|---|---|
+| discovery_gap | **0.6** | −0.1 → **im Band** (naive_rate 0.3→0.4) |
+| session_depth (v2, Probe bis 08.09.) | 63.0 | +8.5 (Re-Baseline) |
+| craft_variety | 5.0 | +0.5, Ziel-Marke ≥ 5 gehalten |
+| skill_spread | 0.202 | +0.016 |
+| übrige 8 | unverändert | Wächter 1.0/1.0/1.0, first_craft 9.5, forage 0.0, warmth 0.46, recovery 0.375, gear 0.994, fq 1.0 |
+
+### Headline: Langeweile-Stelle
+Guided exhaustion (voll-only, 11 volle Runs): **Median 20, Range 14–30** (29.08: 21.5) — drittle
+Lesung in Folge am selben Cap, während `session_depth` 63.0 liest (~3.2×). Die Prozess-Hinweise
+heben die Metrik-Nadel (v2-Bot beantwortet Hinweise), aber die spürbare Decke nicht: in einer
+60-Aktionen-naiven Session feuerten **2 Hinweise** (make_bandage, make_sharp_stone), dann Funkstille —
+die tiefen Kategorien (entzünden/zubereiten/instandhalten) feuern erst, wenn Werkzeug/Feuer schon da
+sind, was ein Naiver nie hält. Hint-Layer bestätigen Besitz; sie erzeugen keinen neuen Zugang.
+
+### Befunde (→ BACKLOG / Report)
+1. **sharpen_tool 0/20 Seeds** — prop-Liste im guided Bot versucht ihn nie; 🔵 BACKLOG (Messwerkzeug).
+   sharpen selbst spielt sauber (Probe: 0.26→0.76, +0.5, 1 flint, ehrliche NO_WORN_TOOL-Meldung).
+2. **Munition ist gratis:** Consumable-Fix korrekt (−1/Schuss, 3 raw_meat/60 gathers, cond konstant
+   1.0, kein Stack-Selbstmord), aber Nachwürfe am selben Ort machen Netto 8→16 Kiesel. Kein
+   Kosten-Gefühl. Beobachtung für spätere Balance, kein Bug.
+3. **Gap-Wächter-Reset fällig:** Vorbedingung (echte Play-Scorecard liest Ziel-1) heute erfüllt —
+   0.6 an der OBEREN Bandkante, getragen von Hint-Layern, nicht neuer Tiefe. SPEC-012 wird wieder
+   drücken. Die gelockten Wächter-Tests (≤ 0.70) können auf die ehrliche Marke gesetzt werden.
+4. B08-Meldung verifiziert: "Du verletzt dich bei der Arbeit." Feuer-Ökonomie: 12/20 Tode im
+   eigenen Sweep = Dev-Lesung exakt.
+
+---
+
 ## 2026-09-01 — [Dev] Feuer-Ökonomie: warmes-Fenster-Versorgung — Tode 13→12, voll-Decke 8→11
 
 ### Task
