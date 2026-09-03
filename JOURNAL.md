@@ -5,6 +5,86 @@
 
 ---
 
+## 2026-09-03 — [Dev] Nachcommit Research-Plan SPEC-013 (abgebrochener Plan-Mode-Lauf) + Go/No-Go-Probe: NO-GO
+
+### Ausgangslage (Crash-Adoption)
+Vorgefundener Arbeitsbaum: `.hermes/plans/2026-09-03_122014-research-spec013-jahreszeiten-wetterfronten.md`
+(ungetrackt) — der Research-Explore-Plan-Mode-Lauf (Do 03.09. 12:20) hat den Plan für SPEC-013
+„Jahreszeiten & Wetterfronten" komplett ausgearbeitet (Evidence-Tabelle, Go/No-Go-Gate, Spec-Volltext,
+Metrik-Proposal-Volltext, PLAN/JOURNAL-Task-Zeilen) und laut eigener Kopfzeile nicht committet
+(Plan-Modus gewinnt gegen das Execute-Mandat). Präzedenz 7d98b7c (SPEC-012, 01.09.). Adoptions-Checks:
+
+- `python -m pytest`: **285 passed** auf dem vorgefundenen Stand.
+- Diff-Review: Plan ist selbst-kohärent; alle Zeilen-/Befund-Referenzen verifiziert (Wetter
+  core.py:209–235, injuries_rng :225–226, `_get_ambient_temp` :237–244, Konstanten :41–97,
+  Statuszeile main.py:22, bestehender Wetter-Test test_engine.py:456–465, Head 06bcebe = Planungs-Head,
+  latest.json = 2026-09-02, kein SPEC-012 im Repo → Nummer 013 korrekt).
+- Kein Code im Arbeitsbaum — reines Arbeitsdokument, Plan-Kopf schreibt die Artefakt-Ausführung dem
+  ausführenden Research-Run zu. Datei unverändert übernommen.
+
+### Go/No-Go-Probe (Plan-Task 1) — Ergebnis: NO-GO
+Methode exakt nach Plan: /tmp-Kopie von engine/data/tools, `weather_rng = random.Random();
+weather_rng.setstate(random.getstate())` in `__init__`, `_update_weather` würfelt aus `weather_rng`
+statt `random.choice`. Sonst nichts. Repo unberührt.
+
+1. **Clean-Baseline-Kontrolle:** unpatchierte /tmp-Kopie → `compute_all()` byte-identisch gegen
+   `scorecard/2026-09-02.json` ✓ (alle 12 Metriken inkl. p25/p75/per_blueprint). Die Messbasis ist
+   reproduzierbar — das Delta ist also wirklich der Patch, kein Drift.
+2. **Gepatcht:** **4/12 Metriken weichen ab** (Rest byte-identisch):
+
+| Metrik | 2026-09-02 | weather_rng-Patch | Δ |
+|---|---|---|---|
+| craft_variety | 5.0 (p25 4 / p75 6) | 4.5 (p25 4 / p75 6) | −0.5 |
+| skill_spread | 0.202 (p25 0.15 / p75 0.226) | 0.202 (p25 0.141 / p75 0.278) | p25/p75 verschoben |
+| session_depth (v2) | 63.0 (p25 47 / p75 76) | 71.5 (p25 50 / p75 78) | +8.5 |
+| discovery_gap | 0.6 (naive p25 0.3 / p75 0.4) | 0.6 (naive p25 0.3 / p75 0.5) | p75 verschoben |
+| übrige 8 | — | byte-identisch | 0 |
+
+3. **Determinismus-Kontrolle:** Patch-Lauf ist intern deterministisch (seedfest, Rerun identisch).
+4. **No-Go-Kriterium:** „ein einziger Metrikwert weicht ab" — vier tun es. **KEIN Spec-Ship in
+   dieser Form.** Plan-Protokoll befolgt: Negativ-Befund in BACKLOG (⚪ Research Leads, mit
+   Probe-Tabelle), Direktor-Flag, kein Spec-File, kein Metrik-Proposal, kein PLAN-Task.
+
+### Warum der Plan-Ansatz nicht tragen kann (Wurzel, nicht Symptom)
+`_update_weather` würfelt **heute** auf dem gemeinsamen globalen Strom (`random.choice`,
+core.py:235) — die Mess-Bots konsumieren diese Draws implizit mit. Der injuries_rng-Transfer
+(SPEC-009) ist das falsche Vorbild: dort wurden **neue** Würfe auf einen **neuen** Strom gelegt
+(gemeinsamer Strom unberührt → byte-identisch); hier würden **bestehende** Draws dem gemeinsamen
+Strom **entnommen** (~41 Wetter-Losungen pro 500-Tick-Run) → jede Gather-/Reise-Sequenz downstream
+verschiebt sich. Und selbst mit beliebig perfekter Strom-Isolation bliebe: Fronten ändern die
+Wetter-Sequenz selbst (STORM-Häufigkeit im 500-Tick-Fenster) → warmth/skill/session-Bots lesen
+einfach anderes Wetter. **Byte-Identität ist für jeden Wetter-Semantik-Wechsel prinzipiell
+unerreichbar** — das Plan-Gate (Akzeptanz-Kriterium 4) war für diese Spec-Klasse falsch gewählt,
+nicht nur der Stream-Trick. Ehrlicher Gate-Ersatz für einen Neuanlauf: Wächter 1.0/1.0/1.0,
+discovery_gap im Band, vollständige Delta-Tabelle im JOURNAL mit Stream-Shift-Lesung (Präzedenz
+Munitions-Ökonomie 31.08.: dokumentiert, nicht kompensiert) — plus Direktor-Freigabe, DASS der
+Scorecard-Stream sich verschieben darf. Das ist eine Mess-Systems-Entscheidung, keine Dev-Details.
+Entscheidung: Direktor So 06.09., VOR Research-Metric (Di 08.09. — dessen Prompt verlangt „GENAU
+EINEN Spec" und würde sonst unkoordiniert neben/über dem Flag landen).
+
+### Prozess-Befund (neu, an den Direktor)
+Zweiter Plan-Mode-Abbruch in Folge: SPEC-012-Plan (01.09.) wartet seit zwei Tagen auf den
+ausführenden Research-Run, SPEC-013-Plan kam heute dazu. Kein ausführender Lauf ist bislang
+erschienen (Research-Metric: Di 10:00, Research-Explore: Do 10:00 — beide laufen im Plan-Modus und
+committen laut Kopfzeile nicht). Zwei wartende Work-Contracts + „GENAU EINEN Spec"-Executor =
+Kollisionskurs; der Direktor sollte klären, wer Pläne ausführt (Dev-Übernahme? Research-Metric
+mit Multi-Spec-Freigabe? Explore führt selbst aus?). Bis dahin: Der Dev-Cron adoptiert gefundene
+Pläne per Crash-Regel (macht dieser Lauf), führt sie aber NICHT selbst aus — plan-konform.
+
+### Verifikation / Umfang dieses Laufs
+- pytest 285 passed (vor UND nach Writes — nur Docs berührt).
+- Files: BACKLOG.md (⚪-Eintrag mit Probe-Tabelle), JOURNAL.md (dieser Eintrag),
+  `.hermes/plans/2026-09-03_122014-…` (unverändert übernommen). **Kein** Spec-File, **kein**
+  metrics/proposed-File, **kein** PLAN.md-Touch, **kein** engine/data/tools/tests-Touch.
+- Kein Engine-/Metrik-Eingriff → `compute_all()` unverändert; die Delta-Tabelle oben ist die
+  Probe-Lesung (Plan vs. 2026-09-02-Basis), nicht ein Repo-Zustand.
+- Constitution: keine Metrik entfernt/umdefiniert/abgeschwächt (Kontroll-Lauf bestätigt
+  byte-identische Messbasis), kein Rezept-Leak-Thema (kein Spielcode), CLI unberührt. Der
+  No-Go schützt gerade die Messung: er verhindert, dass ein Spec gegen sein eigenes Gate
+  gebaut wird.
+
+---
+
 ## 2026-09-02 — [Dev] Gap-Wächter zurück auf 0.60 — Auflage eingelöst
 
 ### Kontext
