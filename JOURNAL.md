@@ -5,6 +5,74 @@
 
 ---
 
+## 2026-09-04 — [Play→Dev] Nachcommit des abgebrochenen Play-Laufs: Messwerkzeug-Fix (prop-Liste/Treiber-Gates) korrigiert übernommen
+
+### Ausgangslage (Crash-Adoption)
+Vorgefunden: Arbeitsbaum des Play-Laufs 04.09. 09:17 (Plan-File `.hermes/plans/2026-09-04_091711-play-messwerkzeug-prop-liste.md`,
+ungetrackt; Code-Änderungen an `play/guided_full.py`, `tests/test_guided_full.py`; Scorecard-Artefakte
+`SCORECARD.md`, `scorecard/latest.json`, `scorecard/2026-09-04.json`) — der Lauf crashte vor JOURNAL/Report/
+Commit. Adoptiert nach Crash-Regel (Präzedenz SPEC-011-Nachcommit 30.08., SPEC-012/013): erst prüfen,
+dann übernehmen, nie still auf Halbfertig-Stand weiterbauen.
+
+### Adoptions-Checks
+1. **Scorecard-Artefakte verifiziert:** `compute_all()` auf korrigiertem Stand reproduziert
+   `scorecard/2026-09-04.json` **exakt** (alle 12 Metriken identisch, inkl. Bands). Tages-Lesung:
+   alles ±0 gegen 02.09 (deterministische Seeds, Engine unverändert seit 8f4173). Bands: discovery_gap
+   0.600 im Band (Kante), blueprint/feedback/reachability 1.0, session_depth 63.0 (Probe bis 08.09.),
+   gear_uptime 0.994 über Band + forage 0.0 unter Band (beide Probe bis 11.09.), warmth 0.46 /
+   recovery 0.375 im Band.
+2. **pytest auf vorgefundenem Stand: 2 failed** (`RecursionError`, Seed 20260810 — beide 20-Seed-Sweep-Tests
+   brachen am selben Seed). Rote Tests = kein sauberes Übernehmen.
+3. **Diff-Review gegen Plan:** Helper `_worn_tool`/`_sharpen_if_worthwhile` + 2b-Lücken-Schritt + Testklasse
+   standen; Code war stellenweise besser als der Plan-Entwurf (2b rief nicht doppelt `execute_process`).
+
+### Befund 1: RecursionError (Re-Entrancy-Falle, scharf geschaltet durch den Szenen-Block)
+Traceback-Beweis (/tmp-Probe, Seed 20260810): Zyklus `gather_tag:191 → _warm_here:156 →
+_treat_if_injured:68`. Der halbfertige Code kannte die Falle (Kommentar im 1d-Block), aber der 1c/1d-Szenen-
+Block schaltete sie scharf: mehr Gathers am warmen Ort → mehr SPEC-009-Verletzungen → `_treat_if_injured`
+kauft Faser nach (gather_tag), dessen `_warm_here` ruft `_treat_if_injured` erneut, solange 'cut'
+unbehandelt bleibt. **Fix (TDD, exakt das bewährte `_fire_supply_pending`-Muster):** `_treat_pending`-Guard
+in `_treat_if_injured` — innerster Aufruf kehrt sofort heim, äusserer vollendet Behandlung + Nachkauf
+seriell. Tests: `test_treat_if_injured_is_reentrancy_safe` + `test_full_run_no_recursion_error` (20-Seed-Sweep).
+
+### Befund 2: Szenen-Block (1c/1d) strikt schlechter → nach Plan-Rückroll-Regel entfernt
+20-Sweep gegengetestet (1 Call/Seed, Range 20260801–20260820):
+
+| Variante | Tode/20 | Exhaustion-Median | sharpen |
+|---|---|---|---|
+| HEAD 8f4173 (Baseline, dokumentiert) | 12 | 19.5 | 0/20 |
+| Wrack mit 1c/1d-Szenen-Block | **17** | **10.0** | 0/20 |
+| Korrigiert (Guard + 2b-Gate, 1c/1d entfernt) | 12 | 19.5 | 0/20 |
+
+Der 1c/1d-Block (Gipfel-Trips für Flint ohne Versorgungs-Disziplin + 12× Wear-Provozieren pro Iteration)
+reproduzierte exakt die 28.08.-Feuer-Versorgungsspirale. Plan Task 3 hatte die Rückroll-Regel selbst
+vorgegeben („Tode nicht schlechter als 12/20 → Fix zurückrollen, Variante dokumentieren"). Übrig bleibt
+der natürliche Pfad: 2b-Gate (Worn-Tool + Flint, nur solange `sharpen_tool` unbekannt — kein
+NO_WORN_TOOL-Spin, kein Flint-Verbrauch im Leerlauf), Messung via `g.shot` (ehrliches Timeline-Register;
+der Wrack-Stand mass ausserhalb des Registers).
+
+### Ehrlicher Restbefund (Play-Task-Ziel nicht erreichbar, dokumentiert statt erzwingen)
+`sharpen_tool` bleibt **0/20** — die Koinzidenz Worn-Tool (cond < 1.0) + flint_shard fällt im natürlichen
+Bot-Verlauf nie zusammen. Der Sweep-Test ist jetzt **xfail** (Begründung im Test; künftiger natürlicher
+Treffer = PASS, kein stilles Grün). Das ist kein Messwerkzeug-Bug mehr, sondern ein echtes Spiel-Signal:
+die SPEC-011-Gegenmechanik ist für Spieler praktisch unentdeckbar (Wear-Warnung ohne Flint im Inventar;
+Flint ohne Wear) → BACKLOG 🟡 04.09. für Direktor-Triage. play/2026-09-04.md-Report entfällt bewusst
+(Play-Lauf crashte vor der Lesung; die Zahlen dieser Adoption sind hier + in BACKLOG dokumentiert).
+
+### Verifikation / Umfang
+- pytest: **289 passed, 1 xfailed** (Befund-Test; cook_meat-Sweep wieder grün — gleicher Seed-Crash).
+- 20-Sweep nach Fix: byte-identische Zahlen zur HEAD-Baseline (Tabelle oben) — Guard + Gate messneutral.
+- `compute_all()` vor/nach: **alle 12 Metriken identisch** (Tages-Scorecard reproduziert) → Delta-Tabelle:
+  keine Abweichung, kein Metrik-Eingriff, kein Engine-Touch. RNG-Strom-Klasse: nur Messwerkzeug
+  (play/+tests/), Engine unverändert.
+- Constitution-Grenze gehalten: keine Metrik-Änderung, kein Reason-Code, kein Rezept-Leak, kein
+  Engine-/Data-Touch. Plan-File unverändert übernommen (Arbeitsdokument).
+- Files: `play/guided_full.py` (Guard + 2b-Gate, 1c/1d entfernt), `tests/test_guided_full.py`
+  (2 neue Tests + xfail), `SCORECARD.md`/`scorecard/*.json` (Play-Lauf-Artefakte, verifiziert),
+  `BACKLOG.md` (🔵 02.09. teilerledigt + 🟡 04.09. neu), JOURNAL.md (dieser Eintrag).
+
+---
+
 ## 2026-09-03 — [Dev] Nachcommit Research-Plan SPEC-013 (abgebrochener Plan-Mode-Lauf) + Go/No-Go-Probe: NO-GO
 
 ### Ausgangslage (Crash-Adoption)

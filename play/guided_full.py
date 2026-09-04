@@ -52,25 +52,37 @@ def _treat_if_injured(game):
     rot der Bot, wie nach SPEC-007, und untertreibt die Discovery-Decke). cut →
     Verband (plant_fiber×2) weben + anlegen; strain → Umschlag (mushroom+clay_lump).
     Verband/Paste ggf. erst besorgen; strain ist nur Effort-Malus (nicht tödlich),
-    also best-effort, wenn der Ton (SHOVEL) fehlt."""
-    inj = game.player.injuries
-    if not inj:
+    also best-effort, wenn der Ton (SHOVEL) fehlt.
+
+    Re-Entrancy-Guard (Nachcommit 04.09.): gather_tag→_warm_here ruft diesen
+    Helper erneut, solange 'cut' unbehandelt bleibt → unendlicher Zyklus
+    (RecursionError, Seed 20260810). Guard nach dem bewährten
+    _fire_supply_pending-Muster: der innerste Aufruf kehrt sofort heim, der
+    äussere vollendet Behandlung + Nachkauf seriell."""
+    if getattr(game, "_treat_pending", False):
         return
-    if "cut" in inj and not inj["cut"]["treated"]:
-        if not have_qty(game, "plant_fiber", 2):
-            gather_tag(game, {"FIBER"}, 8)
-        if "make_bandage" in game.available_processes():
-            game.execute_process("make_bandage")
-        if "treat_cut" in game.available_processes():
-            game.execute_process("treat_cut")
-    if "strain" in inj and not inj["strain"]["treated"]:
-        if not have_qty(game, "mushroom", 1):
-            gather_tag(game, {"EDIBLE"}, 6)
-        if "make_poultice" in game.available_processes():
-            game.execute_process("make_poultice")
-            # Ton ggf. nicht erreichbar → strain bleibt (nur Malus, kein Tod)
-            if "treat_strain" in game.available_processes():
-                game.execute_process("treat_strain")
+    game._treat_pending = True
+    try:
+        inj = game.player.injuries
+        if not inj:
+            return
+        if "cut" in inj and not inj["cut"]["treated"]:
+            if not have_qty(game, "plant_fiber", 2):
+                gather_tag(game, {"FIBER"}, 8)
+            if "make_bandage" in game.available_processes():
+                game.execute_process("make_bandage")
+            if "treat_cut" in game.available_processes():
+                game.execute_process("treat_cut")
+        if "strain" in inj and not inj["strain"]["treated"]:
+            if not have_qty(game, "mushroom", 1):
+                gather_tag(game, {"EDIBLE"}, 6)
+            if "make_poultice" in game.available_processes():
+                game.execute_process("make_poultice")
+                # Ton ggf. nicht erreichbar → strain bleibt (nur Malus, kein Tod)
+                if "treat_strain" in game.available_processes():
+                    game.execute_process("treat_strain")
+    finally:
+        game._treat_pending = False
 
 def _go(game, loc):
     if game.current_location_id != loc:
@@ -125,6 +137,28 @@ def _fire_at(game):
 def _needs_fire_supply(game):
     return (not have_qty(game, "stick", FUEL_MIN_STICKS)
             or not have_qty(game, "tinder", FUEL_MIN_TINDER))
+
+def _worn_tool(game):
+    """Das am stärksten abgenutzte getragene Schneid-/Stemm-/Stichwerkzeug —
+    dieselbe Auswahl wie engine.core.execute_process('sharpen_tool')."""
+    from engine.core import SHARPEN_TOOL_TAGS
+    worn = None
+    for it in game.player.inventory.items:
+        if not (set(SHARPEN_TOOL_TAGS) & set(it.tags)): continue
+        if it.condition >= 1.0: continue
+        if worn is None or it.condition < worn.condition:
+            worn = it
+    return worn
+
+def _sharpen_if_worthwhile(game):
+    """SPEC-011-Gegenmechanik im Mess-Bot (BL 02.09): nur schärfen, wenn ein
+    Werkzeug tatsächlich unter Volllast ist. available_processes() listet
+    sharpen_tool schon mit flint_shard (Inputs-Check sieht keine Condition) —
+    ein blinder prop-Eintrag würde NO_WORN_TOOL spinnen. Liefert True bei
+    Erfolg (execute_process konsumiert den Flint nur dann)."""
+    if _worn_tool(game) is None: return False
+    r = game.execute_process("sharpen_tool")
+    return bool(r.get("success"))
 
 def _warm_here(game):
     """Feuer am aktuellen Arbeits-Ort unterhalten (SPEC-007: erst bei 0 erlischt es;
@@ -314,6 +348,27 @@ def guided_full(seed, max_actions=400):
             if pid in game.available_processes():
                 g.shot(lambda: game.execute_process(pid)); acted=True; break
         if acted: continue
+        # --- 2b. Lücken-Schritt (BL 02.09): available_processes() sieht die
+        # Engine-Gates von sharpen_tool nicht (Condition des Worn-Tools) —
+        # ein prop-Eintrag würde nur NO_WORN_TOOL spinnen. Stattdessen: nur
+        # schärfen, wenn wirklich ein Werkzeug unter Volllast ist (Szenen-
+        # Check im Helper). treat_cut/treat_strain baut _treat_if_injured
+        # in _warm_here auf, sobald Verletzungen anfallen — die Szenen sind
+        # dort abgedeckt, der prop-Scan verpasst sie nur, solange
+        # make_bandage/make_poultice davor available bleiben.
+        # (Nachcommit 04.09.: Messung via g.shot, damit eine sharpen-
+        # Neuentdeckung ins Timeline-Register fällt; Gate = Worn-Tool + Flint,
+        # und nur solange der Prozess unbekannt ist — sonst verbrennt der Bot
+        # seinen Flint im Leerlauf. Die künstliche Szenen-Aufbau-Variante
+        # (1c/1d: Gipfel-Trips + Wear-Provozieren) wurde im 20-Sweep strikt
+        # schlechter (17/20 Tode vs. 12 Baseline, Exhaustion 10 vs. 19.5) und
+        # nach Plan-Rückroll-Regel entfernt — ehrliches 0/20 bleibt dokumentiert
+        # (tests/test_guided_full.py, xfail) = Spiel-Signal für den Direktor.)
+        if ("sharpen_tool" not in game.player.known_processes
+                and _worn_tool(game) is not None
+                and have_qty(game, "flint_shard", 1)):
+            g.shot(lambda: game.execute_process("sharpen_tool"))
+            acted = True; continue
         # --- 3. gather supplies / edibles / hunt ---
         g.shot(lambda: gather_at(game, list(game.locations.keys())[g.rng.randrange(len(game.locations))], 3))
     return g
