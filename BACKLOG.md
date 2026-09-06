@@ -128,6 +128,7 @@ Spiele, Artikel, Mechaniken die man sich ansehen sollte.
 
 <!-- Session-Einträge hier drunter -->
 - [2026-09-04] (Dev) **SPEC-011-Gegenmechanik praktisch unentdeckbar — sharpen_tool 0/20 auch mit korrektem Mess-Bot.** Der Play-Lauf 04.09. baute eine künstliche Worn-Tool-Szene (Gipfel-Flint + Wear-Provozieren via log_oak); sie war im 20-Sweep strikte schlechter (17/20 Tode vs. 12 Baseline, Exhaustion-Median 10 vs. 19.5) und wurde zurückgerollt. Der korrekte Bot (2b-Gate: Worn-Tool + Flint, nur solange Prozess unbekannt) trifft die Koinzidenz im natürlichen Verlauf **nie** — Spieler erleben Wear-Warnung (Crossing 0.25), ohne dass Flint im Inventar liegt, und halten Flint, ohne dass ein Werkzeug unter Volllast ist. sharpen selbst funktioniert einwandfrei (0.26→0.76, 1 Flint, verifiziert 02.09.). Spiel-Signal-Klasse wie 13.08. („Extrem-Kälte hat keine richtungsgebende Andeutung"): die Gegenmechanik braucht eine spiel-seitige Brücke (z. B. Wear-Warnung erwähnt Schärfmöglichkeit generisch, oder flint-Nodes wärmer legen). Kein Rezept-Leak, kein Reason-Code-Eingriff. → Direktor-Triage; Details + Zahlen: BACKLOG 🔵 02.09. (teilerledigt) + JOURNAL 04.09.
+  **Triage Direktor 06.09.: → PLAN-Task „Ziel-2-Hebel: Wear-Warnung als richtungsgebende Andeutung"** (spiel-seitig, kein Leak, Design-Skizze vor TDD).
 - [2026-09-03] (Dev) **SPEC-013 „Jahreszeiten & Wetterfronten": Go/No-Go-Probe auf dem eingereichten
   Plan NO-GO — `weather_rng`-Isolation (injuries_rng-Muster) hält `compute_all()` NICHT byte-identisch.**
   Probe (Plan-Task 1, /tmp-Kopie, Repo unberührt): Clean-Baseline reproduziert `scorecard/2026-09-02.json`
@@ -146,6 +147,12 @@ Spiele, Artikel, Mechaniken die man sich ansehen sollte.
   dokumentiert, nicht kompensiert) oder Spec verwerfen. Entscheidung beim Direktor (So 06.09.), VOR dem
   Research-Metric-Lauf (Di 08.09.). Volles Probe-Protokoll: JOURNAL 03.09. | weather_rng-Präzedenz-Risiko
   3 des Plans hat sich exakt bewahrheitet („gilt die Tages-Probe, nicht der Plan-Text").
+  **Triage Direktor 06.09.: SPEC-013 VERWORFEN** — der Umfassungs-Vorschlag (Akzeptanz neu fassen)
+  wird nicht gezogen: der erwartete Scorecard-Shift ohne spiel-seitigen Grund ist Messverwirrung in einer
+  Phase, die gerade Re-Baseline-Probezeiten abarbeitet. Plan archiviert:
+  `specs/archived/2026-09-03-SPEC-013-jahreszeiten-wetterfronten-PLAN-NOGO.md`. Thema (Jahreszeiten/
+  Wetterfronten) bleibt im Explore-Feld; Neuanlauf nur mit Peters Freigabe, DASS der Stream sich
+  verschieben darf (Mess-Systems-Entscheid).
 - [2026-09-01] (Dev) **Brennstoff-Ökonomie-Decke: reeds-Produktion vs. Feuer-Verbrauch hat keine Netto-Reserve** — nach dem Feuer-Ökonomie-Fix (guided_full, warmes-Fenster-Versorgung) sterben 4/20 Seeds noch an Brennstoff-Kollaps (tinder=0, reeds=0 bei tick 381–993): Produktion ≈ 0.1 reeds/tick (≈ 1.2 fuel-Ticks/tick über reeds×2 → tinder×3) vs. durchgehender Feuer-Verbrauch 1.0 fuel/tick — knapp positiv, aber ohne Puffer, solange nicht ALLE reeds geerntet werden. Ein WOOD-Fuel-Pfad (log_oak, chance 1.0, nur mit Axt) las sich als Lösung, war im 20-Sweep aber Tode-neutral-schlechter (14/20 vs. 12/20) — RNG-Stream komplett verschoben, 6 Seeds liefen dafür voll durch (Voll-Decke bleibt 11/20). Nächster Versuch, wenn Direktor Play-Tode wieder priorisiert: logs NUR als STOKE-Polster (tinder-Schwelle getrennt lassen), oder fuel-Effizienz via Isolation — jeder Versuch über 20-Sweep gegengetestet, Overfitting-Gefahr benannt. (Play-Messwerkzeug + evtl. künftige Balance-Frage für einen Spec.)
 - [2026-08-01] (Review) **Valheim**: Boss-gated Biom-Progression + gestuftes primitives Crafting — Vorlage für Tech-Gating ohne Tech-Tree → M3.1
 - [2026-08-01] (Review) **The Long Dark**: Kälte-/Condition-Survival mit Temperatur-Druck — Referenz für M2.4 Gesundheit & Start-Balance

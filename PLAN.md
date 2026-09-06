@@ -2,127 +2,117 @@
 
 > Lebendes Dokument: wird vom Direktor (So 18:00) neu geschrieben.
 > Grenze: CONSTITUTION.md.
+> Stand: 2026-09-06, Lesung = Scorecard 04.09. (identisch 02.09.).
 
 ## Aktueller Zustand
 
-Die Messbasis ist gesund (`blueprint_reachability` 1.0, `content_reachable` 1.0, `feedback_quality` 1.0,
-`actions_to_first_craft` 9.5 nach SPEC-010), aber der `discovery_gap` klettert drittlesung in Folge über
-Band — 0.6 → 0.65 → **0.70** — weil jedes neue Druck-System (Kälte, Verletzung, jetzt Verschleiß) die
-naive Discovery-Rate (0.4 → 0.35 → 0.3) erodiert. SPEC-011 (Werkzeugverschleiß sichtbar, inkl.
-`sharpen_tool`) ist gelandet (Nachcommit 30.08. nach Session-Abbruch); die neue `gear_uptime`-Erstlesung
-0.994 über Band dokumentiert ehrlich, dass Attrition für den naiven Bot trotz Verdrahtung fast unsichtbar
-bleibt (Probe bis 11.09.). Der echte Boredom-Punkt ist unverändert klein (~15–19 gezielte Aktionen);
-`session_depth` 54.5 ist v2-Re-Baseline (Probe bis 08.09.), kein Wachstum.
+Die Wächter halten alle: `blueprint_reachability` 1.0, `content_reachable` 1.0 (18/18),
+`feedback_quality` 1.0, `discovery_gap` 0.600 (zwei Play-Lesungen bestätigt, Wächter-Tests
+auf ≤ 0.60 verschärft, 06bcebe) — aber am Wert sitzt die obere Bandkante, getragen von
+Hint-Layern, nicht von neuer Entdeckungstiefe. Die Erschöpfungslesung (echter
+Boredom-Punkt) bleibt dritte Lesung in Folge bei ~20 gezielten Aktionen; `session_depth` 63.0
+ist v2-Re-Baseline in Probezeit (bis 08.09.), nicht Spielgefühl. Gear_uptime 0.994
+(über Band, Probe bis 11.09.) ist zusammen mit sharpen_tool 0/20 inzwischen ein
+verifiziertes Spiel-Signal, kein Mess-Bug mehr: die SPEC-011-Gegenmechanik ist für
+Spieler praktisch unentdeckbar. Alle Landungen vom 31.08.–04.09. (B08, Munition,
+Prozess-Hinweise, Feuer-Ökonomie, Messwerkzeug-Fix) sind stabil; 289 Tests grün.
 
 ## Was als nächstes besser werden muss
 
-1. **Naive Spieler behalten den Anschluss — discovery_gap zurück ins Band.**
-   Metrik: `discovery_gap` (0.70 → zurück ≤ 0.6; Band 0.2–0.6 bleibt, keine Abschwächung).
-   Drei Lesungen über Band sind ein Spiel-Signal, kein Zufall: die Druck-Systeme (Kälte SPEC-007,
-   Verletzung SPEC-009, Verschleiß SPEC-011) stapeln sich, aber ihre **Beantwortbarkeit** ist für
-   Naive unsichtbar — der v2-Hint-Layer hilft nur Akteuren, die Hints verfolgen. Antwort strikt
-   spiel-seitig: Constitution erlaubt Entdeckungsjournal, Hinweise, Experimentiergedächtnis —
-   Überlebens-Lektionen müssen als Entdeckung erlebbar werden (z. B. Kälte/Hunger/Verletzung
-   mit einer richtungsgebenden, generischen Meldung beantworten statt nur zu strafen).
-   Kein Tuning an den Metriken, keine Band-Schrauben.
+1. **Discovery-Gap von der Bandkante in die Bandmitte — mit neuem Content, nicht mit
+   mehr Hint-Layer.** Metrik: `discovery_gap` (0.600 → ≤ 0.55; Band 0.2–0.6 unverändert).
+   Befund Research 01.09. (Probe P1–P4): der Gap ist selektionsgebunden, nicht
+   survivalgebunden — der größte tote naive Selektionsraum ist (EDIBLE, FIBER)/
+   (EDIBLE, RIGID), kein Blueprint besetzt ihn. Ein `snare`-Blueprint {FIBER, EDIBLE}
+   las 0.600 → 0.545 (17/20 Seeds, naive_rate 0.4 → 0.455), probe-verifiziert.
+   Keine Band-Schrauben, kein Tuning an der Messung — die neue Zutatenklasse
+   „Essbares als Material" vertieft das Entdecken (Constitution).
 
-2. **Prozesse als zweite Entdeckungsebene öffnen.**
-   Metrik: `craft_variety` (4.5, wieder ≥ 5 und darüber). Naive Spieler führen **null** Prozesse aus
-   (Play-Probe 26.08.: 0 Prozesse in Blind-Runs) — die 10 Prozesse sind für Zufalls-Entdeckung
-   faktisch unsichtbar, obwohl sie halb der Content-Tiefe sind. Antwort spiel-seitig, Muster
-   NEW_COMPONENT-Reveal (SPEC-006) auf Prozesse übertragen: Besitz/Umgebung gibt einen
-   einmaligen, generischen Hinweis („hier ließe sich etwas zubereiten/entzünden") — kein Rezept-Leak,
-   kein Reason-Code-Eingriff.
+2. **Die Gegenmechanik von SPEC-011 für Spieler erreichbar machen.** Spiel-Signal
+   (kein Plan-Ziel, Metrik in Probezeit bis 11.09.): sharpen_tool ist 0/20 — die
+   Koinzidenz Worn-Tool + Flint fällt im natürlichen Verlauf nie zusammen (BACKLOG
+   🔵 02.09./04.09., ⚪ 04.09.). Antwort spiel-seitig, gleiche Klasse wie 13.08.
+   („Extrem-Kälte hat keine richtungsgebende Andeutung"): die Wear-Warnung muss eine
+   generische, richtungsgebende Andeutung tragen (z. B. dass sich Werkzeug mit
+   hartem Stein nachschärfen ließe) — kein Rezept-Leak, kein Reason-Code-Eingriff,
+   feedback_quality-Kern unangetastet. Ziel: die Gegenmechanik wird im natürlichen
+   Verlauf wenigstens einmal erlebbar (Play-Lesung), nicht 0/20.
 
-3. **Die Wächter halten, während neuer Content kommt.**
-   Metriken: `blueprint_reachability` = 1.0, `content_reachable` = 1.0, `feedback_quality` = 1.0.
-   Zwei Tasks unten (Munitions-Ökonomie, Prozess-Hints) fassen die Engine an — kein neuer
-   dangling Node, kein unreachable Blueprint, kein uninformative Reason. Bei jedem Engine-Eingriff:
-   RNG-Strom-Klasse beachten (eigener Strom für neue Würfe), Delta-Tabelle im JOURNAL ist Pflicht.
+3. **Kein neuer Content verschiebt die Wächter.** Metriken: `blueprint_reachability`
+   = 1.0 (dann 11/11), `content_reachable` = 1.0 (18/18), `feedback_quality` = 1.0.
+   Der snare greift in Blueprints ein und das Ziel-2-Signal in die Engine — bei jedem
+   Eingriff: Probe vor dem Ship (Go/No-Go), vollständige compute_all()-Delta-Tabelle
+   im JOURNAL, RNG-Strom-Klasse benennen. Stream-Shift wird dokumentiert, nicht
+   kompensiert (Präzedenz Munitions-Ökonomie 31.08.).
 
 ## Tasks
 
 > Offene Aufgaben mit Akzeptanzkriterien. Dev arbeitet von oben nach unten.
 
-- [x] **SPEC-011 — Werkzeugverschleiß sichtbar machen** — **umgesetzt 29.08.**, vom Direktor
-      nachcommittet 30.08. (Dev-Lauf crashte vor JOURNAL/Commit; Verifikation + Pflicht-Delta-Tabelle
-      im JOURNAL 30.08.). Erstlesung `gear_uptime` 0.994 über Band = dokumentierte Unsichtbarkeit,
-      Probe bis 11.09. — beobachtend, kein Tuning.
+- [ ] **SPEC-012 — Faserschlinge: die toten 2-Slot-Selektionsräume besetzen**
+      (Research-Plan 01.09., probe-verifiziert; Work-Contract:
+      `.hermes/plans/2026-09-01_104324-research-spec012-faserschlinge.md`).
+      Befund: Der Gap ist selektionsgebunden, nicht survivalgebunden (Proben:
+      immortal-Bot identisch 0.400, Tode 19/20, Discovery-Plateau @86.5 vor Tod @119).
+      Der größte tote naive Selektionsraum ist (EDIBLE, FIBER)/(EDIBLE, RIGID) —
+      kein Blueprint besetzt ihn. Antwort: `snare` {loop: FIBER, bait: EDIBLE},
+      ungated, tool_tags [PROJECTILE] → Jagd-Alternative zur endlichen Pebble-Munition
+      (31.08.-Pfad, data-only: `data/blueprints.json` +1 Eintrag am Array-Ende,
+      kein Engine-Touch). Probe 01.09.: naive_rate 0.400 → 0.455, gap 0.600 → 0.545
+      (im Band), 17/20 Seeds craften ihn (Median Aktion 36).
+      **Akzeptanz:** Staleness-Check (nichts Neues, das die Prämissen verschiebt);
+      Go/No-Go-Probe auf Tages-HEAD ≤ 0.55 (Tages-Probe gilt, nicht P4 — Plan-Regel);
+      `blueprint_reachability` 1.0 (11/11) und `content_reachable` 1.0 (18/18 — snare
+      ist Blueprint-only, KEIN items.json-Eintrag, sonst content_reachable-Regression
+      wie SPEC-008); Shadowing-Tests ((stick, stick)→spear; (reeds, stick) ab
+      survival 0.4→rope; snare nie verdrängt); Jagd-Verbrauch: raw_meat-Ernte mit
+      Schlinge → quantity-- pro Erfolg + Meldung, kein Stack-Wear (31.08.-Pfad);
+      EDIBLE-Slot material-agnostisch ((plant_fiber, berries) und (reeds, raw_meat)
+      craften beide); pytest grün (inkl. Zähler-Reconciliation test_engine/test_loader
+      10 → 11); vollständige Delta-Tabelle im JOURNAL (Stream-Shift dokumentiert,
+      nicht kompensiert); session_depth-Lesung als Re-Baseline-Shift markieren
+      (Probe bis 08.09. — Wert beobachtend, kein Tuning); kein Rezept-Leak.
 
-- [x] **B08 — INJURED-Feedback-Zweig** (keine Freigabe nötig, kleiner Fix). `core.gather()` ruft
-      `_feedback_message("INJURED")`, aber `_feedback_message` hat keinen INJURED-Zweig → Spieler
-      liest den Fallback „Das geht so nicht." statt einer Verletzungs-Meldung.
-      Akzeptanz: eigener `INJURED`-Zweig (z. B. „Du verletzt dich."), kein generischer Fallback mehr;
-      Verletzungswahrscheinlichkeit unangetastet; `feedback_quality` unverändert 1.0 (Experiment-only);
-      pytest grün; Delta-Tabelle compute_all() vor/nach im JOURNAL (alle Werte müssen identisch bleiben).
-      **umgesetzt 31.08.** — alle Werte identisch, 264 Tests grün.
+- [ ] **Ziel-2-Hebel: Wear-Warnung als richtungsgebende Andeutung** (keine Freigabe
+      nötig, aber Mechanik-Design sauber halten). Befund (Play 04.09., verifiziert):
+      sharpen_tool 0/20 — Spieler erleben die Wear-Warnung (Crossing 0.25) ohne Flint
+      im Inventar und halten Flint ohne Wear; der Instandhalten-Hinweis (31.08.)
+      feuert erst, wenn das Werkzeug schon unter der Warnschwelle ist. Antwort
+      spiel-seitig: die Wear-Warnung (SPEC-011-B) bekommt eine generische
+      richtungsgebende Andeutung, dass sich Werkzeug mit hartem Material nachschärfen
+      ließe — kein Item-/Prozess-Name, kein Rezept-Leak, kein neuer Reason-Code,
+      keine neuen RNG-Würfe (Konstante, nicht Wurf). Erst Design-Skizze (1 Absatz
+      im JOURNAL), dann TDD.
+      **Akzeptanz:** Warn-Text trägt die Andeutung ohne Leak (Text-Regressionstest);
+      `feedback_quality` unverändert 1.0 (Warnung ist kein Experiment-Pfad);
+      `compute_all()`-Delta-Tabelle im JOURNAL (alle 12 identisch — es gibt keinen
+      Grund, dass sich irgendetwas an den Bot-Sequenzen verschiebt); pytest grün;
+      Play-Lesung danach: die Koinzidenz Worn-Tool+Flint wird im natürlichen
+      guided-Verlauf ≥ 1× erlebbar (Sweep-Dokumentation; Zielwert explorativ, kein
+      harter Gate-Wert — kein Overfitting am Mess-Bot).
 
-- [x] **Munitions-Ökonomie: Pebble = Consumable** (BACKLOG 27.08., Research-Befund, promotet).
-      Die Jagd wäscht den ganzen Pebble-Stack über den Werkzeug-Wear-Pfad (~0.25/Erfolg,
-      durability 0.2) — der komplette Munitionsbestand verschwindet nach ~4 Schüssen still und
-      ohne Vorwarnung. Ein Projektil ist Consumable, kein dauerhaftes Werkzeug.
-      Fix-Richtung: PROJECTILE-Nutzung verbraucht `quantity--` pro Schuss statt Condition-Wear auf
-      den gemergten Stack (oder eigenes Ammo-Tagging — Dev entscheidet, beides ist constitution-konform).
-      Akzeptanz: Pebble-Stack verschwindet nicht kollektiv still; pro Schuss genau ein Projektil
-      weg; keine stillen NaN/Condition-Artefakte auf Stacks; pytest grün; vollständige
-      compute_all()-Delta-Tabelle vor/nach im JOURNAL (RNG-Strom-Klasse!) — verschiebt eine
-      Metrik: Lesung dokumentieren, nicht kompensieren; discovery_gap > 0.70 → Direktor-Flag im
-      selben Commit. Kein Rezept-Leak.
-      **umgesetzt 31.08.** — PROJECTILE konsumiert quantity-- pro Schuss, Wear-Pfad unangetastet;
-      discovery_gap 0.7 → 0.6 (Band, kein Flag), craft_variety 5.0, Delta-Tabelle im JOURNAL,
-      270 Tests grün.
-
-- [x] **Ziel-2-Hebel: Prozesse für naive Spieler sichtbar machen** (keine Freigabe nötig, aber
-      Mechanik-Design sauber halten). Der NEW_COMPONENT-Reveal (SPEC-006) zeigt Werkzeug-Potenzial
-      einmalig beim ersten Werkzeugbau — das analoge Signal für Prozesse fehlt: Besitz + Umgebung
-      (z. B. rohes Fleisch + aktives Feuer, Reeds + CUTTING-Werkzeug) erzeugen null Richtungssignal.
-      Antwortsspielraum (Dev/Research): ein generischer, einmaliger Umgebungshinweis pro Prozess-Klasse
-      (kein Rezept-Leak, kein neuer Reason-Code, `feedback_quality`-Kern unangetastet). Erst Design
-      kurz skizzieren (1 Absatz im JOURNAL), dann TDD.
-      Akzeptanz: naive Bots führen in Mess-Läufen Prozesse aus, ohne dass Rezepte geleakt werden;
-      craft_variety bewegt sich (Ziel: ≥ 5) ohne dass blueprint_reachability/content_reachable sinken;
-      keine neue Metrik nötig.
-      **umgesetzt 31.08.** — Prozess-Potenzial-Hinweise (einmalig, generisch pro Klasse, kein Leak);
-      v2-Bot: 0 → 7/10 Prozesse über 5 Seeds; session_depth 52.5 → 63.0 (Re-Baseline, Probe bis 08.09.);
-      Wächter/Gap/variety unverändert; Delta-Tabelle + Design-Skizze im JOURNAL, 277 Tests grün.
-
-- [x] **Gap-Wächter zurücksetzen, sobald Ziel 1 liest** (Auflage aus den gelockten Tests ≤ 0.70).
-      Nachdem eine spiel-seitige Antwort (B08 + Prozess-Hinweise + ggf. Überlebens-Hinweise) eine
-      Play-Scorecard gezeigt hat: die beiden Gap-Wächter-Tests (TestRec001/TestRec002) von ≤ 0.70
-      auf die dann aktuelle ehrliche Marke zurücksetzen bzw. verschärfen — keine stille
-      Abwärtsanpassung, Auflage-Kommentar in `tests/test_scorecard.py` ablösen.
-      **umgesetzt 02.09.** — Play-Scorecard 02.09. liest 0.600 (im Band, naive_rate 0.4); beide
-      Wächter von ≤ 0.70 auf die ehrliche Marke ≤ 0.60 verschärft, Auflage-Kommentare durch
-      Einlösungs-Historie abgelöst; 285 Tests grün. Kein Engine-Eingriff, Delta-Tabelle nicht
-      erforderlich (Messwerte unverändert).
-
-- [x] **PLAY-TOOLING: Feuer-Ökonomie statt Rückzug-Trigger** (keine Freigabe nötig; ersetzt den
-      toten Trigger-Ansatz). Befund 28.08.: alle 14 Baseline-Tode sind die Feuer-Versorgungsspirale
-      am Waldrand (Gipfel-Trip im STORM → Feuer ohne stick-Nachschub → FIRE_OUT → bt-Kollaps);
-      der Trigger war 16/20 Tode vs. 14/20 Baseline strikt schlechter. Neuer Ansatz: Versorgung
-      VOR dem Trip sichern (Brennstoff-Ökonomie vor der Reise, nicht Reparatur nach dem Kollaps).
-      Jeder Fix nur am kalten Ort bzw. im Warmup, gegengetestet über 20-Sweep.
-      Akzeptanz: Tode/20 < 14 Baseline ODER dokumentiert nicht landbar (wie 28.08.); 20-Sweep-Pflicht;
-      Messwerkzeug, keine Metrik.
-      **umgesetzt 01.09.** — warmes-Fenster-Versorgung (Reserven pflegen, SOLANGE das eigene Feuer
-      brennt; nie am kalten Feuer reparieren — erster Ansatz war 14/20 strikt schlechter):
-      Tode 13/20 (Tages-HEAD-Baseline) → **12/20**, voll-Decke 8/20 → **11/20**, cook 20/20;
-      285 Tests grün. JOURNAL 01.09. mit Varianten-Protokoll.
-
-- [~] *(beobachtend)* **session_depth** (v2, Probe bis 08.09.) — 54.5, Re-Baseline, kein Ziel vor Probe-Ende.
-      Erster Ziel-Check beim Direktor nach Probe-Ende; Play-Lesung (echter Boredom-Punkt ~15–19)
-      bleibt die ehrliche Kompass-Nadel.
-- [~] *(beobachtend)* **gear_uptime** (Probe bis 11.09.) — 0.994 über Band, Erstlesung dokumentiert
-      die Unsichtbarkeit. Bewerten nach Probezeit, nicht tunen.
-- [~] *(beobachtend)* **forage_pressure** (Probe bis 11.09.) — 0.0 unter Band, Re-Baseline der
-      Neudefinition. Band-Entscheid nach Probezeit, nicht vorher.
-- [~] *(beobachtend)* **recovery_stability** (Probe bis 03.09.) — 0.375 im Band, flach. Bewertung
-      nach Probe-Ende (nächster Direktor).
-- [~] *(beobachtend)* **warmth_stability** — Probe 27.08. beendet, Peters Lesung: Beobachtungsgröße,
-      kein Plan-Ziel. 0.46 im Band, flach.
-- [x] *(erledigt)* REC-001, SPEC-003, SPEC-005, SPEC-007, SPEC-008, SPEC-009, SPEC-010, SPEC-006-Kern,
-      Ehrlichmachungs-Batch, forage_pressure v2, REC-002 (+B09-Korrektur), NEAR_MISS-Volldeckung.
+- [~] *(beobachtend, Probe bis 08.09.)* **session_depth** (v2) — 63.0 Re-Baseline
+      (Prozess-Hinweise lassen den v2-Bot tiefer laufen), Metrik-Nadel ~3.2× über dem
+      echten Discovery-Cap (~20 gezielte Aktionen). Erstes Ziel-Handling beim
+      nächsten Direktor nach Probe-Ende; echte Erschöpfungsllesung bleibt die
+      Kompass-Nadel, nicht die Metrik.
+- [~] *(beobachtend, Probe bis 11.09.)* **gear_uptime** (v1) — 0.994 über Band,
+      Erstlesung = dokumentierte Unsichtbarkeit von Attrition. Wird erst nach
+      Ziel-2-Hebel + snare erneut gelesen; Bewertung nach Probe-Ende, nicht vorher.
+- [~] *(beobachtend, Probe bis 11.09.)* **forage_pressure** (v2) — 0.0 unter Band,
+      Re-Baseline der Neudefinition. Band-Entscheid nach Probezeit, nicht vorher.
+- [~] *(beobachtend)* **recovery_stability** (v1) — Probe 03.09. beendet, Peters
+      Lesung steht aus. 0.375 im Band, p25=p75 (deterministische Policy) — Dev-Notiz
+      20.08.: Streuung oder Band-Bewertung nach Probezeit prüfen. Beobachtungsgröße,
+      kein Plan-Ziel.
+- [~] *(beobachtend)* **warmth_stability** (v1) — Probe 27.08. beendet, Peters
+      Lesung: Beobachtungsgröße. 0.46 im Band, flach.
+- [x] *(erledigt, Vorwoche)* SPEC-011, B08, Munitions-Ökonomie, Ziel-2-Hebel
+      (Prozess-Hinweise), Gap-Wächter-Reset, Feuer-Ökonomie, Play-Messwerkzeug-Fix
+      (Re-Entrancy-Guard + 2b-Gate, 1c/1d zurückgerollt) — Details: JOURNAL
+      30.08.–04.09., PLAN vom 30.08. (git-Historie).
 
 ---
 
-*Naechste Scorecard-Kontrolle: naechster Play-Job (Mo 31.08. 09:00). Plan-Neufassung: naechster Direktor (So 06.09.).*
+*Naechste Scorecard-Kontrolle: naechster Play-Job (Mo 07.09. 09:00). Plan-Neufassung:
+naechster Direktor (So 13.09. 18:00).*

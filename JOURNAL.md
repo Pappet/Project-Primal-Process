@@ -5,6 +5,80 @@
 
 ---
 
+## 2026-09-06 — [Direktor] Plan-Neufassung 06.09. + Cron-Eingriff: Plan-Mode-Daemon bei beiden Research-Jobs entfernt; SPEC-013 verworfen (NO-GO bestätigt)
+
+### Scorecard-Lesung (Verlauf seit 30.08.-Neufassung)
+Vorwoche→heute: `discovery_gap` 0.70 → 0.600 (Ziel 1 eingelöst — B08 + Munition +
+Prozess-Hinweise; zwei echte Play-Lesungen, Wächter-Tests 06bcebe auf ≤ 0.60 verschärft,
+Marke = belegter Messwert). `craft_variety` 4.5 → 5.0 (Ziel-2-Marke ≥ 5 gehalten).
+`session_depth` 54.5 → 63.0 (v2-Re-Baseline, Probe bis 08.09. — Metrik-Nadel ~3.2× über
+dem echten Boredom-Punkt ~20 gezielte Aktionen, dritte Lesung in Folge). Wächter
+1.0/1.0/1.0 unverändert. `gear_uptime` 0.994 über Band + sharpen_tool 0/20 (auch nach
+korrektem Mess-Bot, 04.09.) = verifiziertes Spiel-Signal: die SPEC-011-Gegenmechanik
+ist für Spieler praktisch unentdeckbar. Probezeiten: session_depth bis 08.09.,
+gear_uptime/forage_pressure bis 11.09. — **alle noch in Probezeit, daher KEIN neuer
+Metrik-Wert als Plan-Ziel gesetzt** (Probezeit-Regel). Stagnation: die Erschöpfungslesung
+(~20, 21.5 → 20 → 20) — sie ist Spiel-Signal, nicht Metrik, und führt Ziel 2.
+
+### PLAN.md 06.09. (komplett neu geschrieben)
+1. **Ziel 1 — Gap in die Bandmitte:** `discovery_gap` 0.600 → ≤ 0.55 mit Content statt
+   Hint-Layer. Träger: SPEC-012 (snare, probe-verifiziert 01.09.: 0.600 → 0.545,
+   17/20 Seeds). Der Plan vom 01.09. ist Work-Contract; die Freischreibung als
+   PLAN-Task, die der Plan-Mode-Lauf nie ausführte, macht dieser Direktor.
+2. **Ziel 2 — SPEC-011-Gegenmechanik erlebbar machen:** sharpen 0/20 beheben
+   spiel-seitig (generische richtungsgebende Andeutung in der Wear-Warnung, kein Leak).
+   Spiel-Signal-Ziel (gear_uptime in Probezeit, kein Metrik-Ziel).
+3. **Ziel 3 — Wächter halten:** 1.0/1.0/1.0 bei jedem Eingriff; Probe-Pflicht,
+   Delta-Tabelle, RNG-Strom-Klasse.
+Tasks: SPEC-012 (offen, akzeptanz-komplett) + Ziel-2-Hebel (offen). Verworfen: nichts
+aus dem alten Plan — alle 7 Zeilen waren erledigt oder Beobachtungszeilen (in Probezeit
+bzw. Peters Lesung steht aus: recovery 03.09., warmth 27.08.).
+
+### Cron-Eingriff (Mandat: Cron-Jobs ändern; Grenze: Play + Messung unantastbar)
+**Befund:** Beide Research-Jobs liefen mit angehängtem `plan`-Skill — der Plan-Modus
+gewinnt gegen das Execute-Mandat des Prompts (zwei Präzedenz-Adoptionen im JOURNAL:
+01.09. SPEC-012, 03.09. SPEC-013). Ergebnis: zwei Work-Contracts warteten auf
+ausführende Läufe, die nie kamen; Dev-Cron musste als Adopteur einspringen. Der
+Dev-Befund 03.09. („Direktor sollte klären, wer Pläne ausführt") ist die flaggte
+Ursache — Fix an der Wurzel: **`plan`-Skill aus beiden Research-Jobs entfernt**
+(`hermes cron edit <id> --remove-skill plan`; Metric c837d9d8dde1, Explore ba3954705006).
+Die Jobs führen jetzt ihre eigenen Specs aus und committen selbst. Play-Job-Prompt
+geprüft (Constitution-Zeile vorhanden, Messung unberührt — **keine Änderung**). Dev-,
+Play- und Direktor-Prompts unverändert. Backup: `~/.hermes/cron/jobs.json.bak-direktor-20260906`.
+Repo-Seite: `cron/research.md` + `cron/research-explore.md` + `cron/OVERVIEW.md` neu
+exportiert (Skills-Zeile, Status, nächster Run).
+
+### SPEC-013 „Jahreszeiten & Wetterfronten" — verworfen
+Die Go/No-Go-Probe vom 03.09. war ein echtes NO-GO (4/12 Metriken verschoben; Stream-Entnahme
+aus dem gemeinsamen Strom + Fronten ändern die Wetter-Sequenz selbst → Byte-Identität
+prinzipiell unerreichbar für diese Spec-Klasse). Der Plan schlug als Alternative vor,
+die Akzeptanz auf „Wächter + Gap im Band + Delta-Tabelle mit Stream-Shift-Lesung"
+umzufassen — **dieser Direktor verwirft die Spec trotzdem**: der erwartete
+Scorecard-Shift (session_depth, craft_variety, skill_spread-Quartile bewegen sich ohne
+spiel-seitigen Grund) ist genau die Messverwirrung, die Probezeiten und Re-Baselines
+anrichten; der Entdeckungs-Hebel der Spec (Vorbereitung auf Fronten) ist systemisch
+richtig, aber der Rebase-Kostenvorschub passt nicht in die aktuelle Phase (PLAN-Ziele
+sind Gap-Kante + Gegenmechanik, beide mit kleiner, probenbarer Wirkung). Verwurf ≠
+Ablehnung des Themas: Jahreszeiten bleiben im Research-Feld (Explore-Field-Liste), ein
+Neuanlauf bleibt möglich — dann mit offen umgefasster Akzeptanz und Peters Freigabe,
+DASS der Scorecard-Stream sich verschieben darf (Mess-Systems-Entscheid, wie der Plan
+selbst benennt). Plan archiviert:
+`specs/archived/2026-09-03-SPEC-013-jahreszeiten-wetterfronten-PLAN-NOGO.md`
+(git mv, Daten bleiben erhalten — die Proben-Tabelle ist der Wert des Dokuments).
+Metrik-Proposal: keins existierte (Plan-Mode brach vor den Artefakten ab) — nichts
+entfernt.
+
+### Verifikation
+- pytest: 289 passed, 1 xfailed (vor Writes — Repo-Code unberührt).
+- `compute_all()`: kein Eingriff, keine Delta-Tabelle erforderlich (Dokument-Commit).
+- Constitution: kein Metrik-Touch (tools/scorecard.py, METRICS, Scorecard-Files,
+  Play-Job unverändert); alle Dokumente frei änderbar; Probezeit-Regel befolgt.
+- Files: PLAN.md (Neufassung), JOURNAL.md (dieser Eintrag), cron/research.md,
+  cron/research-explore.md, cron/OVERVIEW.md, specs/archived/…SPEC-013…NOGO.md (neu),
+  .hermes/plans/2026-09-03… (git mv nach specs/archived/).
+
+---
+
 ## 2026-09-04 — [Play→Dev] Nachcommit des abgebrochenen Play-Laufs: Messwerkzeug-Fix (prop-Liste/Treiber-Gates) korrigiert übernommen
 
 ### Ausgangslage (Crash-Adoption)
