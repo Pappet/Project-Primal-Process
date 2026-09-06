@@ -1,5 +1,5 @@
 # Cron-Job: Primal Process Research-Explore
-# Exportiert aus ~/.hermes/cron/jobs.json am 2026-08-30 (Direktor-Refresh)
+# Exportiert aus ~/.hermes/cron/jobs.json am 2026-09-06 (Direktor-Refresh: Plan-Mode-Daemon entfernt)
 
 Job-ID: ba3954705006
 Schedule: 0 10 * * 4
@@ -9,7 +9,8 @@ Enabled: True
 Model: (Standard)
 Provider: (Standard)
 Toolsets: browser, terminal, file, search, skills, web
-Skills: plan
+Skills: (keine — Plan-Mode-Skill entfernt 06.09.: zwei Laufengewinne in Folge, die nur
+        schrieben und nie ausführten; siehe JOURNAL 06.09.)
 Workdir: /home/zeroclaw/projects/primal-process
 Created: 2026-08-03T20:17:27.596324+02:00
 Next run: 2026-09-03T10:00:00+02:00
