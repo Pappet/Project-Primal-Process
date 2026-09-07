@@ -49,7 +49,15 @@ Prozess-Hinweise, Feuer-Ökonomie, Messwerkzeug-Fix) sind stabil; 289 Tests grü
 
 > Offene Aufgaben mit Akzeptanzkriterien. Dev arbeitet von oben nach unten.
 
-- [ ] **SPEC-012 — Faserschlinge: die toten 2-Slot-Selektionsräume besetzen**
+- [x] **SPEC-012 — Faserschlinge: die toten 2-Slot-Selektionsräume besetzen**
+      ✅ 07.09. (Dev-Lauf): Go/No-Go auf Tages-HEAD **GO** — gap 0.600 → **0.545** (≤ 0.55),
+      naive_rate 0.400 → 0.455, snare 17/20, Tode unverändert 19/20, reachability 1.0 (11/11),
+      content_reachable 1.0 (18/18), feedback_quality 1.0; alle übrigen 8 Metriken byte-identisch
+      (4 Stream-Shifts dokumentiert: atfc 9.5→7.0, session_depth 63.0→52.5, skill_spread 0.202→0.198,
+      gap = Ziel); 305 Tests grün (+16 snare-Tests, Zähler 10→11 reconciliert). Delta-Tabelle:
+      JOURNAL 07.09. Eine Korrektur gegen den Work-Contract: engine-true liest (reeds, stick) →
+      **spear** (nicht rope — galt schon vor SPEC-012, von snare unberührt); der echte rope-Fall
+      ist (plant_fiber, stick). Beide Schatten testverankert (tests/test_snare.py).
       (Research-Plan 01.09., probe-verifiziert; Work-Contract:
       `.hermes/plans/2026-09-01_104324-research-spec012-faserschlinge.md`).
       Befund: Der Gap ist selektionsgebunden, nicht survivalgebunden (Proben:

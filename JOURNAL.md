@@ -5,6 +5,117 @@
 
 ---
 
+## 2026-09-07 — [Dev] SPEC-012 Faserschlinge gelandet — Gap von der Bandkante in die Bandmitte (0.600 → 0.545), data-only, Wächter alle 1.0
+
+### Zusammenfassung
+
+Der erste offene Plan-Task (SPEC-012) ist umgesetzt: `snare` {loop: FIBER, bait: EDIBLE},
+ungated, tool_tags [PROJECTILE], am Array-Ende von `data/blueprints.json` (+1 Eintrag,
+KEIN Engine-Touch, KEIN items.json-Eintrag — Blueprint-only wie die 10 Werkzeuge, sonst
+content_reachable-Regression wie SPEC-008). „Essbares als Material" ist die neue
+Zutatenklasse; die Schlinge ist zugleich die munitionsfreie Jagd-Alternative (31.08.-Pfad:
+quantity-- pro Fang, ehrliche Leer-Meldung).
+
+### Staleness-Check (Task-1-Regel des Work-Contracts)
+
+- HEAD 6b32811 (play: scorecard + playtest), Arbeitsbaum sauber, kein Crash-Leftover.
+- `scorecard/latest.json` (07.09., Play-Morgen): gap **0.600** exakt an der Bandkante,
+  naive_rate 0.400 — Plan-Prämisse hält unverändert. session_depth 63.0 (Probe bis 08.09.),
+  gear_uptime 0.994 / forage_pressure 0.0 (Probe bis 11.09.) — unberührt beobachtend.
+
+### Go/No-Go-Probe (Tages-HEAD 6b32811, 20 Scorecard-Seeds, read-only via
+monkeypatch — Repo bis zum Ship unberührt)
+
+| Messung | Baseline (P1-erwartet) | Mit snare (P4-erwartet) |
+|---|---|---|
+| naive_rate | 0.400 | **0.455** |
+| gap | 0.600 | **0.545** |
+| p25 / p75 | 0.300 / 0.400 | 0.364 / 0.455 |
+| snare gecraftet | 0/20 | **17/20** |
+| Tode | 19/20 | 19/20 (unverändert) |
+| reachability | 1.000 | 1.000 (11/11) |
+
+→ **GO** (gap ≤ 0.55 ✓, reachability 1.0 ✓, keine andere Band-Metrik gekreuzt ✓).
+Die Tages-Probe bestätigt P4 exakt (0.545); die Probe gilt, nicht P4 (Plan-Regel).
+
+### compute_all()-Delta-Tabelle (Pflicht — vor = scorecard/latest.json (07.09. Play), nach = Ship-Stand snare)
+
+| Metrik | vor | nach | Δ | Klasse |
+|---|---|---|---|---|
+| discovery_gap | 0.600 | **0.545** | −0.055 | **Ziel-Metrik** — Bandkante → Bandmitte (Band 0.2–0.6 unverändert) |
+| actions_to_first_craft | 9.5 | 7.0 | −2.5 | Stream-Shift (naiver Strom: snare bei Median ~Aktion 36, dokumentiert, nicht kompensiert) |
+| session_depth (v2, Probe bis 08.09.) | 63.0 | 52.5 | −10.5 | Stream-Shift / Re-Baseline-Shift — NICHT als Fortschritt lesen; Direktor bewertet nach Probe-Ende |
+| skill_spread | 0.202 | 0.198 | −0.004 | Stream-Shift (Ressourcen-Strom), Band-los, im Trend unverändert |
+| blueprint_reachability | 1.0 | 1.0 | ±0 | Wächter (jetzt 11/11 — snare ungated trivial erreichbar) |
+| content_reachable | 1.0 (18/18) | 1.0 (18/18) | ±0 | Wächter (snare ist Blueprint-only, kein Template) |
+| feedback_quality | 1.0 | 1.0 | ±0 | Wächter |
+| craft_variety | 5.0 | 5.0 | ±0 | Ziel-2-Richtung „≥ 5 halten" erfüllt |
+| forage_pressure (Probe bis 11.09.) | 0.0 | 0.0 | ±0 | beobachtend |
+| warmth_stability | 0.46 | 0.46 | ±0 | unberührt (kein Kälte-Pfad) |
+| recovery_stability | 0.375 | 0.375 | ±0 | unberührt (kein Verletzungs-Pfad) |
+| gear_uptime (Probe bis 11.09.) | 0.994 | 0.994 | ±0 | beobachtend |
+
+**RNG-Strom-Klasse:** der naive Discovery-Strom verschiebt sich auf ~17/20 Seeds (snare-Craft),
+der v2-session_depth-Strom ebenfalls (früherer erster Craft → frühere Novelty-Kette, kürzere
+Sessions). Dokumentiert, nicht kompensiert (Präzedenz Munitions-Ökonomie 31.08.). **Kein
+Direktor-Flag nötig:** keine Band-Metrik außer dem Ziel hat gekreuzt; alle Bänder gehalten.
+
+### Implementierung (data-only, TDD)
+
+- `data/blueprints.json`: +1 Eintrag `snare` am Array-Ende (nach cord_spear — Dict-Order =
+  Präzedenz; früherer Craft-Win bleibt unberührt).
+- `tests/test_snare.py` (neu, 16 Tests): Craft bei survival 0.0 und bei allen survival-Werten
+  (ungated ✓), EDIBLE-Slot material-agnostisch ((plant_fiber, berries) und (reeds, raw_meat)
+  craften beide ✓), Shadowing ((stick, stick)→spear; (plant_fiber, stick) ab 0.4→rope; snare
+  verdrängt nichts und wird nicht verdrängt ✓), Erfolgs-Meldung dynamisch ohne Rezept-Leak
+  ✓, Jagd-Verbrauch (1 Fang = 1 Einheit, condition unberührt, Leer-Meldung „!!! …
+  Faserschlinge … aufgebraucht !!!", ohne Schlinge MISSING_TOOL-Pfad ✓), Registry (11
+  Blueprints, snare am Ende, Felder exakt ✓).
+- Zähler-Reconciliation: `tests/test_engine.py` 10→11, `tests/test_loader.py` ×2 10→11.
+- **pytest: 305 passed, 1 xfailed** (vorher 289 + 16 neue = 305 ✓; der xfail ist der
+  bestehende sharpen 0/20-xfail, unverändert).
+
+### Korrektur gegen den Work-Contract (dokumentiert, engine-true)
+
+Der Contract-Text behauptete `(reeds, stick) ab survival 0.4 → rope`. Die Engine liest
+`(reeds, stick) → spear` (reeds trägt RIGID, spear steht früher im Dict) — **das galt schon
+vor SPEC-012 und ist von snare unberührt** (kein EDIBLE beteiligt; snare kann diesen Craft
+nie übernehmen). Der echte rope-Fall ist `(plant_fiber, stick)`. Beide Schatten sind
+testverankert (`test_reeds_stick_prefers_spear_not_snare`,
+`test_plant_fiber_stick_crafts_rope_at_gate`); der Spec-Text (Akzeptanz 2) schreibt die
+engine-true-Form. Kein Verhaltensunterschied durch snare — der Claim war nur falsch
+beschrieben, nie falsch gebaut.
+
+### Test-Nuancen (für spätere Specs)
+
+- `Inventory.add` mergt gleichnamige Stacks: (stick, stick) über die Inventar-Liste ist EIN
+  Stack → engine-true Doppelslot-Crafts brauchen die explizite Item-Liste (`_try_items`).
+- Der raw_meat-Node (forest_edge, req_tool_tag PROJECTILE, max_stock 5) liefert im selben
+  gather auch Pebbles (weitere PROJECTILE-Träger) — Tests müssen auf `template_id == "snare"`
+  filtern, nicht auf den Tag.
+- Die Leer-Meldung ist `!!! {dynamischer Name} aufgebraucht !!!` mit vollem Craft-Namen
+  (z. B. „Pflanzenfaser-Faserschlinge (Waldbeeren)“) — „Faserschlinge aufgebraucht“ kommt
+  als Contiguous-Substring nie vor (der Slotsuffix steht dazwischen); Tests matchen daher
+  „aufgebraucht“ und „Faserschlinge“ getrennt.
+
+### Constitution-Check
+
+Tag-Crafting-Kern unangetastet ✓ · kein Rezeptbuch/Leak (dynamische Namen, generischer
+Reveal) ✓ · stdlib + pydantic only, keine neue Abhängigkeit ✓ · neuer Content, der das
+Entdecken vertieft (Essbares als Zutat; Schlinge = munitionsfreie Jagd), nicht abkürzt ✓ ·
+keine Metrik entfernt/umdefiniert/abgeschwächt ✓ · CLI-Text bleibt ✓.
+
+### Offen / Next
+
+- Play-Job (Mo 09.09.): erste ECHTE Play-Lesung mit snare — Erwartung gap ~0.545, atfc ~7;
+  session_depth-Lesung gehört dem Direktor (Probe-Ende 08.09.).
+- Direktor (So 13.09.): Plan-Neufassung; snare-Effekt auf Ziel-2-Hebel (sharpen 0/20) wird
+  durch snare nicht erwartet-verändert — eigener Task bleibt offen.
+- BACKLOG: keine neuen Einträge nötig (keine Bugs gefunden; die Work-Contract-Korrektur ist
+  im Spec/JOURNAL dokumentiert).
+
+---
+
 ## 2026-09-07 — [Play] Scorecard flach (Determinismus-Check bestanden) — Menü-Spieler-Profil: Erschöpfung ~110, 20/20 Kälte-Tode, stoke_fire unsichtbar (B10)
 
 ### Scorecard (offizielle Lesung, `scorecard/2026-09-07.json`)

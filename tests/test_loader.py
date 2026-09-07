@@ -62,7 +62,7 @@ class TestLoadItems:
 class TestLoadBlueprints:
     def test_loads_all_blueprints(self):
         bps = load_blueprints()
-        assert len(bps) == 10
+        assert len(bps) == 11  # 10 + snare (SPEC-012)
         ids = [bp.id for bp in bps]
         assert "axe" in ids
         assert "knife" in ids
@@ -226,7 +226,7 @@ class TestLoaderRoundtrip:
 
     def test_blueprints_identical_to_old_data(self):
         bps = load_blueprints()
-        assert len(bps) == 10
+        assert len(bps) == 11  # 10 + snare (SPEC-012)
         axe = next(bp for bp in bps if bp.id == "axe")
         knife = next(bp for bp in bps if bp.id == "knife")
 

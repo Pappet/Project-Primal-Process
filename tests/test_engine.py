@@ -399,7 +399,7 @@ class TestEngineCore:
         assert engine.player.name == "Survivor"
         assert engine.current_location_id == "forest_edge"
         assert len(engine.locations) == 3
-        assert len(engine.blueprints) == 10
+        assert len(engine.blueprints) == 11  # 10 + snare (SPEC-012)
 
     def test_current_location(self):
         engine = GameEngine()
