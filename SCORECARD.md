@@ -44,7 +44,7 @@
 **Band: 0.7 – 0.95.** Keine Richtung (kein "höher = besser"). Unter 0.7 nimmt das Spiel den Spieler an die Hand; über 0.95 ist es faktisch unentdeckbar. `blueprint_reachability` (None) misst, was ein Orakel erreichen kann; `naive_discovery_rate` (None) was ein Spieler wirklich findet. Der Abstand dazwischen ist das eigentliche Spiel.
 
 
-## Details (2026-09-04)
+## Details (2026-09-07)
 
 ```json
 {

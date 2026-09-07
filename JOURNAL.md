@@ -5,6 +5,62 @@
 
 ---
 
+## 2026-09-07 — [Play] Scorecard flach (Determinismus-Check bestanden) — Menü-Spieler-Profil: Erschöpfung ~110, 20/20 Kälte-Tode, stoke_fire unsichtbar (B10)
+
+### Scorecard (offizielle Lesung, `scorecard/2026-09-07.json`)
+
+Alle 12 Metriken ±0 gegen 04.09. Erwartung exakt erfüllt: kein Spiel-Code seit cf67ce2.
+Die flache Scorecard ist diesmal die Lesung — Determinismus bestätigt, alle Erkenntnis
+in den Runs. pytest vor Writes: 289 passed, 1 xfailed.
+
+### Neue Mess-Probe: der Menü-Spieler (drei Profile, 20 Seeds je)
+
+Erstmals gespielt: ein naiver Spieler, der die CLI benutzt wie gebaut (inkl. [p]-Menü,
+`available_processes()`), gegen die bisherigen Profile (guided-Bot ~20 Aktionen
+Erschöpfung, v2-Scorecard-Bot 63).
+
+| Profil | letzte Neuheit (Median) | Blueprints | Prozesse | Ausgang |
+|---|---|---|---|---|
+| A: Blind-Naiv, 60 Aktionen | @45 | 1–3 | **0/20 Runs** | 20/20 überlebt |
+| B: Menü-Naiv, 80 Aktionen | @70 | 1–4 | **1–6, 20/20 Runs** | 19/20 überlebt |
+| C: Menü-Naiv, 200 Aktionen | @110 | 1–5 | 1–6 | **20/20 Kälte-Tode** (Aktion ~80–157) |
+
+### Befunde
+
+1. **Die 02.09.-Korrigenda:** "Prozess-Hinweise heben nur die Metrik, nicht das
+   Spielgefühl" gilt nur für das Blind-Profil. Mit Menü-Nutzung: 0/20 → 20/20
+   Prozess-Discovery, 3–8 Hinweise gefangen. Die Hinweise funktionieren — der Zugang
+   zur Prozess-Ebene liegt im Menü, nicht im Feedback.
+2. **Erschöpfung (4. Lesung):** guided bleibt ~20 (Voll-Decke 11/20, unverändert 3.
+   Woche). Menü-Spieler: ~110. Der Content-Cap ist profilabhängig 20–110; session_depth
+   63.0 sitzt dazwischen (Probe-Ende 08.09., Direktor übernimmt).
+3. **B10 (neu, 🔴-Vorschlag): alle 20 Lang-Runs sterben an Unterkühlung** (bt 3.7–23.3
+   am Ende, Energie 125–332, keine Wunden, kein Hunger) — trotz start_fire 16/20 und
+   sammelbarem Brennstoff. `stoke_fire` ist kein Prozess, kein Blueprint, keine
+   Hinweis-Kategorie; einziger Kontakt ist das Menü-Label `[w]ärmen`. Der Spieler hat
+   kein Muster für "Feuer braucht Nachlegen". Fix-Klasse = PLAN-Ziel 2 (richtungsgebende
+   Meldung, kein Leak). Kollisionshinweis: warmth_stability 0.46 "im Band" liest den
+   guided-Stil, nicht dieses Sterben.
+4. **Neue tote Räume im Menü-Profil:** spear_bound/cord_spear 0/20 (3er-Experimente
+   kombinatorisch verdünnt), treat_cut/treat_strain 0/20, sharpen_tool 1/20 (bekannt).
+   Die (EDIBLE,FIBER)/(EDIBLE,RIGID)-Lücken bleiben unbesetzt — SPEC-012-Befund 4.
+   Lesung unverändert gültig.
+
+### Backlog / Übergabe
+
+- **B10** (stoke_fire unsichtbar) → Direktor-Triage; Gegenprobe nach Fix: Profil-C-Tode.
+- 🔵 Menü-Profil als `play/naive_menu.py` repo-ständig? (Play-Messwerkzeug, kein
+  Scorecard-Eingriff; Skripte lagen nur in /tmp.)
+- 🔵 Tier-2-Strang 0/20 — rope-Anschluss-Andeutung als Design-Frage notiert, kein Task.
+
+### Constitution-Check
+
+Kein Spiel-Code, keine Metrik, kein Scorecard-Eingriff; Probes read-only in /tmp.
+B10-Fix-Vorschlag ist bewusst in der Klasse der freigegebenen Ziel-2-Hebel (Meldung,
+kein Leak, kein Reason-Code) formuliert — Freigabe beim Direktor/Peter wie üblich.
+
+---
+
 ## 2026-09-06 — [Direktor] Plan-Neufassung 06.09. + Cron-Eingriff: Plan-Mode-Daemon bei beiden Research-Jobs entfernt; SPEC-013 verworfen (NO-GO bestätigt)
 
 ### Scorecard-Lesung (Verlauf seit 30.08.-Neufassung)
