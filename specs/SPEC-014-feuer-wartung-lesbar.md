@@ -1,5 +1,9 @@
 # SPEC-014 — Feuer-Wartung lesbar machen: Kälte- und Brennstoff-Signale
 
+> **STATUS: erledigt (Dev 08.09., 86d2137) — Kälte-Warnung + Feuer-schwach als
+> Crossing-Meldungen in `_advance_time`; compute_all 12× byte-identisch; 320 Tests
+> grün (+12); Play-Gegenprobe (Profil-C-Tode < 20/20, [w]-Nutzung) → Play-Job.**
+
 **Problem** (Metrik-Ebene: Play-Lesung 07.09., Befund 3 = BACKLOG 🔴 B10; betroffene
 Metriken: warmth_stability / session_depth / skill_spread über die Profil-Tode): Alle
 20 Lang-Runs des Menü-naiven Profils (200 Aktionen, 20 Seeds) sterben an Unterkühlung
