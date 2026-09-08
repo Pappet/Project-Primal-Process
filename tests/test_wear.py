@@ -78,9 +78,13 @@ class TestWearWarningDirectionalHint:
         return [l for l in engine_logs if "abgenutzt" in l]
 
     def test_warning_carries_directional_hint(self):
+        # Determinismus: Wear feuert nur bei erfolgreichem Ernte-Wurf
+        # (eff_chance ~0.30) — ohne Seed ist "Crossing in N gathers"
+        # flaky (P(Miss) ≈ 0.7^N). Suite-Stil: seed + 30 Iterationen.
+        random.seed(424242)
         g = _engine_with_axe(condition=WEAR_WARN_THRESHOLD + 0.05)
         axe = g.player.inventory.find_item_by_tag("CHOPPING")
-        for _ in range(5):
+        for _ in range(30):
             if g.player.inventory.find_item_by_tag("CHOPPING") is None:
                 break
             warns = self._warning_lines(g.gather())
@@ -88,10 +92,13 @@ class TestWearWarningDirectionalHint:
                 text = " ".join(warns)
                 # Richtung ja …
                 assert "instand" in text, "Warnung muss die Instandhaltungs-Richtung nennen"
-                # … aber kein Leak
+                # … aber kein Leak. Nur den Andeutungs-Anteil prüfen: der
+                # dynamische Tool-Name („Feuersteinsplitter-Feuersteinaxt")
+                # steht engine-generiert vorne und ist kein Leak.
+                hint = text.split("!!!", 2)[-1]
                 for leak in ("Feuerstein", "flint", "sharpen_tool",
                              "Splitter", "1x", "Rezept"):
-                    assert leak not in text, f"Rezept-Leak: {leak!r} in Warnung"
+                    assert leak not in hint, f"Rezept-Leak: {leak!r} in Andeutung"
                 return
         pytest.fail("Setup: Warnung feuerte in 5 gathers nicht (Crossing fehlt)")
 
@@ -109,15 +116,16 @@ class TestWearWarningDirectionalHint:
     def test_warn_line_is_single_line(self):
         """Andeutung bleibt in derselben Logzeile wie die Warnung — der
         Logstream wächst um keinen Zusatz-Tick und keine zweite Zeile."""
+        random.seed(424242)
         g = _engine_with_axe(condition=WEAR_WARN_THRESHOLD + 0.05)
-        for _ in range(5):
+        for _ in range(30):
             if g.player.inventory.find_item_by_tag("CHOPPING") is None:
                 break
             warns = self._warning_lines(g.gather())
             if warns:
                 assert len(warns) == 1, "Eine Warnung = eine Zeile (mit Andeutung)"
                 return
-        pytest.fail("Setup: Warnung feuerte in 5 gathers nicht")
+        pytest.fail("Setup: Warnung feuerte in 30 gathers nicht (Crossing fehlt)")
 
 
 class TestMissingToolFeedback:

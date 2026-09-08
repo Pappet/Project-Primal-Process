@@ -45,13 +45,18 @@ die Ziel-2-Klasse der Wear-Andeutung, core.py:419-425):
    Dekrement sichern, nach `fire_fuel -= ticks` (vor dem FIRE_OUT-Zweig):
 
    ```python
-   if (loc.fire_active and prev_fuel >= FIRE_LOW_FUEL
+   if (loc.fire_active and loc.fire_fuel > 0
+           and prev_fuel >= FIRE_LOW_FUEL
            and loc.fire_fuel < FIRE_LOW_FUEL):
        logs.append(FIRE_DYING_HINT_TEXT)
    ```
 
    Das ist die Don't-Starve-Adaption: das Feuer selbst meldet seinen Zustand,
    ~8 Ticks vor FIRE_OUT (Lead-Zeit = FIRE_LOW_FUEL bei 1.0 Brennstoff/Tick).
+   Guard `loc.fire_fuel > 0`: kippt ein Tick direkt in FIRE_OUT, spricht nur die
+   ehrliche FIRE_OUT-Meldung — die Andeutung („am Leben halten") wäre dort eine
+   Lüge, `stoke_fire` braucht ein aktives Feuer. Dieselbe Wahrheitsregel wie beim
+   Kälte-Gate unten.
 
 3. `_advance_time`, Kälte-Block: `prev_bt` VOR der temp_loss-Update-Zeile sichern,
    nach der Aktualisierung (bei/nach den bestehenden bt-Auswirkungen):
@@ -77,17 +82,20 @@ die Ziel-2-Klasse der Wear-Andeutung, core.py:419-425):
    Prozess-Schema (inputs als `template_id: quantity`) kann „irgendein WOOD/KINDLING-Item"
    nicht ausdrücken. Pseudo-Prozess = falsches Datenmodell. `stoke_fire` bleibt Verb.
 
-5. Tests (TDD, Dev wählt Datei — Vorschlag `tests/test_cold_hints.py`): Crossing feuert
-   einmal / kein Spam unterhalb bis Re-Warm / Fire-Gate (mit aktivem Feuer keine
-   Kälte-Warnung) / Feuer-schwach feuert, FIRE_OUT nicht verdrängt / Leak-frei (exakter
-   Text + Assert: kein template_id und kein Prozess-Name ist Substring der Texte).
+5. Tests (TDD, Dev wählt Datei — Vorschlag `tests/test_cold_hints.py`): Kälte-Crossing
+   feuert einmal / kein Spam unterhalb bis Re-Warm / Fire-Gate (mit aktivem Feuer keine
+   Kälte-Warnung) / Feuer-schwach feuert, nicht im FIRE_OUT-Tick, FIRE_OUT-Meldung nicht
+   verdrängt / Leak-frei (exakter Text + Assert: kein template_id und kein Prozess-Name
+   ist Substring der Texte).
 
 **Akzeptanzkriterien** (jedes verifizierbar):
 1. Konstanten exakt im Stil des WEAR_HINT_TEXT-Blocks (Kommentar: B10/Ziel-3, kein-Leak-Rationale).
 2. Kälte-Warnung: genau am fallenden Crossing < 36.0, nur bei `not loc.fire_active`,
    einmal pro Durchgang, konstanter Text, kein RNG-Wurf (Wurf-Sequenz byte-identisch).
-3. Feuer-schwach: am fallenden Crossing fire_fuel < 8.0 bei aktivem Feuer, einmal pro
-   Durchgang, kein RNG; FIRE_OUT-Meldung unverändert.
+3. Feuer-schwach: am fallenden Crossing fire_fuel < 8.0 bei aktivem Feuer UND
+   fire_fuel > 0 (kein Crossing in denselben Tick wie FIRE_OUT — die Andeutung
+   „am Leben halten" muss wahr bleiben), einmal pro Durchgang, kein RNG;
+   FIRE_OUT-Meldung unverändert.
 4. Kein Leak: Texte nennen kein Item-Template, keine Menge, keine Prozess-ID
    (Vokabelklasse wie die Wear-Andeutung); Regressionstests.
 5. compute_all()-Delta-Tabelle im JOURNAL: alle 12 Metriken **byte-identisch** auf den
