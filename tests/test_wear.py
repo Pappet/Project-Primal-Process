@@ -83,7 +83,6 @@ class TestWearWarningDirectionalHint:
         # flaky (P(Miss) ≈ 0.7^N). Suite-Stil: seed + 30 Iterationen.
         random.seed(424242)
         g = _engine_with_axe(condition=WEAR_WARN_THRESHOLD + 0.05)
-        axe = g.player.inventory.find_item_by_tag("CHOPPING")
         for _ in range(30):
             if g.player.inventory.find_item_by_tag("CHOPPING") is None:
                 break
@@ -100,7 +99,7 @@ class TestWearWarningDirectionalHint:
                              "Splitter", "1x", "Rezept"):
                     assert leak not in hint, f"Rezept-Leak: {leak!r} in Andeutung"
                 return
-        pytest.fail("Setup: Warnung feuerte in 5 gathers nicht (Crossing fehlt)")
+        pytest.fail("Setup: Warnung feuerte in 30 gathers nicht (Crossing fehlt)")
 
     def test_hint_only_on_crossing_not_on_other_wear(self):
         """Die Andeutung hängt an der Warnung (Crossing), sonst nirgends —
