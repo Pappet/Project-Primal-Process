@@ -66,6 +66,60 @@ class TestWearWarningOnce:
         assert warns == 0
 
 
+class TestWearWarningDirectionalHint:
+    """Ziel-2-Hebel (PLAN 06.09., Punkt 2): die Warnung ist bislang eine Sackgasse —
+    der Spieler erfährt, dass das Werkzeug schlecht ist, aber nicht, dass es eine
+    Gegenmaßnahme gibt (sharpen 0/20). Die Warnung trägt daher eine generische,
+    richtungsgebende Andeutung: abgenutztes Werkzeug ließe sich mit hartem,
+    scharfem Material wieder instand halten. Kein Item-/Prozess-Name, kein
+    Rezept, kein neuer Reason-Code, keine neuen RNG-Würfe."""
+
+    def _warning_lines(self, engine_logs):
+        return [l for l in engine_logs if "abgenutzt" in l]
+
+    def test_warning_carries_directional_hint(self):
+        g = _engine_with_axe(condition=WEAR_WARN_THRESHOLD + 0.05)
+        axe = g.player.inventory.find_item_by_tag("CHOPPING")
+        for _ in range(5):
+            if g.player.inventory.find_item_by_tag("CHOPPING") is None:
+                break
+            warns = self._warning_lines(g.gather())
+            if warns:
+                text = " ".join(warns)
+                # Richtung ja …
+                assert "instand" in text, "Warnung muss die Instandhaltungs-Richtung nennen"
+                # … aber kein Leak
+                for leak in ("Feuerstein", "flint", "sharpen_tool",
+                             "Splitter", "1x", "Rezept"):
+                    assert leak not in text, f"Rezept-Leak: {leak!r} in Warnung"
+                return
+        pytest.fail("Setup: Warnung feuerte in 5 gathers nicht (Crossing fehlt)")
+
+    def test_hint_only_on_crossing_not_on_other_wear(self):
+        """Die Andeutung hängt an der Warnung (Crossing), sonst nirgends —
+        kein Dauertext im gather-Stream."""
+        g = _engine_with_axe(condition=0.10)  # schon unter der Schwelle
+        for _ in range(10):
+            if g.player.inventory.find_item_by_tag("CHOPPING") is None:
+                break
+            for line in g.gather():
+                assert "instand" not in line, \
+                    "Ohne Crossing-Event keine Instandhaltungs-Andeutung"
+
+    def test_warn_line_is_single_line(self):
+        """Andeutung bleibt in derselben Logzeile wie die Warnung — der
+        Logstream wächst um keinen Zusatz-Tick und keine zweite Zeile."""
+        g = _engine_with_axe(condition=WEAR_WARN_THRESHOLD + 0.05)
+        for _ in range(5):
+            if g.player.inventory.find_item_by_tag("CHOPPING") is None:
+                break
+            warns = self._warning_lines(g.gather())
+            if warns:
+                assert len(warns) == 1, "Eine Warnung = eine Zeile (mit Andeutung)"
+                return
+        pytest.fail("Setup: Warnung feuerte in 5 gathers nicht")
+
+
 class TestMissingToolFeedback:
     def test_post_break_yields_missing_tool_line_at_harvestable_node(self):
         """Werkzeug entfernt, oak-Node voll (chance 1.0 via stock=max):

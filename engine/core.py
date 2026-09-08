@@ -48,6 +48,14 @@ START_FIRE_FUEL = 24.0    # Brennstoff-Ticks beim Entzünden (≈ 4 In-Game-Stun
 # weiter (min Faktor), statt bis zum Bruch volle Chance zu liefern.
 WEAR_WARN_THRESHOLD = 0.25
 WEAR_MIN_FACTOR = 0.25
+# Ziel-2-Hebel (PLAN 06.09.): richtungsgebende Andeutung an der Wear-Warnung —
+# abgenutztes Werkzeug ist nicht das Ende: hartes, scharfes Material (Klasse,
+# nicht Name) könnte es wieder instand halten. Konstante, kein RNG-Wurf; sie
+# hängt an der bestehenden Crossing-Bedingung, kein Dauertext im Stream. Kein
+# Rezept-Leak: nennt weder Item noch Prozess noch Menge — nur die bekannte
+# TAG_LABELS-Vokabelklasse („etwas Hartes/Scharfes", wie überall im Spiel).
+WEAR_HINT_TEXT = ("Mit etwas Hartem, Scharfem ließe es sich wohl "
+                  "wieder instand halten.")
 
 # Ziel-2-Hebel: Prozess-Potenzial-Hinweise. Besitz + Umgebung erzeugen ein
 # einmaliges, generisches Richtungssignal pro Prozess-Klasse — das analoge
@@ -410,7 +418,11 @@ class GameEngine:
                                 logs.append(f"!!! {used_tool.name} zerbrochen !!!")
                             elif (prev_cond >= WEAR_WARN_THRESHOLD
                                   and used_tool.condition < WEAR_WARN_THRESHOLD):
-                                logs.append(f"!!! {used_tool.name} ist stark abgenutzt !!!")
+                                # Ziel-2-Hebel: die Warnung trägt die generische
+                                # richtungsgebende Andeutung (gleiche Zeile, kein
+                                # Zusatz-Wurf, kein neuer Reason-Code).
+                                logs.append(f"!!! {used_tool.name} ist stark abgenutzt !!! "
+                                            + WEAR_HINT_TEXT)
         return logs
 
     def eat(self, item_index: int) -> str:

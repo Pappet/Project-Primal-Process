@@ -5,7 +5,65 @@
 
 ---
 
-## 2026-09-07 — [Dev] SPEC-012 Faserschlinge gelandet — Gap von der Bandkante in die Bandmitte (0.600 → 0.545), data-only, Wächter alle 1.0
+## 2026-09-08 — [Research] SPEC-014 Feuer-Wartung lesbar machen (Metrik-Modus)
+
+Scorecard 07.09.: alle 12 Metriken ±0 — Determinismus-Check bestanden, kein Spiel-Code
+seit cf67ce2/81a04ee. Die Erkenntnis sitzt nicht in der Scorecard, sondern im Play-Report
+07.09.: **Profil C (Menü-naiv, 200 Aktionen), 20/20 Tode durch Unterkühlung** — bt
+3.7–23.3, Energie 125–332, neben sammelbarem Brennstoff. Ursache (B10): `stoke_fire` ist
+als Wartungs-Verb unsichtbar — kein Prozess ([p]-Menü), keine Kategorie in
+`PROCESS_HINT_CATEGORY`, kein Blueprint, kein Knowledge-Eintrag; einziger Kontakt ist das
+unkommentierte Label `[w]ärmen`. Der Prozess-Ebene fehlt das Muster „Feuer braucht
+dauerhaftes Nachlegen". Engine-Verifikation: `stoke_fire` existiert (core.py:806,
+Long-Dark-Zyklus), Fuel-Tick 1.0/tick (core.py:290), Kälte-Schmerzgrenze 35.0
+(core.py:303); die Ziel-2-Wear-Andeutung (core.py:419-425) ist der Präzedenz der
+Fix-Klasse: Crossing-basiert, Konstante, kein RNG, kein Leak.
+
+Metrik-Einordnung: die schwächste handelbare Stelle ist keine Scorecard-Zahl —
+forage_pressure (0.0) und gear_uptime (0.994) stehen in Probe bis 11.09. (kein Tuning),
+session_depth-Probe endet 08.09. (Direktor-Lesung), warmth_stability liest nur den
+guided-Stil-Bot (p25=p75 flach — blind für die naive Menü-Realität). B10 ist die
+Signal-Klasse, die die Scorecard strukturell nicht sieht — aber die vollständige
+Wirkungskette (Tode, Erschöpfungspunkt ~110) ist Play-verifiziert.
+
+**SPEC-014 geschrieben** (`specs/SPEC-014-feuer-wartung-lesbar.md`): Crossing-basierte,
+generische richtungsgebende Meldungen in `_advance_time` — Kälte-Warnung (bt < 36.0,
+nur ohne aktives Feuer, Guard ≥ 35.0 gegen UNTERKÜHLUNG-Doppel) + Feuer-schwach
+(fire_fuel < 8.0 = weniger als ein STOKE_FUEL, Lead ~8 Ticks vor FIRE_OUT). Mechanik-
+Quellen: The Long Dark (Freezing-Signal vor dem lethal point), Don't Starve (Feuer
+zeigt Brennstoff-Zustand am Objekt). Bewusst verworfen: stoke_fire als Pseudo-Prozess
+(Schema `inputs` kann „irgendein WOOD/KINDLING-Item" nicht ausdrücken — falsches
+Datenmodell). Akzeptanz: alle 12 Metriken byte-identisch (keine neuen Würfe, Bots
+reagieren nicht auf Log-Zeilen — SPEC-012-Probe-Befund), feedback_quality 1.0, Leak-frei
+(TAG_LABELS-Vokabelklasse), Play-Gegenprobe Profil-C-Tode < 20/20. Constitution-Check:
+kein Leak, kein Rezeptbuch, Entdecken vertieft (Wartungs-Loop wird learnbar, nicht
+abgekürzt). PLAN.md: SPEC-014 als offener Task nach SPEC-012 eingefügt.
+
+Kein Spiel-Code, keine Metrik, kein CONSTITUTION-Kontakt.
+
+---
+
+## 2026-09-07 — [Dev] Ziel-2-Hebel: Wear-Warnung trägt richtungsgebende Andeutung (kein Leak, keine RNG-Würfe, compute_all 12×identisch)
+
+### Design-Skizze (Pflicht vor TDD — 1 Absatz)
+
+**Befund (Play 04.09., verifiziert):** sharpen_tool 0/20 — Spieler erleben die
+Wear-Warnung (Crossing 0.25) ohne Flint im Inventar und halten Flint ohne Wear; der
+Instandhaltungs-Hinweis (31.08.) feuert erst, wenn das Werkzeug bereits unter der
+Warnschwelle ist. Die Koinzidenz fällt im natürlichen Verlauf nie zusammen.
+**Antwort spiel-seitig, gleiche Klasse wie 13.08. („Extrem-Kälte braucht eine
+richtungsgebende Andeutung“):** die Wear-Warnung `!!! <name> ist stark abgenutzt !!!`
+bekommt einen Zusatz-Satz, der NUR die Richtung nennt: dass sich abgenutztes Werkzeug
+mit hartem, scharfem Material wieder instand halten lässt. Kein Item-Name (nicht
+„Feuerstein“), kein Prozess-Name (nicht „schärfen“ als Befehl), kein Rezept (keine Menge,
+keine Slots), kein neuer Reason-Code, KEINE neuen RNG-Würfe (Konstante, nicht Wurf — der
+Zusatz-Satz ist an die bestehende Crossing-Bedingung gekoppelt und ändert keine Wurf-
+Sequenz). Der Text ist wahr: sharpen_tool verlangt flint_shard (hart UND scharf) und
+wirkt auf Schneid-/Stemm-/Stich-Werkzeug — genau der Werkzeugklasse, deren Warnung feuert.
+feedback_quality bleibt unberührt: die Warnung ist Log-Stream im gather()-Pfad, kein
+Experiment-Reason; EMITTABLE_REASONS unangetastet. Erwartete Wirkung (explorativ, kein
+Gate): die Koinzidenz Worn-Tool+Flint wird im guided-Verlauf ≥ 1× erlebbar, weil der
+Spieler nach der Warnung Flint hält und nicht wegwirft — Sweep dokumentiert im Play-Job.
 
 ### Zusammenfassung
 

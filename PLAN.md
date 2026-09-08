@@ -81,6 +81,26 @@ Prozess-Hinweise, Feuer-Ökonomie, Messwerkzeug-Fix) sind stabil; 289 Tests grü
       nicht kompensiert); session_depth-Lesung als Re-Baseline-Shift markieren
       (Probe bis 08.09. — Wert beobachtend, kein Tuning); kein Rezept-Leak.
 
+- [ ] **SPEC-014 — Feuer-Wartung lesbar machen: Kälte- und Brennstoff-Signale**
+      (B10, 20/20 Kälte-Tode im Menü-Profil 07.09.). Befund: stoke_fire ist als
+      Wartungs-Verb unsichtbar — kein Prozess, keine Hinweis-Kategorie, kein
+      Knowledge-Eintrag; der Spieler stirbt neben sammelbarem Brennstoff, weil er kein
+      Muster für „Feuer braucht dauerhaftes Nachlegen" lernen kann. Antwort spiel-seitig,
+      exakt die Ziel-2-Klasse (Wear-Andeutung): Crossing-basierte, generische
+      richtungsgebende Meldungen in `_advance_time` — Kälte-Warnung (bt < 36.0, kein
+      aktives Feuer) und Feuer-schwach (fire_fuel < 8.0 bei aktivem Feuer). Konstanten,
+      keine RNG-Würfe, kein Leak (nur die bekannte TAG_LABELS-Vokabelklasse), kein
+      Reason-Code-Eingriff, kein Daten-Touch. Bewusst NICHT: stoke_fire als
+      Pseudo-Prozess (Schema kann WOOD/KINDLING-„irgendein Item" nicht ausdrücken).
+      **Akzeptanz:** Crossing-Tests (einmal pro Durchgang, kein Spam, Fire-Gate);
+      Leak-frei-Regressionstests; compute_all()-Delta-Tabelle: alle 12 Metriken
+      byte-identisch (keine neuen Würfe — Bots reagieren nicht auf Log-Zeilen);
+      feedback_quality 1.0 unverändert, EMITTABLE_REASONS unangetastet; pytest grün;
+      Play-Gegenprobe danach: Profil-C-Kälte-Tode < 20/20 (Zielwert explorativ, kein
+      harter Gate — kein Overfitting am Profil-Bot); Design-Skizze (1 Absatz im
+      JOURNAL) vor TDD; kein Touch an data/*.json, PROCESS_HINT_CATEGORY,
+      scorecard.py.
+
 - [ ] **Ziel-2-Hebel: Wear-Warnung als richtungsgebende Andeutung** (keine Freigabe
       nötig, aber Mechanik-Design sauber halten). Befund (Play 04.09., verifiziert):
       sharpen_tool 0/20 — Spieler erleben die Wear-Warnung (Crossing 0.25) ohne Flint
