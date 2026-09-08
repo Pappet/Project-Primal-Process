@@ -61,6 +61,12 @@ Dinge die kaputt sind und gefixt werden müssen.
 
 ### 🔴 B10 — `stoke_fire` ist als Wartungs-Verb unsichtbar: Menü-Spieler erfriert im Loop neben Brennstoff
 
+> **Status: Engine-seitig gelandet (SPEC-014, 08.09.)** — Kälte-Warnung (bt < 36.0,
+> nur ohne aktives Feuer) + Feuer-schwach (fire_fuel < 8.0, Lead ~8 Ticks vor
+> FIRE_OUT) als Crossing-Meldungen in `_advance_time`; compute_all 12×byte-identisch,
+> 320 Tests grün (JOURNAL 08.09.). 🔴 bleibt offen bis zur **Play-Gegenprobe**
+> (Profil-C-Kälte-Tode < 20/20 UND natürliche [w]-Nutzung — Spec-Akzeptanz 8).
+
 - [2026-09-07] (Play) **Alle 20 Lang-Runs (200 Aktionen, Menü-naives Profil) sterben an Unterkühlung** (bt 3.7–23.3 am Ende, Energie 125–332, keine Wunden, kein Hunger) — trotz 16/20 gefundener `start_fire`-Discovery und sammelbarem Brennstoff. `stoke_fire` ist kein Prozess (nicht im [p]-Menü, keine Hinweis-Kategorie in `PROCESS_HINT_CATEGORY`), kein Blueprint, kein Knowledge-Eintrag; der einzige Kontakt ist das unkommentierte Menü-Label `[w]ärmen`. Der Spieler lernt "Feuer = einmal gelernt" aus der Prozess-Ebene und hat kein Muster für "Feuer braucht dauerhaft Nachlegen". **Fix-Richtung (gleiche Klasse wie PLAN-Ziel 2, Wear-Warnung):** richtungsgebende Meldung, wenn `body_temp` sinkt und kein Feuer brennt — "Die Kälte nagt. Ein Feuer ließe sich wohl am Leben halten." (kein Rezept-Leak, kein Reason-Code-Eingriff, keine neuen RNG-Würfe) ODER `stoke_fire` als Kategorie "feuer pflegen" in die Prozess-Hinweise. Play-Gegenprobe: Profil-C-Tode erneut messen. — warmth_stability/session_depth/skill_spread.
 
 ---

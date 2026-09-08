@@ -90,6 +90,20 @@ SHARPEN_RESTORE = 0.5     # condition-Zugewinn durch sharpen_tool (cap 1.0)
 SHARPEN_TOOL_TAGS = ("CUTTING", "CHOPPING", "PIERCE")
 STOKE_FUEL = 8.0          # Brennstoff-Ticks, die nachgelegtes Holz/Machtsgut bringt
 
+# SPEC-014 (B10 / Ziel-2-Hebel-Klasse): Feuer-Wartung lesbar machen. Der
+# Wartungs-Loop (Nachlegen) ist als Verb unsichtbar — Spieler sterben neben
+# sammelbarem Brennstoff, weil sie kein Muster für „Feuer braucht dauerhaftes
+# Nachlegen" lernen können (Profil C: 20/20 Kälte-Tode). Antwort: Crossing-
+# basierte Zustands-Meldungen am Objekt/in am Körper — Richtung ja, Rezept nein
+# (TAG_LABELS-Vokabelklasse, kein Item-/Prozess-Name, keine Menge). Konstanten,
+# KEINE neuen RNG-Würfe: beide Meldungen hängen an bestehenden Crossing-
+# Bedingungen, Log-Zeilen ändern keine Bot-Sequenz.
+COLD_WARN_THRESHOLD = 36.0   # 1° über der Schmerzgrenze 35.0 → Lead-Zeit
+COLD_HINT_TEXT = ("Die Kälte nagt. Ein Feuer würde hier Wärme geben.")
+FIRE_LOW_FUEL = 8.0          # weniger als ein Nachlegen (STOKE_FUEL) übrig
+FIRE_DYING_HINT_TEXT = ("Das Feuer wird schwach. Es ließe sich wohl "
+                        "am Leben halten.")
+
 # Verletzung & Heilung (SPEC-009): pro-Instanz Wund-Zustand (Player.injuries)
 # + handlungsgebundene Risikoquelle (Sammeln) + Behandlungs-/Ruhe-Gegenmechanik.
 # Frequenz bewusst niedrig: über die KURZE Mess-Fenster der Discovery-Bots
@@ -287,7 +301,17 @@ class GameEngine:
         loc = self.current_location
         if loc.fire_active and loc.fire_fuel > 0:
             fire_warmth = FIRE_HEAT
+            prev_fuel = loc.fire_fuel
             loc.fire_fuel = max(0.0, loc.fire_fuel - ticks)
+            # SPEC-014: das Feuer selbst meldet seinen Brennstoff-Zustand
+            # (Don't-Starve-Klasse) — fallender Crossing unter FIRE_LOW_FUEL
+            # bei aktivem Feuer. Guard fire_fuel > 0: kippt ein Tick direkt
+            # in FIRE_OUT, spricht nur die ehrliche FIRE_OUT-Meldung — die
+            # Andeutung („am Leben halten") wäre dort eine Lüge, stoke_fire
+            # braucht ein aktives Feuer. Einmal pro fallendem Durchgang.
+            if (loc.fire_fuel > 0 and prev_fuel >= FIRE_LOW_FUEL
+                    and loc.fire_fuel < FIRE_LOW_FUEL):
+                logs.append(FIRE_DYING_HINT_TEXT)
             if loc.fire_fuel <= 0:
                 loc.fire_active = False
                 logs.append("!!! FIRE_OUT: " + _feedback_message("FIRE_OUT") + " !!!")
@@ -297,7 +321,20 @@ class GameEngine:
 
         # Delta zwischen Körper und Umwelt, abgemildert durch Isolation und Schutz
         temp_loss = (self.player.body_temp - effective_ambient) * 0.01 * exposure * (1.0 - min(0.9, insulation))
+        prev_bt = self.player.body_temp
         self.player.body_temp -= (temp_loss * ticks)
+
+        # SPEC-014: Kälte-Warnung VOR dem lethal point (The-Long-Dark-Klasse) —
+        # fallender Crossing unter COLD_WARN_THRESHOLD, nur OHNE aktives Feuer
+        # (brennt Feuer und bt fällt trotzdem, spricht die Feuer-schwach-
+        # Meldung bzw. nichts — der Text wäre eine Lüge). Guard >= 35.0:
+        # springt bt in einem Tick unter die Schmerzgrenze, spricht
+        # UNTERKÜHLUNG, kein Doppel im selben Tick. Einmal pro fallendem
+        # Durchgang (Re-Wärmen rearmt), konstanter Text, kein RNG-Wurf.
+        if (not loc.fire_active and prev_bt >= COLD_WARN_THRESHOLD
+                and self.player.body_temp < COLD_WARN_THRESHOLD
+                and self.player.body_temp >= 35.0):
+            logs.append(COLD_HINT_TEXT)
         
         # Auswirkungen der Körpertemperatur
         if self.player.body_temp < 35.0:

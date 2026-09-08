@@ -5,6 +5,110 @@
 
 ---
 
+## 2026-09-08 — [Dev] SPEC-014: Feuer-Wartung lesbar machen — Kälte- und Brennstoff-Signale (compute_all 12×byte-identisch)
+
+### Vorbefund: Crash-Leftover-Adoption bereits sauber, kein Halbfertig-Stand
+
+Der Cron-Meldung zufolge lag ein uncommitteter Arbeitsbaum vor (Abbruch eines früheren
+Dev-Laufs). Befund bei Übernahme: **Baum war sauber** — die Adoption ist bereits in den
+Research-Läufen 19e1f01 ("adopt dev leftover wear-hint") + c0853a1 (test-cleanup)
+gekommen, inkl. JOURNAL-Nachtrag 08.09. (oben) und deterministischer Fix der 2 flaky
+Wear-Hint-Tests. `python -m pytest`: **308 passed, 1 xfailed**. Kein stiller Weiterbau
+auf fremdem Stand — der Ziel-2-Hebel ist damit vollständig abgeschlossen; PLAN-Checkbox
+hiermit reconciliert (`[x]`, Play-Lesung → Play-Job).
+
+### Design-Skizze (Pflicht vor TDD — 1 Absatz)
+
+**Befund (Play 07.09., B10):** stoke_fire ist als Wartungs-Verb unsichtbar — kein
+Prozess, keine Hinweis-Kategorie, kein Knowledge-Eintrag; Profil C stirbt 20/20 an
+Unterkühlung, neben sammelbarem Brennstoff, weil kein learnbares Muster für „Feuer
+braucht dauerhaftes Nachlegen" existiert. **Antwort spiel-seitig, exakt die Ziel-2-
+Klasse (Wear-Andeutung):** zwei Crossing-basierte, generische richtungsgebende Meldungen
+in `_advance_time` — (1) Kälte-Warnung am fallenden Crossing bt < 36.0 (1° über der
+Schmerzgrenze → Lead-Zeit, The-Long-Dark-Klasse: der Zustand meldet sich deutlich vor
+dem lethal point und benennt die Gegenrichtung), nur ohne aktives Feuer (Text-Wahrheit:
+mit Feuer wäre „ein Feuer würde hier Wärme geben" eine Lüge) und mit Guard ≥ 35.0
+(kippt bt im Crossing-Tick unter die Schmerzgrenze, spricht UNTERKÜHLUNG — kein Doppel);
+(2) Feuer-schwach am fallenden Crossing fire_fuel < 8.0 bei aktivem Feuer und
+fuel > 0 (Don't-Starve-Klasse: das Feuerobjekt zeigt seinen Brennstoff-Zustand, Lead
+~8 Ticks vor FIRE_OUT; im FIRE_OUT-Tick selbst keine Andeutung — „am Leben halten"
+wäre dort eine Lüge, stoke_fire braucht ein aktives Feuer). Konstanten, KEINE neuen
+RNG-Würfe, kein Leak (TAG_LABELS-Vokabelklasse: „Feuer", „Wärme", „am Leben halten" —
+kein Item, keine Menge, kein Prozess-Name), kein Reason-Code-Eingriff, kein Daten-Touch.
+Bewusst NICHT: stoke_fire als Pseudo-Prozess (das Prozess-Schema kann „irgendein
+WOOD/KINDLING-Item" nicht ausdrücken — falsches Datenmodell, Spec-Punkt 4).
+
+### Implementierung
+
+- `engine/core.py` Konstanten (nach STOKE_FUEL): `COLD_WARN_THRESHOLD = 36.0`,
+  `COLD_HINT_TEXT` („Die Kälte nagt. Ein Feuer würde hier Wärme geben."),
+  `FIRE_LOW_FUEL = 8.0`, `FIRE_DYING_HINT_TEXT` („Das Feuer wird schwach. Es ließe
+  sich wohl am Leben halten.") — Block-Kommentar: B10/Ziel-2-Klasse, kein-Leak-Rationale.
+- `_advance_time` Feuer-Block: `prev_fuel` vor Dekrement gesichert; Crossing
+  `fuel > 0 and prev_fuel >= FIRE_LOW_FUEL and fuel < FIRE_LOW_FUEL` → eine Zeile,
+  VOR der FIRE_OUT-Verzweigung (beide im selben Tick ausgeschlossen).
+- `_advance_time` Kälte-Block: `prev_bt` vor dem temp_loss-Update gesichert; Crossing
+  `not loc.fire_active and prev_bt >= 36.0 and bt < 36.0 and bt >= 35.0` → eine Zeile,
+  nach der bt-Aktualisierung, vor den Auswirkungs-Zweigen.
+- Tests `tests/test_cold_hints.py` (+12): Crossing einmalig/kein Spam (80 Ticks unter
+  Schwelle → 1), Fire-Gate (100-Tick-Feuer → 0 Kälte-Warnungen), UNTERKÜHLUNG-Guard
+  (SNOW-Drift: Warnung und Schmerz nie im selben Tick, keine Warnung unter 35.0),
+  Rearm beider Meldungen (Re-Wärmen / Nachlegen → neuer Durchgang feuert 1x), Leaks
+  (14 verbotene Substrings über beide Texte: Item-IDs, Holz-Vokabeln, Prozess-IDs,
+  Mengen), Konstanten-Vertrag (36.0/8.0), Determinismus (2 identisch geseedete Läufe →
+  identische Log-Sequenz, Warnung exakt 1x = Konstante). Ein Testfehler meinerseits
+  beim ersten Anlauf (Rearm-Asserts zählten über beide Durchgänge statt pro Durchgang
+  1x — jener ist zustandslos rearmsfähig, das war die geforderte Semantik); behoben,
+  Implementierung unangetastet.
+
+### Pflicht-Delta-Tabelle `compute_all()` vor/nach (20 Scorecard-Seeds)
+
+Vor = `/tmp/metrics_before_spec014.json` (Tages-HEAD c0853a1), nach = Lauf auf dem
+Arbeitsbaum. **Alle 12 Metriken byte-identisch** (Diff über vollständige JSON-Werte,
+sortiert) — es gibt keine neuen Würfe (beide Meldungen sind Konstanten an bestehenden
+Crossing-Bedingungen) und Bots reagieren nicht auf Log-Zeilen (SPEC-012-Probe-Befund):
+
+| Metrik | vor | nach | Δ |
+|---|---|---|---|
+| actions_to_first_craft | 7.0 | 7.0 | — |
+| blueprint_reachability | 1.0 | 1.0 | — |
+| content_reachable | 1.0 | 1.0 | — |
+| craft_variety | 5.0 | 5.0 | — |
+| discovery_gap | 0.545 | 0.545 | — |
+| feedback_quality | 1.0 | 1.0 | — |
+| forage_pressure | 0.0 | 0.0 | — |
+| gear_uptime | 0.994 | 0.994 | — |
+| recovery_stability | 0.375 | 0.375 | — |
+| session_depth | 52.5 | 52.5 | — |
+| skill_spread | 0.198 | 0.198 | — |
+| warmth_stability | 0.46 | 0.46 | — |
+
+**RNG-Strom-Klasse:** keine neuen Würfe, keine entfernten Würfe — beide Meldungen sind
+reine Konstanten an existierenden Werten (`loc.fire_fuel`, `player.body_temp`), ohne
+`random`-Kontakt. Stream-Shift: keiner (byte-identisch bestätigt).
+
+### Verifikation gegen die Akzeptanzkriterien
+
+1. Konstanten im WEAR_HINT_TEXT-Stil ✅ (Block-Kommentar B10/Ziel-2-Klasse + kein-Leak-Rationale)
+2. Kälte-Warnung: fallender Crossing < 36.0, nur `not loc.fire_active`, 1x pro Durchgang, kein RNG ✅ (Tests)
+3. Feuer-schwach: Crossing < 8.0 bei aktivem Feuer UND fuel > 0, nie im FIRE_OUT-Tick, 1x pro Durchgang, FIRE_OUT-Meldung unverändert ✅ (Tests)
+4. Kein Leak: keine Item-Templates, keine Mengen, keine Prozess-IDs in beiden Texten ✅ (14-Substring-Regression)
+5. Delta-Tabelle: alle 12 byte-identisch ✅ (oben)
+6. feedback_quality 1.0 unverändert; EMITTABLE_REASONS unangetastet (Log-Zeilen im _advance_time-Pfad, keine Experiment-Reasons) ✅ (Delta-Tabelle + kein Touch an feedback-Kern)
+7. pytest grün: **320 passed, 1 xfailed** (+12); hash-seed-stabil (PYTHONHASHSEED 1/2/3) ✅
+8. Play-Gegenprobe (Profil-C-Kälte-Tode < 20/20, natürliche [w]-Nutzung) → **offen, Play-Job** (explorativ, kein harter Gate — Spec-Regel)
+9. Kein Touch an data/*.json, PROCESS_HINT_CATEGORY, scorecard.py; session_depth-Probe unberührt ✅ (Diff: nur core.py + tests + PLAN/JOURNAL)
+
+### Constitution-Check
+
+Tag-Crafting-Kern unangetastet; kein Rezeptbuch/Leak (Richtung benennt die Verb-Klasse,
+nicht Item/Menge/Prozess — Brennstoff, Werkzeug-Klasse und Zünd-Pfad muss der Spieler
+weiterhin selbst finden); stdlib only; keine Metrik entfernt, umdefiniert oder
+abgeschwächt (12× byte-identisch); das Entdecken wird vertieft — der Wartungs-Loop wird
+als learnbares Objekt sichtbar gemacht, nicht abgekürzt. CLI-Text bleibt.
+
+---
+
 ## 2026-09-08 — [Research] SPEC-014 Feuer-Wartung lesbar machen (Metrik-Modus)
 
 Scorecard 07.09.: alle 12 Metriken ±0 — Determinismus-Check bestanden, kein Spiel-Code

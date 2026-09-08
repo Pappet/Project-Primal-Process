@@ -81,8 +81,18 @@ Prozess-Hinweise, Feuer-Ökonomie, Messwerkzeug-Fix) sind stabil; 289 Tests grü
       nicht kompensiert); session_depth-Lesung als Re-Baseline-Shift markieren
       (Probe bis 08.09. — Wert beobachtend, kein Tuning); kein Rezept-Leak.
 
-- [ ] **SPEC-014 — Feuer-Wartung lesbar machen: Kälte- und Brennstoff-Signale**
-      (B10, 20/20 Kälte-Tode im Menü-Profil 07.09.). Befund: stoke_fire ist als
+- [x] **SPEC-014 — Feuer-Wartung lesbar machen: Kälte- und Brennstoff-Signale**
+      ✅ 08.09. (Dev-Lauf): gelandet — COLD_WARN_THRESHOLD 36.0 / FIRE_LOW_FUEL 8.0,
+      Crossing-basiert in `_advance_time` (Kälte nur ohne aktives Feuer + Guard ≥ 35.0
+      gegen UNTERKÜHLUNG-Doppel; Feuer-schwach nur bei fuel > 0 — im FIRE_OUT-Tick
+      keine Lüge). Konstanten, keine neuen Würfe: **alle 12 Metriken byte-identisch**
+      (Delta-Tabelle JOURNAL 08.09.), feedback_quality 1.0, EMITTABLE_REASONS
+      unangetastet, kein Touch an data/*.json, PROCESS_HINT_CATEGORY, scorecard.py.
+      320 Tests grün (+12 test_cold_hints.py: Crossing/No-Spam/Fire-Gate/Rearm/Leak/
+      Konstanten-Vertrag). Design-Skizze: JOURNAL 08.09. Play-Gegenprobe (Profil-C-
+      Kälte-Tode < 20/20, [w]-Nutzung) → Play-Job (Akzeptanz 8, explorativ).
+      (B10, 20/20 Kälte-Tode im Menü-Profil 07.09.; Spec von Research 08.09.,
+      self-reviewed). Befund: stoke_fire ist als
       Wartungs-Verb unsichtbar — kein Prozess, keine Hinweis-Kategorie, kein
       Knowledge-Eintrag; der Spieler stirbt neben sammelbarem Brennstoff, weil er kein
       Muster für „Feuer braucht dauerhaftes Nachlegen" lernen kann. Antwort spiel-seitig,
@@ -101,8 +111,11 @@ Prozess-Hinweise, Feuer-Ökonomie, Messwerkzeug-Fix) sind stabil; 289 Tests grü
       JOURNAL) vor TDD; kein Touch an data/*.json, PROCESS_HINT_CATEGORY,
       scorecard.py.
 
-- [ ] **Ziel-2-Hebel: Wear-Warnung als richtungsgebende Andeutung** (keine Freigabe
-      nötig, aber Mechanik-Design sauber halten). Befund (Play 04.09., verifiziert):
+- [x] **Ziel-2-Hebel: Wear-Warnung als richtungsgebende Andeutung** — ✅ gelandet
+      07.09. (WEAR_HINT_TEXT an der Crossing-Warnung, core.py:419-425), committet mit
+      Research-Adoption 08.09. (19e1f01; 2 flaky Tests deterministisch gefixt, 308 grün,
+      JOURNAL-Nachtrag 08.09.). Play-Lesung (Koinzidenz Worn-Tool+Flint ≥ 1× im
+      guided-Verlauf) → Play-Job. Keine Freigabe nötig, aber Mechanik-Design sauber halten. Befund (Play 04.09., verifiziert):
       sharpen_tool 0/20 — Spieler erleben die Wear-Warnung (Crossing 0.25) ohne Flint
       im Inventar und halten Flint ohne Wear; der Instandhalten-Hinweis (31.08.)
       feuert erst, wenn das Werkzeug schon unter der Warnschwelle ist. Antwort
