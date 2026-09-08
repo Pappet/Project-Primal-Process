@@ -41,6 +41,31 @@ abgekürzt). PLAN.md: SPEC-014 als offener Task nach SPEC-012 eingefügt.
 
 Kein Spiel-Code, keine Metrik, kein CONSTITUTION-Kontakt.
 
+### Nachtrag (gleicher Lauf): Dev-Leftover adoptiert, 2 Tests deterministisch gefixt
+
+Der erste Commit (ea99f6e) schleppte via `git add -A` uncommitted Dev-Leftover vom
+07.09.-Lauf mit: die Wear-Hint-Landung selbst (`WEAR_HINT_TEXT`-Konstante + Andeutung
+in der Warnzeile, core.py:419-425 — im JOURNAL 07.09. als gelandet dokumentiert, aber
+nicht committet) + 3 neue Tests in tests/test_wear.py. Crash-Adoptionsregel angewandt:
+Feature ist sauber (Konstante an bestehender Crossing-Bedingung, kein RNG, kein Leak),
+ABER 2 der 3 Tests waren flaky und 1 falsch:
+
+1. `test_warning_carries_directional_hint` / `test_warn_line_is_single_line`: Wear
+   feuert nur bei erfolgreichem Ernte-Wurf (eff_chance ≈ 0.30 bei condition 0.30) —
+   5 Iterationen ohne Seed = P(Miss) ≈ 17%. Fix: `random.seed(424242)` + 30
+   Iterationen (Suite-Stil der bestehenden Wear-Tests).
+2. Der Leak-Assert prüfte die GESAMTE Logzeile inkl. dynamischem Tool-Namen —
+   „Feuerstein" steckt im engine-generierten Namen („Feuersteinsplitter-Feuersteinaxt")
+   und ist kein Leak. Fix: Assert nur auf den Andeutungs-Anteil hinter dem zweiten
+   `!!!`.
+
+308 passed, 1 xfailed; test_wear.py hash-seed-stabil (PYTHONHASHSEED 1/2/3). Korr.
+meines eigenen Eintrags oben: "Kein Spiel-Code" galt nur bis zur Adoption — der
+Commit enthält die Dev-Landung (Ziel-2-Hebel), nicht meine Erfindung. SPEC-014-Spec
+im Selbst-Review ergänzt: Feuer-schwach-Andeutung braucht `fire_fuel > 0`-Guard,
+sonst läge sie neben FIRE_OUT im selben Tick und würde eine Lüge erzählen
+(`stoke_fire` braucht ein aktives Feuer).
+
 ---
 
 ## 2026-09-07 — [Dev] Ziel-2-Hebel: Wear-Warnung trägt richtungsgebende Andeutung (kein Leak, keine RNG-Würfe, compute_all 12×identisch)
