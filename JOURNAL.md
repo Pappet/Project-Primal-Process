@@ -63,6 +63,12 @@ re-gelaufen (read-only, deterministisch, Doppel-Lauf byte-identisch). Befund:
    simpelsten Profil, früh (@20). Menü 12/20, guided 16/20.
 3. rope 7/20 blind, cord_spear 0/20 überall — Tier-2-Strang bleibt tot (BACKLOG
    07.09. unverändert).
+4. **Nachgeholte PLAN-Ziel-2-Lesung (Wear-Hint, fehlte im gecrashten Plan):** die
+   Koinzidenz Worn-Tool + Flint fällt im natürlichen guided-Verlauf weiterhin nie —
+   sharpen_tool **0/20** (post-SPEC-014, unverändert zum 04.09-Stand; der Kälte-/
+   Feuer-Pfad berührt weder Wear-Timing noch Flint-Rückhalt). Zielwert explorativ
+   nicht erreicht, kein harter Gate — dokumentiert als bestehendes Direktor-Signal
+   (Koinzidenz-Loch, xfail-Test verankert). 5. Lesung in Folge.
 
 ### Constitution / Hygiene
 
