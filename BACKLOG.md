@@ -64,8 +64,20 @@ Dinge die kaputt sind und gefixt werden müssen.
 > **Status: Engine-seitig gelandet (SPEC-014, 08.09.)** — Kälte-Warnung (bt < 36.0,
 > nur ohne aktives Feuer) + Feuer-schwach (fire_fuel < 8.0, Lead ~8 Ticks vor
 > FIRE_OUT) als Crossing-Meldungen in `_advance_time`; compute_all 12×byte-identisch,
-> 320 Tests grün (JOURNAL 08.09.). 🔴 bleibt offen bis zur **Play-Gegenprobe**
-> (Profil-C-Kälte-Tode < 20/20 UND natürliche [w]-Nutzung — Spec-Akzeptanz 8).
+> 320 Tests grün (JOURNAL 08.09.).
+>
+> **Play-Gegenprobe 09.09.:** Mechanik-Seite hält — Meldung feuert zuverlässig
+> (722 cold_events / 20 Seeds), kein Spam, Fire-Gate korrekt. Akzeptanz "Profil-C-
+> Kälte-Tode < 20/20" (explorativ) formal nur im reader-Politik-Test erreicht
+> (19/20 — Seed 805 überlebt @200), deaf 20/20 @97.5, retreat 20/20 @83.
+> Ursache ist nicht mehr Unsichtbarkeit, sondern Ökonomie + Reihenfolge:
+> `start_fire` ist beim ersten Kälte-Crossing in **0/20** Seeds bekannt (erste
+> Warnung median @6.5, Discovery später); ohne gelerntes Nachlege-Muster verlischt
+> jedes Feuer (fires_lit median 2); der wörtlich befolgte Sammel-Loop am kalten
+> Ort (reader, Tod @76) ist SCHLECHTER als Ignorieren (deaf @97.5). Ehrliche
+> Lesung: Mechanik hält, Spieler-Antwortpfad fehlt noch. **Design-Frage →
+> Direktor (13.09.):** Hinweis-Text Richtung "warmes Rückzugsziel" vs. "Feuer"?
+> Details: play/2026-09-09.md.
 
 - [2026-09-07] (Play) **Alle 20 Lang-Runs (200 Aktionen, Menü-naives Profil) sterben an Unterkühlung** (bt 3.7–23.3 am Ende, Energie 125–332, keine Wunden, kein Hunger) — trotz 16/20 gefundener `start_fire`-Discovery und sammelbarem Brennstoff. `stoke_fire` ist kein Prozess (nicht im [p]-Menü, keine Hinweis-Kategorie in `PROCESS_HINT_CATEGORY`), kein Blueprint, kein Knowledge-Eintrag; der einzige Kontakt ist das unkommentierte Menü-Label `[w]ärmen`. Der Spieler lernt "Feuer = einmal gelernt" aus der Prozess-Ebene und hat kein Muster für "Feuer braucht dauerhaft Nachlegen". **Fix-Richtung (gleiche Klasse wie PLAN-Ziel 2, Wear-Warnung):** richtungsgebende Meldung, wenn `body_temp` sinkt und kein Feuer brennt — "Die Kälte nagt. Ein Feuer ließe sich wohl am Leben halten." (kein Rezept-Leak, kein Reason-Code-Eingriff, keine neuen RNG-Würfe) ODER `stoke_fire` als Kategorie "feuer pflegen" in die Prozess-Hinweise. Play-Gegenprobe: Profil-C-Tode erneut messen. — warmth_stability/session_depth/skill_spread.
 
@@ -77,6 +89,7 @@ Mechaniken, Features, Verbesserungen — nicht akut, aber wertvoll.
 > **Triage 2026-08-23 (Direktor):** Kein neuer 🔴 Bug. `session_depth`-Blindheit (18./19.08.), `feedback_quality`-NEAR_MISS (19.08.), `skill_spread` (13.08.) bleiben offen — in PLAN.md als Entscheid-Tasks an Peter überführt. `forage_pressure` (20.08.): Probe beendet, Wert über Band, aber definitions-abhängig → Peters Entscheid Definition/Band (PLAN-Task), kein Spiel-Tuning dahinter. `warmth_stability`/`recovery_stability` bleiben beobachtend bis Probe-Ende (27.08./03.09.). Neu als Research-Kandidat: Near-Miss für 2-Slot-Blueprints (Deckungslücke, `discovery_gap`-Hebel; PLAN-Task).
 
 <!-- Session-Einträge hier drunter -->
+- [2026-09-09] (Play) **Re-Confirm 07.09.-Idee:** Menü-/Kälte-Probes erneut nur in /tmp (crash-adoptierter Lauf neu implementiert — Vorwochen-Skripte waren weg). snare-Lesung, deaf/reader/retreat-Politiken, first-cold-Check: alles wieder Wegwerf-Code. Das 07.09er-Anliegen (drittes Standard-Profil als `play/naive_menu.py` ins Repo) gilt unverändert weiter — der Unterhalt dieser Probes frisst pro Session Verifikationszeit. — alle Metriken (Lesung), kein Metrik-Eingriff.
 - [2026-09-07] (Play) **Menü-Naiv-Profil als drittes Mess-Profil etablieren?** Diese Session spielte erstmals einen naiven Spieler, der die CLI-Menüs nutzt (gather/Experimente 2er+3er/[p]-Menü/reisen), über /tmp-Skripte: 80-Aktionen- und 200-Aktionen-Variante, 20 Seeds. Ergebnis: Prozess-Discovery 0/20 → 20/20 (Blind vs. Menü), Erschöpfung ~20 (guided) vs. ~110 (Menü), 20/20 Kälte-Tode im Lang-Loop (→ B10). Die Befunde hängen am Profil — wenn die Menü-Lesung Standard werden soll, gehört das Profil als `play/naive_menu.py` ins Repo (Play-Messwerkzeug, kein Scorecard-Eingriff, Constitution unangetastet). Skripte lagen nur in /tmp (diese Session). — alle Metriken (Lesung), kein Metrik-Eingriff.
 - [2026-09-07] (Play) **spear_bound/cord_spear 0/20 im Menü-Profil: der Tier-2-Strang ist für echte Spieler tot.** rope wird 17/20 gefunden (FIBER+RIGID als 2er), aber `cord_spear` braucht ein 3er-Experiment {SHARP_OR_RIGID, RIGID, CORD} — im Blind-Profil unmöglich (nur 2er), im Menü-Profil kombinatorisch verdünnt. Die rope-Discovery könnte eine Anschluss-Andeutung tragen ("Fasern um Holz..."), Design-Frage, kein Task — erst lesen, wenn B10 und SPEC-012 gelandet sind. — discovery_gap/session_depth.
 - [2026-08-27] (Research) **Pebble-Munition verbraucht sich nicht — sie "verschleißt" als Stack.** Die Jagd (`raw_meat`, req_tool_tag PROJECTILE) läuft über denselben Wear-Pfad wie Werkzeuge (`core.py:329-334`); pebbles mergen zu einem Stack mit EINER gemeinsamen condition, wear trifft den ganzen Stapel (~0.25/Erfolg, durability 0.2), bei cond ≤ 0 verschwindet der komplette Munitionsbestand ohne Vorwarnung. Designlücke: Ein Projektil sollte Consumable sein (einer fliegt pro Schuss), kein durables "Werkzeug". Ausgekoppelt aus SPEC-011 (dort als Randbefund dokumentiert); Fix-Richtung: PROJECTILE-Nutzung verbraucht quantity-- statt condition-wear, oder eigenes ammo-tagging. — Spielgefühl/Wirtschaft. — **→ PLAN-Task „Munitions-Ökonomie: Pebble = Consumable" (Direktor 30.08.)**

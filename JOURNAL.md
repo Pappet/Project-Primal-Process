@@ -5,6 +5,74 @@
 
 ---
 
+## 2026-09-09 — [Play] Nachcommit des abgebrochenen Play-Laufs: erste Lesung post-SPEC-012/014 — Meldung ehrlich, rettet trotzdem niemanden
+
+### Ausgangslage (Crash-Adoption)
+
+Vorgefunden: uncommitteter Arbeitsbaum des Play-Laufs 09:30 (Plan-File
+`.hermes/plans/2026-09-09_093000-play-echtlesung-post-spec012-014.md`, ungetrackt;
+keine Writes — Scorecard/Report/JOURNAL/BACKLOG fehlten, /tmp-Probes lagen herum).
+Adoption nach Crash-Regel (Präzedenz 04.09.): erst prüfen, dann übernehmen.
+
+**Prüfung:** HEAD = e271cbf (exakt der Plan-Vertrag), pytest 320 passed + 1 xfailed,
+Code-Baum sauber — keine Staleness. **Verifikation der Plan-Zahlen:** alle Probes
+re-gelaufen (read-only, deterministisch, Doppel-Lauf byte-identisch). Befund:
+
+- **Scorecard-Write byte-identisch zur Pre-Measurement-Prognose** — alle 12 Metriken
+  exakt (gap 0.600→**0.545**, PLAN-Ziel ≤ 0.55 erreicht; atfc 9.5→7.0; session_depth
+  63.0→52.5; skill_spread 0.202→0.198; Wächter reachability/content/feedback 1.0/1.0/1.0;
+  Rest ±0). Determinismus-Vertrag hält.
+
+| Metrik | 07.09. | 09.09. | Status |
+|---|---|---|---|
+| actions_to_first_craft | 9.5 | **7.0** | Stream-Shift (dokumentiert), besser |
+| blueprint_reachability | 1.0 | **1.0** | Wächter (11/11) |
+| craft_variety | 5.0 | **5.0** | unverändert |
+| skill_spread | 0.202 | **0.198** | Stream-Shift, minimal |
+| feedback_quality | 1.0 | **1.0** | Wächter hält |
+| content_reachable | 1.0 | **1.0** | Wächter (18/18) |
+| session_depth | 63.0 | **52.5** | Stream-Shift (Probe-Ende 08.09. → Direktor) |
+| discovery_gap | 0.600 | **0.545** | PLAN-Ziel 1 erreicht (Band 0.2–0.6) |
+| naive_rate / naive_p25 | 0.400 / 0.3 | **0.455 / 0.364** | der Gap-Gewinn |
+| forage_pressure | 0.0 | **0.0** | beobachtend (Probe bis 11.09.) |
+| warmth_stability | 0.46 | **0.46** | unverändert |
+| recovery_stability | 0.375 | **0.375** | unverändert |
+| gear_uptime | 0.994 | **0.994** | über Band (Probe bis 11.09.) |
+
+- **Zwei Korrekturen zum Plan-Entwurf** (vor Adoption gefunden, Report schreibt sie
+  ehrlich): (1) reader-Politik **19/20** Tode, nicht 20/20 — Seed 805 überlebt @200
+  (bt 33.9); Median-Tod @76 und Events (722/166) exakt wie geplant, Ordnung
+  reader < deaf bleibt. (2) guided "13/20 alive, 7 am Cap" im Plan ist vertauscht —
+  real **7/20 alive (= exakt die 7 am 400er-Cap), 13 frühe Tode** (Aktion 4–38),
+  konsistent mit der 07.09-Baseline (~12 Tode). Snare/guided-Kernzahlen exakt:
+  blind 19/20 @20, menü 12/20 @19 (Tode 18/20), guided snare 16/20, volle Decke
+  10/20, Erschöpfung median 22 (15–27, full-only).
+- **Verifizierte Kausal-Zuspitzung:** `start_fire` ist beim ersten Kälte-Crossing in
+  **0/20** Seeds bekannt (erste Warnung median @6.5, Range 1–20; Prozess-Discovery
+  später). Der Hinweis feuert (722×), ist ehrlich — und der wörtlich befolgte
+  Sammel-Loop am kalten Ort ist schlechter als Ignorieren (reader @76 < deaf @97.5).
+
+### Befunde (Details: play/2026-09-09.md)
+
+1. **SPEC-014-Gegenprobe:** Mechanik hält (Meldung zuverlässig, kein Spam, Fire-Gate),
+   Akzeptanz "Kälte-Tode < 20/20" (explorativ) formal nur im reader-Test erreicht
+   (19/20). Ursache ist Ökonomie + Reihenfolge, nicht mehr Unsichtbarkeit. Design-
+   Frage → Direktor: Hinweis-Text Richtung "warmes Rückzugsziel" vs. "Feuer"?
+   (BACKLOG B10-Status aktualisiert.)
+2. **SPEC-012 im Spiel:** der Gap-Gewinn ist real angekommen — snare 19/20 im
+   simpelsten Profil, früh (@20). Menü 12/20, guided 16/20.
+3. rope 7/20 blind, cord_spear 0/20 überall — Tier-2-Strang bleibt tot (BACKLOG
+   07.09. unverändert).
+
+### Constitution / Hygiene
+
+- Kein Engine-/Data-/Metrik-Touch, kein Eingriff in `tools/scorecard.py` — nur der
+  sanktionierte Scorecard-Write des Play-Jobs + Report/BACKLOG/JOURNAL.
+- /tmp-Probes nach den Writes gelöscht (probe_snare_profiles, probe_cold_reader,
+  probe_cold_retreat, probe_cold_profile_c, probe_gap_snare, premeasure_metrics,
+  verify_*).
+- pytest nach Writes: 320 passed, 1 xfailed.
+
 ## 2026-09-08 — [Dev] SPEC-014: Feuer-Wartung lesbar machen — Kälte- und Brennstoff-Signale (compute_all 12×byte-identisch)
 
 ### Vorbefund: Crash-Leftover-Adoption bereits sauber, kein Halbfertig-Stand
