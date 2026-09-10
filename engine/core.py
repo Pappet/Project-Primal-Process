@@ -104,6 +104,18 @@ FIRE_LOW_FUEL = 8.0          # weniger als ein Nachlegen (STOKE_FUEL) übrig
 FIRE_DYING_HINT_TEXT = ("Das Feuer wird schwach. Es ließe sich wohl "
                         "am Leben halten.")
 
+# SPEC-015: Rast — Zeit als investierbare Ressource. Ein Verb, das REST_TICKS
+# Ticks über den BESTEHENDEN _advance_time-Pfad verstreichen lässt, mit
+# reduziertem Effort: Hunger-Ticks, Feuer-Brennstoff, Wetter-Crossings und
+# SPEC-014-Warnungen laufen unverändert weiter — aber die Tätigkeit selbst
+# kostet kaum Kraft, keine Draws, kein Wear, kein Verletzungsrisiko. Detail-
+# Balance beim Dev (SPEC-007/013-Präzedenz).
+REST_TICKS = 4            # ein Rast-Zyklus (≈ 40 In-Game-Minuten)
+REST_EFFORT = 0.4         # reduzierter Hunger-Drain (vs. gather 2.0)
+REST_HEAL_BONUS = 1.0     # Reserve: Rast am Feuer könnte Heilrate über
+                          # INJ_HEAL_RATE heben — bewusst NICHT verdrahtet
+                          # (Spec: Heilung läuft heute über _resting_warm()+Ticks)
+
 # Verletzung & Heilung (SPEC-009): pro-Instanz Wund-Zustand (Player.injuries)
 # + handlungsgebundene Risikoquelle (Sammeln) + Behandlungs-/Ruhe-Gegenmechanik.
 # Frequenz bewusst niedrig: über die KURZE Mess-Fenster der Discovery-Bots
@@ -865,6 +877,22 @@ class GameEngine:
         msg = f"Du legst {name} nach. "
         msg += (time_msg if time_msg else "")
         return {"success": True, "message": msg.strip(), "reason": "SUCCESS"}
+
+    def rest(self) -> Dict[str, Any]:
+        """Verbringt REST_TICKS Ticks mit reduziertem Effort — Zeit kaufen
+        (Heilung abwarten, Nacht überstehen, Node-Regen geben). Kostet
+        Hunger-Ticks, Feuer-Brennstoff und Wetter-Gefahr wie jede Zeit.
+
+        Kein paralleler Simulations-Pfad: alles läuft durch `_advance_time` —
+        deshalb feuern FIRE_OUT/UNTERKÜHLUNG/SPEC-014-Warnungen auch während
+        der Rast ehrlich. Keine neuen RNG-Würfe (nur die bestehenden %-12-
+        Wetter-Crossings). Kein Rezept-Leak: die Meldung ist generisch.
+        """
+        msg = self._advance_time(REST_TICKS, effort_multiplier=REST_EFFORT)
+        return {"success": True,
+                "message": "Du rastest eine Weile."
+                           + (f" {msg}" if msg else ""),
+                "reason": "SUCCESS"}
 
     def _process_requirements_met(self, proc) -> bool:
         """Alle Input-/Werkzeug-/Umgebungs-Anforderungen eines Prozesses erfüllt?"""

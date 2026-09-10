@@ -132,7 +132,7 @@ Prozess-Hinweise, Feuer-Ökonomie, Messwerkzeug-Fix) sind stabil; 289 Tests grü
       guided-Verlauf ≥ 1× erlebbar (Sweep-Dokumentation; Zielwert explorativ, kein
       harter Gate-Wert — kein Overfitting am Mess-Bot).
 
-- [ ] **SPEC-015 — Rast: Zeit als investierbare Ressource** (Research 10.09., explorativ,
+- [x] **SPEC-015 — Rast: Zeit als investierbare Ressource** (Research 10.09., explorativ,
       probe-verifiziert). Befund: Die Welt tickt, aber der Spieler kann Ticken nicht gewähren —
       es gibt kein Verb, das Zeit ohne Arbeit verstreichen lässt (CLI main.py:26 hat kein Rast);
       die SPEC-009-Heil-Kette (`treated + _resting_warm()`) wird im natürlichen Verlauf nie
@@ -152,6 +152,16 @@ Prozess-Hinweise, Feuer-Ökonomie, Messwerkzeug-Fix) sind stabil; 289 Tests grü
       Heil-Kette über Rast (am Feuer ja, ohne Feuer nein), FIRE_OUT/UNTERKÜHLUNG während
       Rast ehrlich, keine-Draws-Assertion, Wächter 1.0/1.0/1.0, pytest grün, Delta-Tabelle
       im JOURNAL (auch bei Null-Delta), kein Rezept-Leak, CLI bleibt.
+      ✅ 10.09. (Dev-Lauf): gelandet — `rest()`-Verb (engine/core.py nach
+      stoke_fire), REST_TICKS=4 / REST_EFFORT=0.4 / REST_HEAL_BONUS=1.0 (Reserve,
+      nicht verdrahtet), Menü `[r]asten` musterkonform zu [w]ärmen. Alle Systeme
+      durch den bestehenden Tick-Pfad (FIRE_OUT/UNTERKÜHLUNG/SPEC-014 feuern
+      ehrlich während Rast, Node-Regen läuft). **Go/No-Go: alle 12 Metriken
+      byte-identisch** gegen 2026-09-09 (Tages-Probe, Delta-Tabelle JOURNAL
+      10.09.); Wächter 1.0/1.0/1.0; 342 Tests grün (+22 tests/test_rest.py);
+      CLI-Smoke ([r] im Menü, rest-Antwort) verifiziert; kein Data-Touch,
+      EMITTABLE_REASONS unangetastet, kein Rezept-Leak. Play-Gegenprobe
+      (rest_adoption, explorativ) → Play-Job.
 - [~] *(beobachtend, Probe bis 08.09.)* **session_depth** (v2) — 63.0 Re-Baseline
       (Prozess-Hinweise lassen den v2-Bot tiefer laufen), Metrik-Nadel ~3.2× über dem
       echten Discovery-Cap (~20 gezielte Aktionen). Erstes Ziel-Handling beim

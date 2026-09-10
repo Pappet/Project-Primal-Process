@@ -1,5 +1,11 @@
 # SPEC-015 — Rast: Zeit als investierbare Ressource (der Nacht-Bogen bekommt ein Verb)
 
+> **STATUS: erledigt (Dev 10.09.) — `rest()`-Verb in engine/core.py
+> (`_advance_time(REST_TICKS=4, effort 0.4)`), Menü `[r]asten`; compute_all 12×
+> byte-identisch gegen 2026-09-09 (Tages-Probe, Go); 342 Tests grün (+22
+> test_rest.py); Delta-Tabelle JOURNAL 10.09.; Play-Gegenprobe (rest_adoption,
+> explorativ) → Play-Job.**
+
 STATUS: offen (Research-Exploration, 2026-09-10) · Probe-Verifiziert (read-only /tmp, Repo unberührt)
 
 ## Problem

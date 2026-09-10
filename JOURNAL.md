@@ -5,6 +5,128 @@
 
 ---
 
+## 2026-09-10 — [Dev] SPEC-015: Rast — Zeit als investierbare Ressource (compute_all 12× byte-identisch)
+
+### Vorbefund: sauberer Baum, Tages-Baseline verifiziert
+
+HEAD 03fb51f (Research SPEC-015-Exploration), Arbeitsbaum sauber — kein
+Crash-Nachcommit nötig. pytest 320 passed + 1 xfailed. Pre-Messung auf HEAD:
+`compute_all()` byte-identisch gegen `scorecard/2026-09-09.json` (alle 12 Werte) —
+die Tages-Baseline ist exakt die, gegen die der Spec die Probe verlangt.
+Basen: `/tmp/metrics_before_spec015.json`, `/tmp/metrics_after_spec015.json`.
+
+### Design-Skizze (vor TDD, 1 Absatz)
+
+Rast ist kein neuer Simulations-Pfad, sondern ein *Tarif* auf dem bestehenden:
+`rest()` ruft `_advance_time(REST_TICKS=4, effort_multiplier=REST_EFFORT=0.4)` und
+sonst nichts. Die Wucht steckt im schon bestehenden Tick-Pfad — Feuer-Brennstoff,
+Wetter-Crossings (%12, keine neuen Würfe), SPEC-014-Warnungen, Heil-Bedingung
+(`treated + _resting_warm()`), Node-Regen laufen unverändert weiter; Rast macht sie
+nur durch Verstreichen-Lassen anwendbar. Konstanten im Spec-Block nach FIRE_LOW_FUEL,
+REST_HEAL_BONUS als bewusste Reserve (nicht verdrahtet — Heilung braucht keinen
+Bonus, nur die *Möglichkeit*, Zeit zu verbringen). Menü-Zeile `[r]asten`, Handler
+musterkonform zu `[w]ärmen`. Kein Data-Touch, kein Scorecard-Touch, kein
+Reason-Code-Eingriff. Abgrenzungen exakt wie im Spec: kein Sleep-Skip, kein
+Energie-Regen, kein Auto-Heal, kein Wachen-Beruf.
+
+### TDD: tests/test_rest.py (22 Tests, zuerst rot)
+
+- **Vertrag**: Konstanten 4/0.4/1.0; genau 4 Ticks pro rest(); 80 Rast-Ticks =
+  160 Energie-Drain statt 800 (Spec-Zahlen); beliebig wiederholbar (kein Sleep-Skip).
+- **Stream-Disziplin**: ohne Crossing kein RNG-Kontakt (getstate() unverändert);
+  mit Crossing genau ein random.choice-Wurf (Wetter) — verifiziert per
+  State-Kopie-Probe. Kein eigener Draw.
+- **Tick-Pfad-Ehrlichkeit**: Feuer brennt während Rast ab (−4/Ticks); FIRE_OUT mit
+  ehrlicher Meldung, wenn Brennstoff in der Rast kippt; FIRE_DYING-Hint feuert;
+  COLD_HINT feuert (Gipfel-Tag-Crossing 36.5 → 36.1); Node-Regen läuft (depleted
+  wird frei); Wetter kann wechseln.
+- **Heil-Kette**: behandelte 1.0-Schnittwunde am Feuer verheilt nach 5 Rast-Zyklen
+  (Probe exakt reproduziert), im Shelter (hidden_cave) nach 5 (Severity 0.65 nach
+  Behandlungs-Ticks — treat_-Prozess selbst kostet 2 Ticks), exponiert ohne Feuer
+  nie, unbehandelt nie (Rast ersetzt Behandlung nicht — make_bandage geht voraus).
+- **Kein Gratis-Schlaf**: Gipfel-Nacht ohne Feuer: bt 37.0 → 34.19 → 32.50 nach
+  2 Rasten, UNTERKÜHLUNG-Drain + HP-Verlust ehrlich; mit gesichertem Feuer
+  (forest_edge, 500 fuel, 120 Nacht-Ticks) überstehbar — bt pendelt 36–42,
+  kein UNTERKÜHLUNG, Hunger dosiert. Die Nacht bleibt ein Ereignis, das man
+  *arbeitet* (Brennstoff vor der Nacht sichern = Entscheidung).
+- **Menü/Leak**: [r]asten in main.py, game.rest()-Handler; Meldung generisch
+  ("Du rastest eine Weile."), 10-Substring-Leak-Regression; UNTERKÜHLUNG bleibt
+  sichtbar während Rast (keine Hint-freie Blase).
+
+### Implementierung
+
+engine/core.py: Konstantenblock (REST_TICKS/REST_EFFORT/REST_HEAL_BONUS) nach
+FIRE_DYING_HINT_TEXT mit Constitution-Rationale; `rest()` nach `stoke_fire` —
+6 Zeilen Mechanik, alles durch `_advance_time`. main.py: Menü-Zeile + elif-'r'.
+Sonst nichts. Kein Data-Touch, scorecard.py unangetastet.
+
+### Pflicht-Delta-Tabelle `compute_all()` vor/nach (20 Scorecard-Seeds)
+
+Vor = Tages-HEAD 03fb51f, nach = Arbeitsbaum mit rest(). **Alle 12 Metriken
+byte-identisch** (volle JSON-Objekte verglichen, nicht nur `value`) — Scorecard-
+Bots rufen rest() nie (kein Policy-Touch), die Wettkreis-Sequenzen verschieben
+sich nicht:
+
+| Metrik | vor | nach | Δ |
+|---|---|---|---|
+| actions_to_first_craft | 7.0 | 7.0 | — |
+| blueprint_reachability | 1.0 | 1.0 | — |
+| content_reachable | 1.0 | 1.0 | — |
+| craft_variety | 5.0 | 5.0 | — |
+| discovery_gap | 0.545 | 0.545 | — |
+| feedback_quality | 1.0 | 1.0 | — |
+| forage_pressure | 0.0 | 0.0 | — |
+| gear_uptime | 0.994 | 0.994 | — |
+| recovery_stability | 0.375 | 0.375 | — |
+| session_depth | 52.5 | 52.5 | — |
+| skill_spread | 0.198 | 0.198 | — |
+| warmth_stability | 0.46 | 0.46 | — |
+
+**RNG-Strom-Klasse:** keine neuen Würfe, keine entfernten Würfe — rest() ist
+reiner Zeit-Kauf über `_advance_time` (nur die bestehenden %-12-Wetter-Crossings;
+no-draws-Assertion per random.getstate()-Vergleich getestet). Stream-Shift:
+keiner (byte-identisch bestätigt). **Go/No-Go: GO** — Tages-Probe gilt (Spec-
+Kriterium 4), SPEC-013-Präzedenz nicht nötig.
+
+### Verifikation gegen die Akzeptanzkriterien
+
+1. Verb existiert: `[r]asten` in main.py, `game.rest()` — REST_TICKS/Effort über
+   Energie-Delta (80 Ticks → 160 statt 800) und Tick-Zähler getestet ✅
+2. Tick-Pfad: Feuer-Brennstoff brennt, FIRE_OUT/FIRE_DYING/COLD ehrlich, Wetter-
+   Crossings, Heilung am Feuer/Shelter ja / exponiert nein, Node-Regen ✅
+3. Kein Gratis-Schlaf: Nacht-Rast ohne Feuer friert (bt 32.5, HP-Verlust), mit
+   gesichertem Feuer überstehbar — planbar statt unvermeidbar ✅
+4. Stream-Disziplin: keine neuen Würfe, compute_all 12× byte-identisch, Delta-
+   Tabelle oben ✅
+5. Wächter: blueprint_reachability 1.0 (11/11), content_reachable 1.0 (18/18),
+   feedback_quality 1.0 — kein Data-Touch, rest kein Experiment-Pfad,
+   EMITTABLE_REASONS unangetastet ✅
+6. pytest: **342 passed, 1 xfailed** (320 + 22 neue) ✅
+7. CLI-Textinterface bleibt, Meldung generisch, kein Leak (10-Substring-Test);
+   CLI-Smoke im echten main()-Durchlauf: Menü zeigt [r]asten, rest-Antwort
+   "Du rastest eine Weile.", Parser bricht nicht ✅
+
+Zähler-Reconciliation (Präzedenz SPEC-012) nicht anwendbar: kein Data-Touch,
+Blueprint-/Template-Zähler unverändert.
+
+### Play-Gegenprobe (an Play-Job)
+
+rest_adoption (metrics/proposed/rest_adoption.md) explorativ lesen — Zielwert
+explorativ, kein harter Gate (kein Overfitting am Mess-Bot). Erwartung: bestehende
+12 Metriken bleiben unberührt (Bots rufen rest() nie); das Spielgefühl-Argument
+(Heil-Kette anwendbar, Nacht überstehbar, Zeit investierbar) liegt außerhalb der
+Bot-Welt — genau deshalb existiert das Proposal.
+
+### Constitution-Check
+
+Tag-basiertes Crafting unangetastet (rest ist Zeit-Verb, kein Crafting-Pfad);
+keine Rezepte, kein Leak; CLI bleibt, stdlib only, Start < 1s (kein neuer Lade-
+Pfad); keine Metrik entfernt/umdefiniert/abgeschwächt (12× byte-identisch
+gemessen); kein Content-Ballon (0 Items, 0 Blueprints, 0 Prozesse); Entdecken
+vertieft: Heil-Bedingung, Node-Regen und Nacht werden von Zufalls-Nebenwirkungen
+zu planbaren Entscheidungsräumen — der Spieler muss weiterhin entdecken, *dass*
+und *wann* Rast hilft.
+
 ## 2026-09-10 — [Research] SPEC-015 Rast: Zeit als investierbare Ressource — die Heil-Kette endet im Nichts, die Nacht ist unbeantwortbar, Zeit ist nicht kaufbar
 
 ### Ausgangslage (Explorations-Modus)
