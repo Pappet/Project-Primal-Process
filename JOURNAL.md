@@ -5,6 +5,64 @@
 
 ---
 
+## 2026-09-10 — [Research] SPEC-015 Rast: Zeit als investierbare Ressource — die Heil-Kette endet im Nichts, die Nacht ist unbeantwortbar, Zeit ist nicht kaufbar
+
+### Ausgangslage (Explorations-Modus)
+
+Freie Suche, kein Metrik-Anker (Constitution-Feld „Zeit"). Staleness-Check vor dem
+Schreiben: HEAD fbb7340 (Play-Nachcommit 09.09.), clean, 320 passed + 1 xfailed.
+Nummern-Disziplin: SPEC-014 gelandet, SPEC-013 verworfen/archiviert → SPEC-015 frei.
+
+### Skip-Log der Metrik-Auswahl (warum nicht die naheliegenden)
+
+- discovery_gap (0.545, im Band nach SPEC-012): Rast ist kein Selektions-/Content-Hebel —
+  0 Items, 0 Blueprints, 0 Prozesse. Kein Gap-Bezug, bewusst.
+- gear_uptime / forage_pressure (Probe bis 11.09.): Probezeit läuft, kein Eingriff.
+- warmth_stability / recovery_stability (flach, p25=p75): SEHR verlockend als
+  Ankündigungs-Hebel — aber beide lesen Scorecard-Bot-Policies, die rest() nie rufen
+  würden; die Metrik müsste erst einen neuen Runner bekommen (Metrik-Core-Eingriff,
+  Peters Freigabe). Ehrlich: SPEC-015 bewegt sie im Messfenster nicht. Stattdessen
+  eigener Metrik-Vorschlag `rest_adoption`, der die Adoption der Zeit-Achse misst.
+
+### Befund (alle Probes read-only /tmp, Repo unberührt, Standard-Seeds)
+
+1. **Die Welt hat kein "Warten".** CLI main.py:26: gather/experiment/process/feed/
+   knowledge/inventory/travel/wärmen — jede Zeit-Einheit muss mit Arbeit erkauf werden
+   (gather: Effort 2.0 = 10 Energie/Tick + chance-Draws + Wear + Verletzungsrisiko).
+2. **SPEC-009-Heil-Kette endet im Nichts:** Heilung braucht `treated + _resting_warm()`,
+   aber ohne Rast-Verb wird die Ruhe-Bedingung nur als Zufalls-Nebeneffekt erfüllt.
+   Probe: 0/10 naive Bots (500 Ticks) behandeln jemals; guided-artig heilt eine
+   behandelte 1.0-Wunde "nebenbei" nach 19 gathers am Feuer; ohne Feuer nie
+   (600 gathers, severity bleibt 1.0, hp −1527). recovery_stability (0.375,
+   p25=p75) liest genau diese Nebenbei-Policy, kein Spielerwissen.
+3. **Nacht unbeantwortbar:** ~41% der Ticks sind Nacht (413/1008, bt-Mod −10);
+   ein Tag Sammeln am Waldrand (84 Ticks, CLEAR) wirft bt von 37.0 auf 19.99
+   (UNTERKÜHLUNG-Drain). "Am Feuer ausharren bis zum Morgen" ist nicht ausdrückbar.
+4. **Energie-Decke:** jede verstrichene Zeiteinheit kostet Arbeits-Zusatz (BACKLOG
+   10.08.: "Energie-Balance wäre Hebel" — Rast ist der erste Schritt, bewusst OHNE
+   Schlaf-Regeneration, das wäre ein eigenes Spec-Thema).
+5. **Stream-Anatomie:** 60× gather = 60 Draw-Cycles; 60× _advance_time(4) = 20
+   (nur %-12-Wetter-Crossings). Ein Zeit-Verb über _advance_time ist draw-arm und
+   verschiebt keine Ressourcen-Sequenzen — Go/No-Go (compute_all byte-identisch)
+   ist realistisch haltbar, anders als SPEC-013 (dort war die Wetter-Semantik
+   selbst betroffen; hier ändert Rast nur das Offerieren eines neuen Verbs ohne
+   Bot-Kontakt).
+
+### Antwort (Spec + Metrik-Proposal, keine Umsetzung)
+
+- `specs/SPEC-015-rast-zeit-investment.md` — rest()-Verb: `_advance_time(4, 0.4)`,
+  alle Systeme laufen durch den bestehenden Tick-Pfad (Feuer, SPEC-014-Warnungen,
+  Heilung, Node-Regen, Wetter); bewusst NICHT: Sleep-Skip, Energie-Regen, Auto-Heal.
+- `metrics/proposed/rest_adoption.md` — Rast-Fenster mit Outcome (Heilung vollendet /
+  Nacht warm überstanden); Band [0.4, 0.85], Bot-Trigger behandelt+Nacht+Feuer,
+  kein Outcome-Ghosting.
+- PLAN.md: offene Task-Zeile SPEC-015 (vor den [~]-Beobachtungszeilen).
+- Kein Touch an engine/, data/, tools/scorecard.py, main.py, tests/ — alles Dev-Arbeit
+  gegen den Spec. Constitution geprüft: kein Metrik-Core-Kontakt, kein Data-Touch,
+  CLI bleibt, kein Rezept-Leak (rest-Meldung generisch), kein Content-Ballon.
+
+---
+
 ## 2026-09-09 — [Play] Nachcommit des abgebrochenen Play-Laufs: erste Lesung post-SPEC-012/014 — Meldung ehrlich, rettet trotzdem niemanden
 
 ### Ausgangslage (Crash-Adoption)

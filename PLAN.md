@@ -132,6 +132,26 @@ Prozess-Hinweise, Feuer-Ökonomie, Messwerkzeug-Fix) sind stabil; 289 Tests grü
       guided-Verlauf ≥ 1× erlebbar (Sweep-Dokumentation; Zielwert explorativ, kein
       harter Gate-Wert — kein Overfitting am Mess-Bot).
 
+- [ ] **SPEC-015 — Rast: Zeit als investierbare Ressource** (Research 10.09., explorativ,
+      probe-verifiziert). Befund: Die Welt tickt, aber der Spieler kann Ticken nicht gewähren —
+      es gibt kein Verb, das Zeit ohne Arbeit verstreichen lässt (CLI main.py:26 hat kein Rast);
+      die SPEC-009-Heil-Kette (`treated + _resting_warm()`) wird im natürlichen Verlauf nie
+      als Entscheidung erfüllt (Probe: 0/10 naive Bots behandeln jemals; guided heilt
+      "nebenbei" nach 19 gathers), die Nacht (~41% der Ticks, bt 37→19.99 nach einem Tag
+      Waldrand) ist unbeantwortbar, die Energie-Decke (~240 Ticks optimal) bestraft jede
+      Zeiteinheit mit Arbeits-Kosten (gather = Effort 2.0 + Draws + Wear + Verletzungsrisiko).
+      Antwort (Engine-only, kein Data-Touch): `rest()`-Verb in engine/core.py —
+      `_advance_time(REST_TICKS=4, effort 0.4)`, keine neuen RNG-Würfe (nur bestehende
+      %-12-Crossings), Menü `[r]asten` in main.py; alle Systeme (Feuer, SPEC-014-Warnungen,
+      Heilung, Node-Regen, Wetter) laufen durch den bestehenden Tick-Pfad. Kein Sleep-Skip,
+      kein Energie-Regen, kein Auto-Heal (Abgrenzungen im Spec). Neue Metrik:
+      `rest_adoption` (metrics/proposed/) — Rast-Fenster mit Outcome (Heilung vollendet /
+      Nacht warm überstanden). Erwartete bestehende Metrik-Wirkung: KEINE (Scorecard-Bots
+      rufen rest() nie; Go/No-Go: compute_all() byte-identisch gegen 2026-09-09 — Tages-Probe
+      gilt, SPEC-013-Präzedenz bei Abweichung). Akzeptanz: rest-Ticks/Effort-Vertrag,
+      Heil-Kette über Rast (am Feuer ja, ohne Feuer nein), FIRE_OUT/UNTERKÜHLUNG während
+      Rast ehrlich, keine-Draws-Assertion, Wächter 1.0/1.0/1.0, pytest grün, Delta-Tabelle
+      im JOURNAL (auch bei Null-Delta), kein Rezept-Leak, CLI bleibt.
 - [~] *(beobachtend, Probe bis 08.09.)* **session_depth** (v2) — 63.0 Re-Baseline
       (Prozess-Hinweise lassen den v2-Bot tiefer laufen), Metrik-Nadel ~3.2× über dem
       echten Discovery-Cap (~20 gezielte Aktionen). Erstes Ziel-Handling beim
