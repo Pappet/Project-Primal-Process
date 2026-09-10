@@ -6,7 +6,7 @@
 > test_rest.py); Delta-Tabelle JOURNAL 10.09.; Play-Gegenprobe (rest_adoption,
 > explorativ) → Play-Job.**
 
-STATUS: offen (Research-Exploration, 2026-09-10) · Probe-Verifiziert (read-only /tmp, Repo unberührt)
+STATUS: erledigt (Dev 10.09., 2ae395f — siehe Status-Header oben)
 
 ## Problem
 
