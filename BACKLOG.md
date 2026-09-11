@@ -78,8 +78,36 @@ Dinge die kaputt sind und gefixt werden müssen.
 > Lesung: Mechanik hält, Spieler-Antwortpfad fehlt noch. **Design-Frage →
 > Direktor (13.09.):** Hinweis-Text Richtung "warmes Rückzugsziel" vs. "Feuer"?
 > Details: play/2026-09-09.md.
+>
+> **Nachtrag Play 11.09. (rest_adoption-Erstlesung):** die Nacht-Rast braucht ~64
+> Brennstoff-Ticks (14 Rests à 4 + ~8 Stokes à 1); KINDLING-Quellen (reeds
+> Höhle-only, tinder via Prozess) tragen das nicht im natürlichen Verlauf — das
+> Feuer stirbt @Rest 5–6 in der Nacht, danach ist die Höhle weg (reeds nur dort)
+> und die Rast unterm kalten Waldrand = UNTERKÜHLUNG-Drain. Gleiche Klasse wie oben:
+> Mechanik hält, Antwortpfad (Brennstoff-Dauer) fehlt. **Design-Frage → Direktor
+> (13.09.):** Nachlege-Zyklus lesbarer machen (z. B. WOOD-Tag auf stick ergänzen
+> wäre Data-Touch → Direktor-Entscheid). Details: play/2026-09-11.md.
 
 - [2026-09-07] (Play) **Alle 20 Lang-Runs (200 Aktionen, Menü-naives Profil) sterben an Unterkühlung** (bt 3.7–23.3 am Ende, Energie 125–332, keine Wunden, kein Hunger) — trotz 16/20 gefundener `start_fire`-Discovery und sammelbarem Brennstoff. `stoke_fire` ist kein Prozess (nicht im [p]-Menü, keine Hinweis-Kategorie in `PROCESS_HINT_CATEGORY`), kein Blueprint, kein Knowledge-Eintrag; der einzige Kontakt ist das unkommentierte Menü-Label `[w]ärmen`. Der Spieler lernt "Feuer = einmal gelernt" aus der Prozess-Ebene und hat kein Muster für "Feuer braucht dauerhaft Nachlegen". **Fix-Richtung (gleiche Klasse wie PLAN-Ziel 2, Wear-Warnung):** richtungsgebende Meldung, wenn `body_temp` sinkt und kein Feuer brennt — "Die Kälte nagt. Ein Feuer ließe sich wohl am Leben halten." (kein Rezept-Leak, kein Reason-Code-Eingriff, keine neuen RNG-Würfe) ODER `stoke_fire` als Kategorie "feuer pflegen" in die Prozess-Hinweise. Play-Gegenprobe: Profil-C-Tode erneut messen. — warmth_stability/session_depth/skill_spread.
+
+---
+
+### 🔴 B11 — Rast am Feuer treibt `body_temp` über 40.0 → HITZSCHLAG-Tod ohne Komfort-Obergrenze (SPEC-015-Kante)
+
+- [2026-09-11] (Play) **Der einzige Wärme-Counter des Feuers (FIRE_HEAT=40) hat
+  keinen oberen Komfort-Stop:** Rast am satten Feuer asymptotiert `body_temp`
+  gegen die effektive Ambient-Temperatur (> 40) → HITZSCHLAG @−1 hp/Tick, ohne
+  Unterbrechung bis zum Tod. Verifiziert doppelt: Play-Probe (Bot rastet im Feuer
+  zu Tode — 43 Rests @bt 40.7–43, hp 100→0 bei SATTEM Inventar, warm, Feuer an)
+  + Dev-Re-Produktion 11.09. (**19/20 Tode** im puren Rest-Loop am 500-fuel-Feuer,
+  Rest#33–57, bt_end 40.0–42.5, 20 Scorecard-Seeds). "Am Feuer ausharren" ist DIE
+  nahegelegte Antwort auf den Nacht-Bogen (SPEC-015) — und sie tötet bei langem
+  Ausharren an einer Überhitzung, die der Spieler nicht sieht (nur die
+  HITZSCHLAG-Zeile). Ehrliches Spiel-Signal, kein Bot-Artefakt. **Fix-Richtung:**
+  oberer Komfort-Cutoff der Feuer-Wärme (z. B. eff. Ambient-Cap ~38 °C) oder
+  Gleichgewicht statt Asymptot-Überhitzung — spiel-seitig, Konstante, kein
+  Metrik-Touch, kein Reason-Code-Eingriff. — warmth_stability/rest_adoption
+  (Erstlesung). **→ Direktor-Triage (13.09.)**; Details: play/2026-09-11.md.
 
 ---
 

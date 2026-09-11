@@ -5,6 +5,46 @@
 
 ---
 
+## 2026-09-11 — [Play→Dev] Nachcommit des abgebrochenen Play-Laufs: rest_adoption-Erstlesung 0.333 — zwei Nacht-Antworten töten (Brennstoff-Dauer, HITZSCHLAG)
+
+> Play-Lauf 09:00 crashte vor den Writes. Vorgefunden: Plan-File
+> `.hermes/plans/2026-09-11_090000-play-echtlesung-post-spec015.md` (ungetrackt,
+> read-only Pre-Measurement komplett), KEINE Writes. Adoptiert nach Crash-Regel
+> (Präzedenz 04.09./09.09.): erst prüfen, dann übernehmen, eigene Commit-Herkunft.
+> **Verifikation vor Adoption:** pytest 342 passed + 1 xfailed (35.75 s) auf
+> Tages-HEAD c56e6ff; Scorecard-Write `scorecard/2026-09-11.json` — alle 12 Metriken
+> **byte-identisch** gegen `2026-09-09.json` (verifiziert per Diff, Determinismus-
+> Vertrag hält; Erwartung aus Dev-Tages-Probe 10.09. bestätigt). B11 wurde
+> zusätzlich unabhängig re-produziert: 19/20 Tode im puren `rest()`-Loop am
+> 500-fuel-Feuer (Rest#33–57, bt_end 40.0–42.5, 20 Scorecard-Seeds).
+
+### Befunde (Details: play/2026-09-11.md)
+
+1. **`rest_adoption` Erstlesung: 0.333** (p25 0.000, p75 0.500, n=20, HORIZON 500,
+   guided-Grundierung) — unter Band 0.4–0.85. Erstlesung mit dokumentierter Policy,
+   kein Band-Urteil (Probezeit-Kalibrierung laut Spec erlaubt).
+2. **Nacht-Fenster scheitern an der Brennstoff-Ökonomie, nicht an Rast:** Nacht
+   ≈ 64 Brennstoff-Ticks vs. Höhlen-Reserve ~5 Stokes nach Warmup; Feuer stirbt
+   @Rest 5–6, Höhle (reeds) danach weg → UNTERKÜHLUNG-Drain. Klasse "Mechanik
+   hält, Antwortpfad fehlt" (wie B10). → BACKLOG B10-Nachtrag.
+3. **B11 (neu, 🔴): Rast am Feuer überhitzt tödlich.** FIRE_HEAT=40 ohne oberen
+   Komfort-Stop → bt asymptotiert > 40 → HITZSCHLAG @−1hp/Tick. "Am Feuer
+   ausharren" (nahegelegte Nacht-Antwort) tötet 19/20. Fix-Richtung: Komfort-Cutoff
+   der Feuer-Wärme (~38 °C eff. Ambient) — spiel-seitig, Konstante. → Direktor.
+4. **Heil-Kette über Rast einwandfrei:** behandelte cut heilt in exakt 5 Rast-Zyklen
+   (20 Ticks) in 10/10 Seeds — SPEC-015-Probe bestätigt ("19–20 Ticks bis verheilt").
+5. **Scorecard byte-identisch** (alle 12): Scorecard-Bots rufen `rest()` nie.
+   `rest_adoption` bleibt AUSSERHALB von METRICS — Aufnahme (probation_until
+   2026-09-24) ist Direktor/Dev-Adoption, nicht Teil eines Play-Nachcommits
+   (Constitution: Metrik-Kern braucht Freigabe; Proposal liegt in metrics/proposed/).
+
+### Writes dieses Nachcommits
+
+`scorecard/2026-09-11.json` + `SCORECARD.md`/`latest.json` (via tools/scorecard.py),
+`play/2026-09-11.md`, BACKLOG (B11 + B10-Nachtrag), Plan-File im Repo belassen
+(Präzedenz: Plan-Files werden historisch getrackt). Kein Spiel-Code, keine
+Metrik-Berechnung, kein CONSTITUTION-Kontakt. pytest nach Writes erneut.
+
 ## 2026-09-10 — [Dev] SPEC-015: Rast — Zeit als investierbare Ressource (compute_all 12× byte-identisch)
 
 ### Vorbefund: sauberer Baum, Tages-Baseline verifiziert
