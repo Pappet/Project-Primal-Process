@@ -1,0 +1,10 @@
+{
+  "items": {
+    "stick": {
+      "name": "Eichenast",
+      "weight": 0.5,
+      "tags": { "RIGID": true, "WOOD": true },
+      "attributes": { "durability": 0.8 }
+    }
+  }
+}

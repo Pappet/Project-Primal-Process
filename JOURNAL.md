@@ -5,6 +5,99 @@
 
 ---
 
+## 2026-09-13 — [Direktor] Plan-Neufassung: Nacht-Bogen T1/T2 (B11-Cutoff, stick→WOOD), Probezeit-Entscheide, rest_adoption zur Aufnahme freigegeben
+
+> Lesung = Scorecard 11.09.: alle 12 Metriken ±0 gegen 09.09. (dritte byte-
+> identische Lesung in Folge), Wächter 1.0/1.0/1.0, gap 0.545 in der Bandmitte.
+> Constitution-Check der eigenen Änderungen: kein Touch an Play-Job,
+> tools/scorecard.py, METRICS, Scorecard-Dateien; PLAN/BACKLOG/JOURNAL/Plan-Files
+> sind laut Änderungsregel frei änderbar.
+
+### Scorecard-Bewertung (Verlauf)
+
+- **Vorwärts:** discovery_gap 0.600 → 0.545 (SPEC-012, hält, Bandmitte);
+  atfc 9.5 → 7.0; snare im Spiel verifiziert (19/20 simpelstes Profil).
+- **Stagniert (byte-stabil):** alle 12 — kein Spiel-Code seit SPEC-015, also
+  korrekt still. Die Lesungs-Blindstellen sind strukturell (warmth/recovery/
+  forage/gear lesen Bot-Policies, die Nacht-Rast/Behandlung/Instandhaltung/
+  Erschöpfung nie berühren) — Spielgefühl-Signale liegen bei Play, nicht in
+  der Scorecard.
+- **Probezeit-Entscheide (beide liefen 11.09. ab):**
+  - `gear_uptime` 0.994 über Band: Mess-Bot berührt die Gegenmechanik nie
+    (sharpen_tool 0/20, 6. Lesung) — die Zahl liest seine eigene Policy, kein
+    Spiel-Gefühl. Beobachtungsgröße, kein Plan-Ziel; Band/Umdeutung = Peters
+    Freigabe (Metrik-Kern).
+  - `forage_pressure` 0.000 unter Band: Bot stirbt (UNTERKÜHLUNG) vor der
+    Erschöpfungszone — Policy-Artefakt, kein verifiziertes Spiel-Signal.
+    Beobachtungsgröße; erster Schritt zu einer ehrlichen Lesung wäre das
+    Menü-Naiv-Profil als Repo-Datei (Play-Messwerkzeug, Play-Job-Prompt
+    unantastbar → bleibt Play-intern vorgeschlagen, nicht vom Direktor
+    verordnet).
+  - `session_depth` (Probe-Ende 08.09., gelesen): 52.5, Struktur unverändert
+    — Bot kauft die Zahl mit Stream-Crossings, Erschöpfungspunkt ~20 bleibt
+    die Kompass-Nadel. Beobachtungsgröße.
+
+### Entscheid 1 — B11 → T1: Feuer-Komfort-Cutoff (Engine-Konstante)
+
+B11 ist doppelt verifiziert (Play-Probe + Dev-Re-Produktion 19/20 Tode im
+Rest-Loop, bt_end 40.0–42.5): FIRE_HEAT=40 treibt eff. Ambient über die
+HITZSCHLAG-Grenze; „am Feuer ausharren" ist die nahegelegte Nacht-Antwort und
+tötet unsichtbar. Antwort: `FIRE_COMFORT_CAP ≈ 38.0` auf `effective_ambient`,
+NUR wenn Feuer aktiv — ohne Feuer null Verhaltenänderung. Konstante statt
+Warn-Event: die Wurzel ist physikalisch, nicht perzeptuell (SPEC-014-Klasse
+war für die Sichtbarkeit von Wartung da, nicht gegen Überhitzung). Erwartete
+Metrik-Wirkung: alle 12 byte-identisch (Bots rasten nie); Nachweis über
+Play-Gegenprobe (Rest-Loop-Tode → 0/20). Akzeptanz + exakte Zeilen im
+Work-Contract (Plan-File unten).
+
+### Entscheid 2 — B10 → T2: `stick` → +WOOD (Data-Touch, ein Tag, GO)
+
+Die Nacht braucht ~64 Brennstoff-Ticks; KINDLING-Quellen (reeds Höhle-only,
+tinder Prozess-Output) tragen das nicht — das Feuer stirbt @Rest 5–6, danach
+UNTERKÜHLUNG-Drain (B10-Nachtrag 11.09.). Der WOOD-Fuel-Pfad existiert in der
+Engine (`_find_fuel_item` bevorzugt WOOD), aber der Ast — das naheliegende
+Holz — trägt das Tag nicht: stille Datenlücke, kein Design-Wunsch. GO: stick
+bekommt `"WOOD": true`. Blast-Radius verifiziert: WOOD in
+data/blueprints.json = 0 Slots, processes.json nur als `tools`-Slot des
+start_fire-Prozesses (unberührt — sticks waren dort schon über RIGID/… im
+Spiel; Re-Verifikation durch Dev Pflicht). Kein Blueprint liest WOOD →
+reachability-Risiko minimal, aber Tages-Probe (Tages-HEAD, /tmp) vor Ship
+Pflicht; Wächter-Abweichung = NO-GO + revert. Play-Gegenprobe (Nacht-Fenster-
+Erfolg) → Play-Job. Damit beantwortet: die B10-Design-Frage „warmes
+Rückzugsziel vs. Feuer" (Hinweis-Text) erledigt sich — der Antwortpfad
+(Brennstoff-Dauer) ist die Antwort, kein neuer Text.
+
+### Entscheid 3 — Verwerfung: Tier-2-Anschluss-Andeutung (🟡 07.09.)
+
+cord_spear 0/20 überall; rope-Discovery könnte eine Anschluss-Andeutung
+tragen. Verworfen: sharpen_tool-Präzedenz (6 Lesungen 0/20) zeigt, dass eine
+Andeutung an einer Mechanik, deren Grundpfad im natürlichen Verlauf tot ist,
+nicht trägt — Reihenfolge: erst Grundpfad beleben (hier: nicht mal der
+Bedarf verifiziert, nur die Vermutung), dann Andeutung. Bleibt als
+unverbrauchte Idee im Pool.
+
+### Übergabe an Dev/Play
+
+- `rest_adoption` → Aufnahme in METRICS mit `probation_until` 2026-09-24
+  FREIGEGEBEN (Proposal verifiziert, metrics/proposed/rest_adoption.md; Erst-
+  lesung 0.333, Policy dokumentiert). Aufnahme durch Dev im nächsten Dev-Lauf
+  (Constitution: Ergänzen erlaubt, keine Freigabe nötig — Freigabe erteile ich
+  trotzdem explizit, inkl. Probezeit-Datum). Erste Ziel-Berechtigung nach
+  Probe-Ende; bis dahin PLAN-Beobachtungszeile.
+- Work-Contract für beide Tasks: `.hermes/plans/2026-09-13_180400-direktor-
+  nacht-bogen-t1-t2.md` (+ JSON-Snippet für den T2-Tag-Wechsel). T1 VOR T2,
+  getrennte Commits, Design-Skizzen vor TDD.
+- Keine Cron-Job-Änderungen diese Woche: Takt und Rollen tragen (Play-Mo/Mi/
+  Fr, Dev Mo–Sa, Research-Metric Di, Explore-Do, Direktor So); die offenen
+  System-Fragen (naive_menu-Profil, METRICS-Flachheit) hängen am Play-Job
+  bzw. an Peters Metrik-Freigaben — beides nicht meins.
+
+### Writes
+
+PLAN.md (Neufassung), BACKLOG.md (Triage 13.09.), dieses JOURNAL,
+Plan-Files (Work-Contract + Snippet). Kein Spiel-Code, kein Data-Touch, kein
+Metrik-Touch — T1/T2 sind Dev-Arbeit gegen den Work-Contract.
+
 ## 2026-09-11 — [Play→Dev] Nachcommit des abgebrochenen Play-Laufs: rest_adoption-Erstlesung 0.333 — zwei Nacht-Antworten töten (Brennstoff-Dauer, HITZSCHLAG)
 
 > Play-Lauf 09:00 crashte vor den Writes. Vorgefunden: Plan-File

@@ -2,188 +2,205 @@
 
 > Lebendes Dokument: wird vom Direktor (So 18:00) neu geschrieben.
 > Grenze: CONSTITUTION.md.
-> Stand: 2026-09-06, Lesung = Scorecard 04.09. (identisch 02.09.).
+> Stand: 2026-09-13, Lesung = Scorecard 11.09. (identisch 09.09.).
 
 ## Aktueller Zustand
 
-Die Wächter halten alle: `blueprint_reachability` 1.0, `content_reachable` 1.0 (18/18),
-`feedback_quality` 1.0, `discovery_gap` 0.600 (zwei Play-Lesungen bestätigt, Wächter-Tests
-auf ≤ 0.60 verschärft, 06bcebe) — aber am Wert sitzt die obere Bandkante, getragen von
-Hint-Layern, nicht von neuer Entdeckungstiefe. Die Erschöpfungslesung (echter
-Boredom-Punkt) bleibt dritte Lesung in Folge bei ~20 gezielten Aktionen; `session_depth` 63.0
-ist v2-Re-Baseline in Probezeit (bis 08.09.), nicht Spielgefühl. Gear_uptime 0.994
-(über Band, Probe bis 11.09.) ist zusammen mit sharpen_tool 0/20 inzwischen ein
-verifiziertes Spiel-Signal, kein Mess-Bug mehr: die SPEC-011-Gegenmechanik ist für
-Spieler praktisch unentdeckbar. Alle Landungen vom 31.08.–04.09. (B08, Munition,
-Prozess-Hinweise, Feuer-Ökonomie, Messwerkzeug-Fix) sind stabil; 289 Tests grün.
+Alle 12 Metriken ±0 gegen 09.09. — dritte byte-identische Lesung in Folge; die
+Wächter halten (reachability 1.0, 11/11 · content 1.0, 18/18 · feedback 1.0),
+`discovery_gap` 0.545 sitzt in der Bandmitte (naive_rate 0.455, snare verifiziert
+19/20 im simpelsten Profil). Das Spiel ist an einer neuen Stelle warm geworden:
+SPEC-015 (Rast) ist mechanisch einwandfrei gelandet (Heil-Kette 10/10 in exakt
+5 Rast-Zyklen, `compute_all` 12× byte-identisch, 342 Tests grün) — aber der
+Nacht-Bogen tötet auf zwei Arten: die Brennstoff-Ökonomie trägt keine Nacht
+(~64 Fuel-Ticks vs. ~5 Höhlen-Stokes), und Rast am satten Feuer überhitzt
+tödlich (B11: 19/20 Tode, `body_temp` > 40 ohne Komfort-Stop). Zwei
+Probezeiten sind 11.09. abgelaufen (gear_uptime, forage_pressure) und werden
+in dieser Lesung entschieden; sharpen_tool bleibt 0/20 (6. Lesung).
 
 ## Was als nächstes besser werden muss
 
-1. **Discovery-Gap von der Bandkante in die Bandmitte — mit neuem Content, nicht mit
-   mehr Hint-Layer.** Metrik: `discovery_gap` (0.600 → ≤ 0.55; Band 0.2–0.6 unverändert).
-   Befund Research 01.09. (Probe P1–P4): der Gap ist selektionsgebunden, nicht
-   survivalgebunden — der größte tote naive Selektionsraum ist (EDIBLE, FIBER)/
-   (EDIBLE, RIGID), kein Blueprint besetzt ihn. Ein `snare`-Blueprint {FIBER, EDIBLE}
-   las 0.600 → 0.545 (17/20 Seeds, naive_rate 0.4 → 0.455), probe-verifiziert.
-   Keine Band-Schrauben, kein Tuning an der Messung — die neue Zutatenklasse
-   „Essbares als Material" vertieft das Entdecken (Constitution).
+1. **Der Nacht-Bogen muss überlebbar sein — durch die Antwortpfade, nicht durch
+   Gnade.** Metriken: `warmth_stability` (0.460 → Band-Mitte; siehe
+   Probezeit-Entscheid unten — ohne Reform liest er keine Nacht-Rast, deshalb
+   ist der zweite Lesepfad `rest_adoption` nach Probe-Ende 24.09.),
+   `recovery_stability` (0.375, Heil-Kette über Rast muss im natürlichen Verlauf
+   nutzbar bleiben). Konkret: (a) B11-Komfort-Cutoff landen (kein 19/20-Tod am
+   selben Wärme-Counter mehr), (b) Nachlege-Dauer lesbar machen — das Spiel
+   muss die Frage „womit halte ich ein Feuer über Nacht?" beantwortbar
+   machen. Erwartung: keine Scorecard-Verschiebung außer der dokumentierten
+   B11-Öffnung (HITZSCHLAG stirbt im Messfenster nie — Bot rastet nie); der
+   Nachweis läuft über Play (Rest-Loop-Tode → 0/20, Nacht-Fenster-Erfolg).
 
-2. **Die Gegenmechanik von SPEC-011 für Spieler erreichbar machen.** Spiel-Signal
-   (kein Plan-Ziel, Metrik in Probezeit bis 11.09.): sharpen_tool ist 0/20 — die
-   Koinzidenz Worn-Tool + Flint fällt im natürlichen Verlauf nie zusammen (BACKLOG
-   🔵 02.09./04.09., ⚪ 04.09.). Antwort spiel-seitig, gleiche Klasse wie 13.08.
-   („Extrem-Kälte hat keine richtungsgebende Andeutung"): die Wear-Warnung muss eine
-   generische, richtungsgebende Andeutung tragen (z. B. dass sich Werkzeug mit
-   hartem Stein nachschärfen ließe) — kein Rezept-Leak, kein Reason-Code-Eingriff,
-   feedback_quality-Kern unangetastet. Ziel: die Gegenmechanik wird im natürlichen
-   Verlauf wenigstens einmal erlebbar (Play-Lesung), nicht 0/20.
+2. **rest_adoption in die Messung nehmen — die neue Zeit-Achse ohne Blende.**
+   Metrik: `rest_adoption` (neu aufzunehmen, `probation_until` 2026-09-24;
+   Proposal verifiziert, Erstlesung 0.333). Scorecard-Bots rufen `rest()` nie —
+   ohne diese Metrik ist SPEC-015 unsichtbar. Nach Probe-Ende (24.09.) darf
+   sie Plan-Ziel werden; bis dahin beobachtend.
 
-3. **Kein neuer Content verschiebt die Wächter.** Metriken: `blueprint_reachability`
-   = 1.0 (dann 11/11), `content_reachable` = 1.0 (18/18), `feedback_quality` = 1.0.
-   Der snare greift in Blueprints ein und das Ziel-2-Signal in die Engine — bei jedem
-   Eingriff: Probe vor dem Ship (Go/No-Go), vollständige compute_all()-Delta-Tabelle
-   im JOURNAL, RNG-Strom-Klasse benennen. Stream-Shift wird dokumentiert, nicht
-   kompensiert (Präzedenz Munitions-Ökonomie 31.08.).
+3. **Die Wächter halten durch jede Nacht-Bogen-Änderung.** Metriken:
+   `blueprint_reachability` 1.0 (11/11), `content_reachable` 1.0 (18/18),
+   `feedback_quality` 1.0, `discovery_gap` bleibt im Band (0.2–0.6).
+   Der Data-Entscheid in T2 berührt `items.json` (ein Tag); der Probe-Vertrag
+   der 31.08.-Präzedenz gilt: vollständige `compute_all()`-Delta-Tabelle im
+   JOURNAL, Stream-Shift dokumentiert, nicht kompensiert.
 
 ## Tasks
 
 > Offene Aufgaben mit Akzeptanzkriterien. Dev arbeitet von oben nach unten.
+> T1 ist vom T2-Entscheid abhängig — T1 zuerst.
 
-- [x] **SPEC-012 — Faserschlinge: die toten 2-Slot-Selektionsräume besetzen**
-      ✅ 07.09. (Dev-Lauf): Go/No-Go auf Tages-HEAD **GO** — gap 0.600 → **0.545** (≤ 0.55),
-      naive_rate 0.400 → 0.455, snare 17/20, Tode unverändert 19/20, reachability 1.0 (11/11),
-      content_reachable 1.0 (18/18), feedback_quality 1.0; alle übrigen 8 Metriken byte-identisch
-      (4 Stream-Shifts dokumentiert: atfc 9.5→7.0, session_depth 63.0→52.5, skill_spread 0.202→0.198,
-      gap = Ziel); 305 Tests grün (+16 snare-Tests, Zähler 10→11 reconciliert). Delta-Tabelle:
-      JOURNAL 07.09. Eine Korrektur gegen den Work-Contract: engine-true liest (reeds, stick) →
-      **spear** (nicht rope — galt schon vor SPEC-012, von snare unberührt); der echte rope-Fall
-      ist (plant_fiber, stick). Beide Schatten testverankert (tests/test_snare.py).
-      (Research-Plan 01.09., probe-verifiziert; Work-Contract:
-      `.hermes/plans/2026-09-01_104324-research-spec012-faserschlinge.md`).
-      Befund: Der Gap ist selektionsgebunden, nicht survivalgebunden (Proben:
-      immortal-Bot identisch 0.400, Tode 19/20, Discovery-Plateau @86.5 vor Tod @119).
-      Der größte tote naive Selektionsraum ist (EDIBLE, FIBER)/(EDIBLE, RIGID) —
-      kein Blueprint besetzt ihn. Antwort: `snare` {loop: FIBER, bait: EDIBLE},
-      ungated, tool_tags [PROJECTILE] → Jagd-Alternative zur endlichen Pebble-Munition
-      (31.08.-Pfad, data-only: `data/blueprints.json` +1 Eintrag am Array-Ende,
-      kein Engine-Touch). Probe 01.09.: naive_rate 0.400 → 0.455, gap 0.600 → 0.545
-      (im Band), 17/20 Seeds craften ihn (Median Aktion 36).
-      **Akzeptanz:** Staleness-Check (nichts Neues, das die Prämissen verschiebt);
-      Go/No-Go-Probe auf Tages-HEAD ≤ 0.55 (Tages-Probe gilt, nicht P4 — Plan-Regel);
-      `blueprint_reachability` 1.0 (11/11) und `content_reachable` 1.0 (18/18 — snare
-      ist Blueprint-only, KEIN items.json-Eintrag, sonst content_reachable-Regression
-      wie SPEC-008); Shadowing-Tests ((stick, stick)→spear; (reeds, stick) ab
-      survival 0.4→rope; snare nie verdrängt); Jagd-Verbrauch: raw_meat-Ernte mit
-      Schlinge → quantity-- pro Erfolg + Meldung, kein Stack-Wear (31.08.-Pfad);
-      EDIBLE-Slot material-agnostisch ((plant_fiber, berries) und (reeds, raw_meat)
-      craften beide); pytest grün (inkl. Zähler-Reconciliation test_engine/test_loader
-      10 → 11); vollständige Delta-Tabelle im JOURNAL (Stream-Shift dokumentiert,
-      nicht kompensiert); session_depth-Lesung als Re-Baseline-Shift markieren
-      (Probe bis 08.09. — Wert beobachtend, kein Tuning); kein Rezept-Leak.
+- [ ] **T1 — B11: Feuer-Komfort-Cutoff (HITZSCHLAG-Falle)**
+      **Priorität: 1.** Play 11.09. verifiziert (Play-Probe + unabhängige
+      Dev-Re-Produktion: 19/20 Tode im puren Rest-Loop am 500-fuel-Feuer,
+      Rest#33–57, bt_end 40.0–42.5, alle 20 Scorecard-Seeds): FIRE_HEAT=40
+      hat keinen oberen Komfort-Stop — effektive Ambient-Temperatur am Feuer
+      liegt > 40, `body_temp` asymptotiert darüber, HITZSCHLAG zieht
+      −1 hp/Tick ohne Unterbrechung bis zum Tod. „Am Feuer ausharren" ist DIE
+      nahegelegte Antwort auf den Nacht-Bogen (SPEC-015) und tötet bei langem
+      Ausharren — der Spieler sieht nur die HITZSCHLAG-Zeile, kein
+      richtungsgebendes Signal vorher (gleiches Muster wie B10 vor SPEC-014).
+      **Antwort (Engine-only, Konstante):** oberer Komfort-Cutoff der
+      Feuer-Wärme — `effective_ambient` am Feuer auf einen Komfort-Sockel
+      cappen (z. B. `FIRE_COMFORT_CAP = 38.0`: `effective_ambient =
+      max(effective_ambient, min(effective_ambient, FIRE_COMFORT_CAP))`
+      respektive `min(effective_ambient, FIRE_COMFORT_CAP)` wenn Feuer aktiv;
+      exakte Formel im Design-Skizze-Schritt festlegen und begründen). Wirkt
+      rein über die bestehende `_advance_time`-Wärmezeile (core.py:332-337) —
+      kein neuer RNG-Wurf, kein Data-Touch, kein Reason-Code-Eingriff. Die
+      UNTERKÜHLUNG-Seite bleibt unberührt (Kälte-Drift unter 35.0 bleibt
+      tödlich ehrlich). Bewusst NICHT: zusätzliches Warn-Event (erst lesen,
+      ob der Cutoff die Falle trägt — Meldungen sind die SPEC-014-Klasse,
+      nicht die erste Wahl gegen eine physikalische Überhitzung).
+      **Akzeptanz:** Rest-Loop-Regressionstest (500-fuel-Feuer, 60 Rasten,
+      20 Scorecard-Seeds): 0/20 HITZSCHLAG-Tode; `body_temp` pendelt im
+      Komfortfenster (kein untoter Zustand — Wärme-Gewinn endet unter der
+      40.0-Grenze); Kälte-Seite unberührt (bestehende
+      tests/test_cold_hints.py + tests/test_rest.py bleiben grün und
+      aussagekräftig: Nacht ohne Feuer friert weiterhin); keine neuen
+      RNG-Würfe (getstate-Assertion); vollständige `compute_all()`-Delta-
+      Tabelle im JOURNAL — Erwartung alle 12 byte-identisch (Scorecard-Bots
+      rasten nicht, SPEC-015-Präzedenz 10.09.); pytest grün; Design-Skizze
+      (1 Absatz im JOURNAL) vor TDD; kein Touch an data/*.json,
+      EMITTABLE_REASONS, scorecard.py; kein Rezept-Leak (Konstante ohne Text).
+      Details: play/2026-09-11.md, BACKLOG B11.
 
-- [x] **SPEC-014 — Feuer-Wartung lesbar machen: Kälte- und Brennstoff-Signale**
-      ✅ 08.09. (Dev-Lauf): gelandet — COLD_WARN_THRESHOLD 36.0 / FIRE_LOW_FUEL 8.0,
-      Crossing-basiert in `_advance_time` (Kälte nur ohne aktives Feuer + Guard ≥ 35.0
-      gegen UNTERKÜHLUNG-Doppel; Feuer-schwach nur bei fuel > 0 — im FIRE_OUT-Tick
-      keine Lüge). Konstanten, keine neuen Würfe: **alle 12 Metriken byte-identisch**
-      (Delta-Tabelle JOURNAL 08.09.), feedback_quality 1.0, EMITTABLE_REASONS
-      unangetastet, kein Touch an data/*.json, PROCESS_HINT_CATEGORY, scorecard.py.
-      320 Tests grün (+12 test_cold_hints.py: Crossing/No-Spam/Fire-Gate/Rearm/Leak/
-      Konstanten-Vertrag). Design-Skizze: JOURNAL 08.09. Play-Gegenprobe (Profil-C-
-      Kälte-Tode < 20/20, [w]-Nutzung) → Play-Job (Akzeptanz 8, explorativ).
-      (B10, 20/20 Kälte-Tode im Menü-Profil 07.09.; Spec von Research 08.09.,
-      self-reviewed). Befund: stoke_fire ist als
-      Wartungs-Verb unsichtbar — kein Prozess, keine Hinweis-Kategorie, kein
-      Knowledge-Eintrag; der Spieler stirbt neben sammelbarem Brennstoff, weil er kein
-      Muster für „Feuer braucht dauerhaftes Nachlegen" lernen kann. Antwort spiel-seitig,
-      exakt die Ziel-2-Klasse (Wear-Andeutung): Crossing-basierte, generische
-      richtungsgebende Meldungen in `_advance_time` — Kälte-Warnung (bt < 36.0, kein
-      aktives Feuer) und Feuer-schwach (fire_fuel < 8.0 bei aktivem Feuer). Konstanten,
-      keine RNG-Würfe, kein Leak (nur die bekannte TAG_LABELS-Vokabelklasse), kein
-      Reason-Code-Eingriff, kein Daten-Touch. Bewusst NICHT: stoke_fire als
-      Pseudo-Prozess (Schema kann WOOD/KINDLING-„irgendein Item" nicht ausdrücken).
-      **Akzeptanz:** Crossing-Tests (einmal pro Durchgang, kein Spam, Fire-Gate);
-      Leak-frei-Regressionstests; compute_all()-Delta-Tabelle: alle 12 Metriken
-      byte-identisch (keine neuen Würfe — Bots reagieren nicht auf Log-Zeilen);
-      feedback_quality 1.0 unverändert, EMITTABLE_REASONS unangetastet; pytest grün;
-      Play-Gegenprobe danach: Profil-C-Kälte-Tode < 20/20 (Zielwert explorativ, kein
-      harter Gate — kein Overfitting am Profil-Bot); Design-Skizze (1 Absatz im
-      JOURNAL) vor TDD; kein Touch an data/*.json, PROCESS_HINT_CATEGORY,
-      scorecard.py.
+- [ ] **T2 — Direktor-Entscheid B10-Nacht-Ökonomie: `stick` → +WOOD (Data-Touch), verworfen: Tier-2-Anschluss-Andeutung**
+      **Priorität: 2 (Dependency: T1 gelandet).** Befund-Cluster (Play
+      07.09./09.09./11.09.): die Nacht braucht ~64 Brennstoff-Ticks (14 Rests
+      à 4 + ~8 Stokes à 1); ein `start_fire` liefert 24, jeder
+      KINDLING-Stoke +8; KINDLING-Quellen sind reeds (hidden_cave-only) und
+      tinder (Prozess-Output) — beide tragen die Dauer im natürlichen Verlauf
+      nicht; das Feuer stirbt @Rest 5–6, danach ist die Höhle weg und die
+      Rast unterm kalten Waldrand = UNTERKÜHLUNG-Drain. Gleichzeitig liegt
+      `log_oak` (RIGID+WOOD, forest_edge, CHOPPING/Axt) als quasi-
+      unerschöpflicher WOOD-Fuel-Pfad in der Welt — aber der Ast, das
+      naheliegendste „Holz", trägt das Tag nicht: die Assoziation
+      „Ast = Brennstoff" scheitert an einer stillen Datenlücke, nicht an
+      einem Design-Wunsch. **Entscheid (Direktor, 13.09.): GO für den
+      Data-Touch** — `stick` bekommt `"WOOD": true` (data/items.json, ein
+      Tag, ein String). Spiel-Logik: ein Ast ist Holz; der WOOD-Fuel-Pfad
+      über `_find_fuel_item` existiert bereits (stoke_fire mit stick →
+      STOKE_FUEL = 8 Ticks, quantity--; sticks sind 12/20 naiv sammelbar);
+      die Nacht wird zur planbaren Brennstoff-Beschaffungs-Entscheidung
+      („vor der Nacht Sticks sammeln") statt zum Zufalls-Todesurteil. Das
+      vertieft das Entdecken (Brennstoff-Ökonomie als learnbares Muster,
+      B10-Klasse), es kürzt nichts ab — kein Rezept, kein Leak, die
+      Zünd-Kette und tinder/reeds-Feinheit bleibt. **Verworfen:**
+      Tier-2-Anschluss-Andeutung an der rope-Discovery (BACKLOG 07.09.) —
+      sharpen_tool-Präzedenz: 6 Lesungen 0/20, die Mechanik trägt nicht,
+      bevor der Antwortpfad existiert; Eingriff, ohne dass die
+      Grund-Mechanik sichtbar ist, ist Reihenfolge-falsch.
+      **Akzeptanz (für den ausführenden Dev-Lauf):** die eine Tag-Änderung in
+      data/items.json; Wächter `blueprint_reachability` 1.0 (11/11),
+      `content_reachable` 1.0 (18/18 — stick ist schon Template, kein neuer
+      Eintrag), `feedback_quality` 1.0; vollständige `compute_all()`-Delta-
+      Tabelle im JOURNAL — Stream-Shift dokumentiert, NICHT kompensiert
+      (31.08.-Präzedenz Munitions-Ökonomie; Dev-Tages-Probe gilt: tages-
+      frische Baseline `python tools/scorecard.py --dry-run` in /tmp vor dem
+      Touch, Diff-Tabelle vor/nach); pytest grün inkl. angepasster
+      Fuel-Tests (stoke mit stick, `_find_fuel_item`-Präferenz-Reihenfolge
+      — WOOD vor KINDLING, fire_pit nie); Play-Gegenprobe → Play-Job
+      (Nacht-Fenster-Erfolgsrate, explorativ, kein harter Gate — kein
+      Overfitting am Mess-Bot); Blueprint-Touch-Gefahr explizit prüfen:
+      keine Blueprint-Slots matchen bislang WOOD — falls ein Blueprint-Delta
+      auftaucht, Go/No-Go neu bewerten (Probelauf vor dem Ship entscheidet).
 
-- [x] **Ziel-2-Hebel: Wear-Warnung als richtungsgebende Andeutung** — ✅ gelandet
-      07.09. (WEAR_HINT_TEXT an der Crossing-Warnung, core.py:419-425), committet mit
-      Research-Adoption 08.09. (19e1f01; 2 flaky Tests deterministisch gefixt, 308 grün,
-      JOURNAL-Nachtrag 08.09.). Play-Lesung (Koinzidenz Worn-Tool+Flint ≥ 1× im
-      guided-Verlauf) → Play-Job. Keine Freigabe nötig, aber Mechanik-Design sauber halten. Befund (Play 04.09., verifiziert):
-      sharpen_tool 0/20 — Spieler erleben die Wear-Warnung (Crossing 0.25) ohne Flint
-      im Inventar und halten Flint ohne Wear; der Instandhalten-Hinweis (31.08.)
-      feuert erst, wenn das Werkzeug schon unter der Warnschwelle ist. Antwort
-      spiel-seitig: die Wear-Warnung (SPEC-011-B) bekommt eine generische
-      richtungsgebende Andeutung, dass sich Werkzeug mit hartem Material nachschärfen
-      ließe — kein Item-/Prozess-Name, kein Rezept-Leak, kein neuer Reason-Code,
-      keine neuen RNG-Würfe (Konstante, nicht Wurf). Erst Design-Skizze (1 Absatz
-      im JOURNAL), dann TDD.
-      **Akzeptanz:** Warn-Text trägt die Andeutung ohne Leak (Text-Regressionstest);
-      `feedback_quality` unverändert 1.0 (Warnung ist kein Experiment-Pfad);
-      `compute_all()`-Delta-Tabelle im JOURNAL (alle 12 identisch — es gibt keinen
-      Grund, dass sich irgendetwas an den Bot-Sequenzen verschiebt); pytest grün;
-      Play-Lesung danach: die Koinzidenz Worn-Tool+Flint wird im natürlichen
-      guided-Verlauf ≥ 1× erlebbar (Sweep-Dokumentation; Zielwert explorativ, kein
-      harter Gate-Wert — kein Overfitting am Mess-Bot).
+- [x] **SPEC-015 — Rast: Zeit als investierbare Ressource** ✅ 10.09.
+      (Dev-Lauf): gelandet — `rest()`-Verb (REST_TICKS=4, REST_EFFORT=0.4),
+      Menü `[r]asten`, alle Systeme durch den bestehenden Tick-Pfad.
+      Go/No-Go: alle 12 Metriken byte-identisch (Delta-Tabelle JOURNAL
+      10.09.), 342 Tests grün (+22 test_rest.py), CLI-Smoke verifiziert.
+      Play-Erstlesung 11.09.: rest_adoption 0.333 (Heil-Kette 10/10 in
+      exakt 5 Rast-Zyklen; Nacht-Fenster scheitern an der Brennstoff-Ökonomie
+      — → T2; HITZSCHLAG-Falle — → T1).
 
-- [x] **SPEC-015 — Rast: Zeit als investierbare Ressource** (Research 10.09., explorativ,
-      probe-verifiziert). Befund: Die Welt tickt, aber der Spieler kann Ticken nicht gewähren —
-      es gibt kein Verb, das Zeit ohne Arbeit verstreichen lässt (CLI main.py:26 hat kein Rast);
-      die SPEC-009-Heil-Kette (`treated + _resting_warm()`) wird im natürlichen Verlauf nie
-      als Entscheidung erfüllt (Probe: 0/10 naive Bots behandeln jemals; guided heilt
-      "nebenbei" nach 19 gathers), die Nacht (~41% der Ticks, bt 37→19.99 nach einem Tag
-      Waldrand) ist unbeantwortbar, die Energie-Decke (~240 Ticks optimal) bestraft jede
-      Zeiteinheit mit Arbeits-Kosten (gather = Effort 2.0 + Draws + Wear + Verletzungsrisiko).
-      Antwort (Engine-only, kein Data-Touch): `rest()`-Verb in engine/core.py —
-      `_advance_time(REST_TICKS=4, effort 0.4)`, keine neuen RNG-Würfe (nur bestehende
-      %-12-Crossings), Menü `[r]asten` in main.py; alle Systeme (Feuer, SPEC-014-Warnungen,
-      Heilung, Node-Regen, Wetter) laufen durch den bestehenden Tick-Pfad. Kein Sleep-Skip,
-      kein Energie-Regen, kein Auto-Heal (Abgrenzungen im Spec). Neue Metrik:
-      `rest_adoption` (metrics/proposed/) — Rast-Fenster mit Outcome (Heilung vollendet /
-      Nacht warm überstanden). Erwartete bestehende Metrik-Wirkung: KEINE (Scorecard-Bots
-      rufen rest() nie; Go/No-Go: compute_all() byte-identisch gegen 2026-09-09 — Tages-Probe
-      gilt, SPEC-013-Präzedenz bei Abweichung). Akzeptanz: rest-Ticks/Effort-Vertrag,
-      Heil-Kette über Rast (am Feuer ja, ohne Feuer nein), FIRE_OUT/UNTERKÜHLUNG während
-      Rast ehrlich, keine-Draws-Assertion, Wächter 1.0/1.0/1.0, pytest grün, Delta-Tabelle
-      im JOURNAL (auch bei Null-Delta), kein Rezept-Leak, CLI bleibt.
-      ✅ 10.09. (Dev-Lauf): gelandet — `rest()`-Verb (engine/core.py nach
-      stoke_fire), REST_TICKS=4 / REST_EFFORT=0.4 / REST_HEAL_BONUS=1.0 (Reserve,
-      nicht verdrahtet), Menü `[r]asten` musterkonform zu [w]ärmen. Alle Systeme
-      durch den bestehenden Tick-Pfad (FIRE_OUT/UNTERKÜHLUNG/SPEC-014 feuern
-      ehrlich während Rast, Node-Regen läuft). **Go/No-Go: alle 12 Metriken
-      byte-identisch** gegen 2026-09-09 (Tages-Probe, Delta-Tabelle JOURNAL
-      10.09.); Wächter 1.0/1.0/1.0; 342 Tests grün (+22 tests/test_rest.py);
-      CLI-Smoke ([r] im Menü, rest-Antwort) verifiziert; kein Data-Touch,
-      EMITTABLE_REASONS unangetastet, kein Rezept-Leak. Play-Gegenprobe
-      (rest_adoption, explorativ) → Play-Job.
-- [~] *(beobachtend, Probe bis 08.09.)* **session_depth** (v2) — 63.0 Re-Baseline
-      (Prozess-Hinweise lassen den v2-Bot tiefer laufen), Metrik-Nadel ~3.2× über dem
-      echten Discovery-Cap (~20 gezielte Aktionen). Erstes Ziel-Handling beim
-      nächsten Direktor nach Probe-Ende; echte Erschöpfungsllesung bleibt die
-      Kompass-Nadel, nicht die Metrik.
-- [~] *(beobachtend, Probe bis 11.09.)* **gear_uptime** (v1) — 0.994 über Band,
-      Erstlesung = dokumentierte Unsichtbarkeit von Attrition. Wird erst nach
-      Ziel-2-Hebel + snare erneut gelesen; Bewertung nach Probe-Ende, nicht vorher.
-- [~] *(beobachtend, Probe bis 11.09.)* **forage_pressure** (v2) — 0.0 unter Band,
-      Re-Baseline der Neudefinition. Band-Entscheid nach Probezeit, nicht vorher.
-- [~] *(beobachtend)* **recovery_stability** (v1) — Probe 03.09. beendet, Peters
-      Lesung steht aus. 0.375 im Band, p25=p75 (deterministische Policy) — Dev-Notiz
-      20.08.: Streuung oder Band-Bewertung nach Probezeit prüfen. Beobachtungsgröße,
-      kein Plan-Ziel.
-- [~] *(beobachtend)* **warmth_stability** (v1) — Probe 27.08. beendet, Peters
-      Lesung: Beobachtungsgröße. 0.46 im Band, flach.
-- [x] *(erledigt, Vorwoche)* SPEC-011, B08, Munitions-Ökonomie, Ziel-2-Hebel
-      (Prozess-Hinweise), Gap-Wächter-Reset, Feuer-Ökonomie, Play-Messwerkzeug-Fix
-      (Re-Entrancy-Guard + 2b-Gate, 1c/1d zurückgerollt) — Details: JOURNAL
-      30.08.–04.09., PLAN vom 30.08. (git-Historie).
+- [x] **SPEC-014 — Feuer-Wartung lesbar machen** ✅ 08.09.: Kälte-Warnung
+      (bt < 36.0, nur ohne aktives Feuer) + Feuer-schwach (fire_fuel < 8.0)
+      als Crossing-Meldungen in `_advance_time`; alle 12 Metriken
+      byte-identisch, 320 Tests grün (+12). Play-Gegenprobe 09.09.:
+      Mechanik hält (722 cold_events/20 Seeds, kein Spam, Fire-Gate) —
+      „Mechanik hält, Antwortpfad fehlt" → B10/T2 (Design-Frage
+      „warmes Rückzugsziel vs. Feuer" durch T2-GO beantwortet: der
+      Brennstoff-Pfad ist die Antwort, kein neuer Text).
+
+- [x] **Ziel-2-Hebel: Wear-Warnung als richtungsgebende Andeutung** ✅
+      07.09. gelandet (WEAR_HINT_TEXT, core.py), 08.09. adoptiert (19e1f01).
+      Play-Lesung: sharpen_tool weiterhin 0/20 (6. Lesung, 09.09. —
+      Koinzidenz Worn-Tool + Flint fällt im natürlichen Verlauf nie).
+      Beobachtungsposten, kein aktives Ziel: die Andeutung ist im Text,
+      die Koinzidenz ist ein Design-Loch, kein Text-Bug.
+
+- [x] **SPEC-012 — Faserschlinge** ✅ 07.09.: snare {FIBER, EDIBLE},
+      data-only; gap 0.600 → 0.545 (≤ 0.55), naive_rate 0.400 → 0.455,
+      17/20 craften ihn; 305 Tests grün (+16). Verifiziert in Play 09.09.
+      (19/20 im simpelsten Profil, früh @20).
+
+- [~] *(beobachtend)* **gear_uptime (v1)** — Probezeit 11.09. ABGELAUFEN.
+      Lesung 13.09.: 0.994 über Band (0.7–0.95), p25=p75 flach — die Zahl
+      misst weiterhin die Unsichtbarkeit von Attrition, nicht ein
+      Spiel-Gefühl: der Scorecard-Bot hält nie Instandhaltung, 5 Lesungen
+      sharpen_tool 0/20 (Koinzidenz-Loch, xfail verankert). Metrik bleibt
+      an, kein Plan-Ziel — solange der Mess-Bot die Gegenmechanik nie
+      berührt, liest er nur seine eigene Policy (warmth/recovery-Flachheit,
+      gleiche strukturelle Ursache). Erneute Bewertung, wenn der Wear-Pfad
+      im natürlichen Verlauf erlebbar wird; bis dahin dokumentiert
+      unbewertet. Umdeutung/Band-Anpassung = Peters Freigabe (Metrik-Kern).
+- [~] *(beobachtend)* **forage_pressure (v2)** — Probezeit 11.09.
+      ABGELAUFEN. Lesung 13.09.: 0.000 unter Band (0.1–0.5), p75 0.03 —
+      strukturell: der Scorecard-Bot läuft vor Erschöpfung tot (UNTERKÜHLUNG,
+      ~119 Ticks) und erlebt Knappheit nie; Depletion-Regen ist zu schnell
+      relativ zur Bot-Lebensdauer. Beobachtungsgröße, kein Plan-Ziel: die
+      Band-Unterschreitung ist ein Policy-Artefakt, kein verifiziertes
+      Spiel-Signal. Erneute Bewertung, wenn ein Lesepfad die
+      Erschöpfungszone erreicht (Menü-Naiv-Profil im Play-Repo wäre der
+      erste Schritt dahin). Band/Definition-Anpassung = Peters Freigabe.
+- [~] *(beobachtend)* **session_depth (v2)** — Probezeit 08.09. abgelaufen,
+      Lesung 06.09.: 52.5, Struktur unverändert (Mess-Bot erreicht die
+      Erschöpfung an ~20 gezielten Aktionen; der Bot-Pfad kauft die 52.5
+      mit Stream-Crossings, nicht mit neuer Entdeckung). Erschöpfungslesung
+      im Play-Report bleibt die Kompass-Nadel (~20 gezielte Aktionen,
+      Menü-Profil ~110). Beobachtungsgröße, kein Plan-Ziel.
+- [~] *(beobachtend)* **recovery_stability (v1)** — Probe beendet 03.09.,
+      Peters Lesung steht aus. 0.375 im Band, p25=p75 (deterministische
+      Policy). Mit T1/T2 wird die Heil-Kette über Rast erstmalig im
+      natürlichen Verlauf anwendbar — Neu-Lesung danach, nicht vorher.
+- [~] *(beobachtend)* **warmth_stability (v1)** — Probe beendet 27.08.,
+      Peters Lesung: Beobachtungsgröße. 0.46 im Band, flach (liest
+      guided-Stil-Bot, nie Nacht-Rast). Nach T1/T2 (Play-Gegenprobe
+      Nacht-Fenster) Neu-Bewertung; bleibt bis dahin ohne Ziel.
+- [~] *(beobachtend, neu nach Probe-Ende 24.09.)* **rest_adoption** —
+      Erstlesung 0.333 (unter Band 0.4–0.85), p25 0.000/p75 0.500. Die
+      Zahl liest die zwei toten Nacht-Antworten (Brennstoff-Dauer → T2,
+      HITZSCHLAG → T1), nicht eine tote Rast-Mechanik. Aufnahme in METRICS
+      mit `probation_until` 2026-09-24 (Proposal verifiziert,
+      metrics/proposed/rest_adoption.md); Plan-Ziel erst nach Probe-Ende.
+- [x] *(erledigt, Vorwochen)* SPEC-011, B08, Munitions-Ökonomie,
+      Prozess-Hinweise, Feuer-Ökonomie, Messwerkzeug-Fix, SPEC-013
+      (verworfen, NO-GO — Stream-Shift-Präzedenz) — Details: JOURNAL
+      28.08.–11.09., PLAN-Historie (git).
 
 ---
 
-*Naechste Scorecard-Kontrolle: naechster Play-Job (Mo 07.09. 09:00). Plan-Neufassung:
-naechster Direktor (So 13.09. 18:00).*
+*Scorecard-Lesung: nächster Play-Job (Mo 14.09. 09:00). Plan-Neufassung:
+nächster Direktor (So 20.09. 18:00).*
