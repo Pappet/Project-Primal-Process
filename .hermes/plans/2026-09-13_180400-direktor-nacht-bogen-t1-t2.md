@@ -3,8 +3,9 @@
 > Direktor 2026-09-13 18:00, Lesung = Scorecard 11.09. (alle 12 ±0, Wächter 1.0/1.0/1.0, gap 0.545).
 > Grenze: CONSTITUTION.md. Play-Job und Messung (`tools/scorecard.py`, `METRICS`,
 > Scorecard-Dateien) sind unantastbar — Dev führt KEINEN Scorecard-Write aus;
-> tages-frische Baseline via `python tools/scorecard.py --dry-run`-equivalent
-> (Scorecard-Tools nur LESEN/berechnen, Writes nach /tmp).
+> tages-frische Baseline via Inline-Probe (`PYTHONPATH=. .venv/bin/python -c
+> "from tools import scorecard as sc; ..."` — compute_all(), JSON nach /tmp;
+> NIE tools/scorecard.py als __main__, das ist der Play-Write).
 > pytest nur mit Repo-.venv: `source ~/projects/primal-process/.venv/bin/activate` VOR python.
 
 ## Abhängigkeits-Regel
@@ -29,13 +30,13 @@ HITZSCHLAG). Re-Produktion: 19/20 Tode im puren Rest-Loop am 500-fuel-Feuer
 nahegelegte Antwort auf den Nacht-Bogen (SPEC-015) und tötet. Der Spieler sieht
 vorher KEIN richtungsgebendes Signal — nur die HITZSCHLAG-Zeile.
 
-**Antwort (Engine-only, Konstante):** oberer Komfort-Cutoff der Feuer-Wärme.
-`effective_ambient` NICHT über einen Komfort-Sockel hinaus treiben, wenn Feuer
-aktiv ist:
+**Antwort (Engine-only, Konstante):** oberer Komfort-Cutoff der
+Feuer-Wärme. `effective_ambient` NICHT über einen Komfort-Sockel hinaus
+treiben, wenn Feuer aktiv ist:
 
 ```python
 FIRE_COMFORT_CAP = 38.0   # engine/core.py, Konstantenblock nach START_FIRE_FUEL
-# core.py:332, wenn Feuer aktiv (loc.fire_active and loc.fire_fuel > 0):
+# core.py:332, wenn Feuer aktiv (fire_warmth > 0):
 effective_ambient = min(effective_ambient, FIRE_COMFORT_CAP)
 ```
 
@@ -124,7 +125,7 @@ Zufalls-Todesurteil. Kein Rezept, kein Leak, kein Text.
 
 **Verworfen (gleiches Befund-Cluster):** Tier-2-Anschluss-Andeutung an der
 rope-Discovery (BACKLOG 07.09., cord_spear 0/20) — sharpen_tool-Präzedenz:
-6 Lesungen 0/20; eine Andeutung an einer Mechanik, deren Grundpfad tot ist,
+5 Lesungen in Folge 0/20 (zuletzt 09.09.); eine Andeutung an einer Mechanik, deren Grundpfad tot ist,
 ist Reihenfolge-falsch. Bleibt im Backlog-Ideen-Pool.
 
 **TDD-Reihenfolge:**

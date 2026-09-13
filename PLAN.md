@@ -16,7 +16,7 @@ Nacht-Bogen tötet auf zwei Arten: die Brennstoff-Ökonomie trägt keine Nacht
 (~64 Fuel-Ticks vs. ~5 Höhlen-Stokes), und Rast am satten Feuer überhitzt
 tödlich (B11: 19/20 Tode, `body_temp` > 40 ohne Komfort-Stop). Zwei
 Probezeiten sind 11.09. abgelaufen (gear_uptime, forage_pressure) und werden
-in dieser Lesung entschieden; sharpen_tool bleibt 0/20 (6. Lesung).
+in dieser Lesung entschieden; sharpen_tool bleibt 0/20 (5. Lesung in Folge).
 
 ## Was als nächstes besser werden muss
 
@@ -48,7 +48,7 @@ in dieser Lesung entschieden; sharpen_tool bleibt 0/20 (6. Lesung).
 ## Tasks
 
 > Offene Aufgaben mit Akzeptanzkriterien. Dev arbeitet von oben nach unten.
-> T1 ist vom T2-Entscheid abhängig — T1 zuerst.
+> T1 vor T2 (Work-Contract regelt Reihenfolge und getrennte Commits).
 
 - [ ] **T1 — B11: Feuer-Komfort-Cutoff (HITZSCHLAG-Falle)**
       **Priorität: 1.** Play 11.09. verifiziert (Play-Probe + unabhängige
@@ -61,11 +61,14 @@ in dieser Lesung entschieden; sharpen_tool bleibt 0/20 (6. Lesung).
       Ausharren — der Spieler sieht nur die HITZSCHLAG-Zeile, kein
       richtungsgebendes Signal vorher (gleiches Muster wie B10 vor SPEC-014).
       **Antwort (Engine-only, Konstante):** oberer Komfort-Cutoff der
-      Feuer-Wärme — `effective_ambient` am Feuer auf einen Komfort-Sockel
-      cappen (z. B. `FIRE_COMFORT_CAP = 38.0`: `effective_ambient =
-      max(effective_ambient, min(effective_ambient, FIRE_COMFORT_CAP))`
-      respektive `min(effective_ambient, FIRE_COMFORT_CAP)` wenn Feuer aktiv;
-      exakte Formel im Design-Skizze-Schritt festlegen und begründen). Wirkt
+      Feuer-Wärme — am aktiven Feuer wird `effective_ambient` auf
+      `FIRE_COMFORT_CAP = 38.0` gecappt:
+      `effective_ambient = min(effective_ambient, FIRE_COMFORT_CAP)`, gewired
+      an `fire_warmth > 0` (d. h. am Feuer aktiv). Begründung 38.0: unter der
+      HITZSCHLAG-Grenze 40.0, über der Kälte-Schwelle 35.0 — bt pendelt am
+      Feuer im Komfortfenster statt gegen > 40 zu asymptotieren. OHNE Feuer
+      kein Cap (Kälte-Physik unangetastet — exakt diese Zwei-Fälle-Trennung
+      testet der „Cap greift nur am Feuer"-Test). Wirkt
       rein über die bestehende `_advance_time`-Wärmezeile (core.py:332-337) —
       kein neuer RNG-Wurf, kein Data-Touch, kein Reason-Code-Eingriff. Die
       UNTERKÜHLUNG-Seite bleibt unberührt (Kälte-Drift unter 35.0 bleibt
@@ -108,17 +111,19 @@ in dieser Lesung entschieden; sharpen_tool bleibt 0/20 (6. Lesung).
       B10-Klasse), es kürzt nichts ab — kein Rezept, kein Leak, die
       Zünd-Kette und tinder/reeds-Feinheit bleibt. **Verworfen:**
       Tier-2-Anschluss-Andeutung an der rope-Discovery (BACKLOG 07.09.) —
-      sharpen_tool-Präzedenz: 6 Lesungen 0/20, die Mechanik trägt nicht,
-      bevor der Antwortpfad existiert; Eingriff, ohne dass die
-      Grund-Mechanik sichtbar ist, ist Reihenfolge-falsch.
+      sharpen_tool-Präzedenz: 5 Lesungen in Folge 0/20 (zuletzt 09.09.), die
+      Mechanik trägt nicht, bevor der Antwortpfad existiert; Eingriff, ohne
+      dass die Grund-Mechanik sichtbar ist, ist Reihenfolge-falsch.
       **Akzeptanz (für den ausführenden Dev-Lauf):** die eine Tag-Änderung in
       data/items.json; Wächter `blueprint_reachability` 1.0 (11/11),
       `content_reachable` 1.0 (18/18 — stick ist schon Template, kein neuer
       Eintrag), `feedback_quality` 1.0; vollständige `compute_all()`-Delta-
       Tabelle im JOURNAL — Stream-Shift dokumentiert, NICHT kompensiert
       (31.08.-Präzedenz Munitions-Ökonomie; Dev-Tages-Probe gilt: tages-
-      frische Baseline `python tools/scorecard.py --dry-run` in /tmp vor dem
-      Touch, Diff-Tabelle vor/nach); pytest grün inkl. angepasster
+      frische Baseline via `PYTHONPATH=. .venv/bin/python -c "from tools
+      import scorecard as sc; ..."` (compute_all() als Inline-Probe, /tmp-
+      Write only — NIE tools/scorecard.py als __main__, das ist der Play-Write),
+      Diff-Tabelle vor/nach); pytest grün inkl. angepasster
       Fuel-Tests (stoke mit stick, `_find_fuel_item`-Präferenz-Reihenfolge
       — WOOD vor KINDLING, fire_pit nie); Play-Gegenprobe → Play-Job
       (Nacht-Fenster-Erfolgsrate, explorativ, kein harter Gate — kein
@@ -146,7 +151,7 @@ in dieser Lesung entschieden; sharpen_tool bleibt 0/20 (6. Lesung).
 
 - [x] **Ziel-2-Hebel: Wear-Warnung als richtungsgebende Andeutung** ✅
       07.09. gelandet (WEAR_HINT_TEXT, core.py), 08.09. adoptiert (19e1f01).
-      Play-Lesung: sharpen_tool weiterhin 0/20 (6. Lesung, 09.09. —
+      Play-Lesung: sharpen_tool weiterhin 0/20 (5. Lesung in Folge, 09.09. —
       Koinzidenz Worn-Tool + Flint fällt im natürlichen Verlauf nie).
       Beobachtungsposten, kein aktives Ziel: die Andeutung ist im Text,
       die Koinzidenz ist ein Design-Loch, kein Text-Bug.

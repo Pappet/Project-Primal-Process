@@ -24,7 +24,8 @@
   der Scorecard.
 - **Probezeit-Entscheide (beide liefen 11.09. ab):**
   - `gear_uptime` 0.994 über Band: Mess-Bot berührt die Gegenmechanik nie
-    (sharpen_tool 0/20, 6. Lesung) — die Zahl liest seine eigene Policy, kein
+    (sharpen_tool 0/20, 5 Lesungen in Folge, zuletzt 09.09.) — die Zahl liest
+    seine eigene Policy, kein
     Spiel-Gefühl. Beobachtungsgröße, kein Plan-Ziel; Band/Umdeutung = Peters
     Freigabe (Metrik-Kern).
   - `forage_pressure` 0.000 unter Band: Bot stirbt (UNTERKÜHLUNG) vor der
@@ -58,9 +59,10 @@ UNTERKÜHLUNG-Drain (B10-Nachtrag 11.09.). Der WOOD-Fuel-Pfad existiert in der
 Engine (`_find_fuel_item` bevorzugt WOOD), aber der Ast — das naheliegende
 Holz — trägt das Tag nicht: stille Datenlücke, kein Design-Wunsch. GO: stick
 bekommt `"WOOD": true`. Blast-Radius verifiziert: WOOD in
-data/blueprints.json = 0 Slots, processes.json nur als `tools`-Slot des
-start_fire-Prozesses (unberührt — sticks waren dort schon über RIGID/… im
-Spiel; Re-Verifikation durch Dev Pflicht). Kein Blueprint liest WOOD →
+data/blueprints.json = 0 Slots, in data/processes.json = 0 Slots (der eine
+KINDLING-Treffer im start_fire-Prozess ist ein `tools`-Slot und bleibt —
+sticks waren dort nie gegen WOOD gerichtet; Re-Verifikation durch Dev Pflicht).
+Kein Blueprint liest WOOD →
 reachability-Risiko minimal, aber Tages-Probe (Tages-HEAD, /tmp) vor Ship
 Pflicht; Wächter-Abweichung = NO-GO + revert. Play-Gegenprobe (Nacht-Fenster-
 Erfolg) → Play-Job. Damit beantwortet: die B10-Design-Frage „warmes
@@ -70,7 +72,8 @@ Rückzugsziel vs. Feuer" (Hinweis-Text) erledigt sich — der Antwortpfad
 ### Entscheid 3 — Verwerfung: Tier-2-Anschluss-Andeutung (🟡 07.09.)
 
 cord_spear 0/20 überall; rope-Discovery könnte eine Anschluss-Andeutung
-tragen. Verworfen: sharpen_tool-Präzedenz (6 Lesungen 0/20) zeigt, dass eine
+tragen. Verworfen: sharpen_tool-Präzedenz (5 Lesungen in Folge 0/20, zuletzt
+09.09.) zeigt, dass eine
 Andeutung an einer Mechanik, deren Grundpfad im natürlichen Verlauf tot ist,
 nicht trägt — Reihenfolge: erst Grundpfad beleben (hier: nicht mal der
 Bedarf verifiziert, nur die Vermutung), dann Andeutung. Bleibt als
