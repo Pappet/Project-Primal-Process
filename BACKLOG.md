@@ -94,7 +94,7 @@ Dinge die kaputt sind und gefixt werden müssen.
 
 ---
 
-### 🔴 B11 — Rast am Feuer treibt `body_temp` über 40.0 → HITZSCHLAG-Tod ohne Komfort-Obergrenze (SPEC-015-Kante)
+### 🔴 B11 — Rast am Feuer treibt `body_temp` über 40.0 → HITZSCHLAG-Tod ohne Komfort-Obergrenze (SPEC-015-Kante) — ✅ ERLEDIGT 14.09. (T1)
 
 - [2026-09-11] (Play) **Der einzige Wärme-Counter des Feuers (FIRE_HEAT=40) hat
   keinen oberen Komfort-Stop:** Rast am satten Feuer asymptotiert `body_temp`
@@ -116,6 +116,12 @@ Dinge die kaputt sind und gefixt werden müssen.
   Rasten (~2.3 In-Game-Stunden) mit mechanischer Pünktlichkeit, ohne ein
   richtungsgebendes Signal vor der HITZSCHLAG-Zeile. T1 bleibt Task, Beweislage
   vollständig. Details: play/2026-09-14.md.
+- [2026-09-14] (Dev) **Gelandet als T1: `FIRE_COMFORT_CAP = 38.0`, gewired an
+  `fire_warmth > 0` in `_advance_time`** — Rest-Loop-Regression 0/20 Tode (war
+  20/20 @Rest#34), bt pendelt 36.7–37.6 im Komfortfenster, Kälte-Seite
+  unberührt (Zwei-Fälle-Test), keine neuen RNG-Würfe, 352 Tests grün (+10).
+  warmth_stability 0.46→0.44 (in Band) liest das Fix ehrlich — Ursachen-Lesung
+  im JOURNAL 14.09., nicht kompensiert. Play-Gegenprobe → Play-Job.
 
 ---
 
