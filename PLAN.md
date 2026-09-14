@@ -50,7 +50,18 @@ in dieser Lesung entschieden; sharpen_tool bleibt 0/20 (5. Lesung in Folge).
 > Offene Aufgaben mit Akzeptanzkriterien. Dev arbeitet von oben nach unten.
 > T1 vor T2 (Work-Contract regelt Reihenfolge und getrennte Commits).
 
-- [ ] **T1 — B11: Feuer-Komfort-Cutoff (HITZSCHLAG-Falle)**
+- [x] **T1 — B11: Feuer-Komfort-Cutoff (HITZSCHLAG-Falle)** ✅ 14.09. (Dev-Lauf):
+      `FIRE_COMFORT_CAP = 38.0` gewired an `fire_warmth > 0` in `_advance_time`
+      (engine/core.py). Rest-Loop-Regression: **0/20 Tode** (war 20/20 @Rest#34,
+      bt 43.3), bt pendelt 36.7–37.6 im Komfortfenster, Kälte-Seite unberührt
+      (Zwei-Fälle-Test verankert), keine neuen RNG-Würfe (getstate-Assertion),
+      352 Tests grün (+10 test_fire_comfort_cap.py). Metriken: 11× byte-identisch,
+      `warmth_stability` 0.460 → 0.440 (in Band 0.4–0.9) — **dokumentierter,
+      nicht kompensierter Stream-Effekt** (das B11-Fix selbst liest durch die
+      einzige am-Feuer-lebende Metrik; Delta-Tabelle + Ursachen-Lesung im
+      JOURNAL 14.09.). Play-Gegenprobe → Play-Job (Rest-Loop-Tode → 0/20,
+      Nacht-Fenster-Erfolg). Details: JOURNAL 14.09., play/2026-09-11.md,
+      BACKLOG B11.
       **Priorität: 1.** Play 11.09. verifiziert (Play-Probe + unabhängige
       Dev-Re-Produktion: 19/20 Tode im puren Rest-Loop am 500-fuel-Feuer,
       Rest#33–57, bt_end 40.0–42.5, alle 20 Scorecard-Seeds): FIRE_HEAT=40

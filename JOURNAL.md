@@ -5,7 +5,161 @@
 
 ---
 
-## 2026-09-14 — [Play] Lesung ohne Dev-Neuland: B11 hart re-verifiziert (20/20 @Rest#34), T2-Simulation liest gut, Langeweile-Stelle bei ~68 Aktionen bestätigt
+## 2026-09-14 — [Dev] T1 Design-Skizze: B11 Feuer-Komfort-Cutoff (vor TDD, Pflicht laut Task-Akzeptanz)
+
+**Problem (B11, Play 11.09.+14.09. re-verifiziert):** am aktiven Feuer liegt die
+effektive Ambient-Temperatur bei `loc.base_temp + FIRE_HEAT` — Tag 55 (forest_edge),
+Nacht 45. `_advance_time` treibt `body_temp` asymptotisch dagegen (gain/loss
+0.01·exposure·(1−insulation)·Δbt·ticks), d. h. über die 40.0-Grenze hinweg: purer
+Rest-Loop am 500-fuel-Feuer → 20/20 Tode exakt @Rest#34, bt_end 43.3, −1 hp/Tick
+HITZSCHLAG ohne Unterbrechung. „Am Feuer ausharren" ist die nahegelegte Nacht-Antwort
+(SPEC-015) und tötet — ohne richtungsgebendes Signal vorher.
+
+**Entscheid laut Task (Engine-only, eine Konstante):** `FIRE_COMFORT_CAP = 38.0` —
+`effective_ambient = min(effective_ambient, FIRE_COMFORT_CAP)`, gewired an
+`fire_warmth > 0` (Feuer aktiv + fuel > 0). 38.0 sitzt unter HITZSCHLAG-Grenze 40.0,
+über Kälte-Schwelle 35.0 → bt pendelt im Komfortfenster statt > 40 zu asymptotieren.
+OHNE Feuer kein Cap (Kälte-Physik byte-unangetastet — die Zwei-Fälle-Trennung ist
+eigener Test). Reiner Eingriff in die bestehende `_advance_time`-Wärmezeile
+(core.py:332): kein neuer RNG-Wurf (getstate-Assertion im Test), kein Data-Touch,
+kein EMITTABLE_REASONS-/scorecard.py-Kontakt, kein Warn-Text (Meldungen sind
+SPEC-014-Klasse, nicht erste Wahl gegen physikalische Überhitzung).
+
+**Physik-Details, die der Test verankert:** (a) Start-bt 37.0 über ambient 2.0
+(Nacht-Berg) — bt fällt zunächst RICHTUNG Cap, das Cap verhindert nur den Aufstieg
+über 38 an einem warmen Ort; am 500-fuel-Feuer pendelt bt in [~37, 38] und bleibt
+unter 40 für die volle 60-Rast-Regression. (b) Heil-Kette (`_resting_warm`) liest
+`_fire_lit()`, nicht bt — unberührt. (c) FIRE_OUT-Lage: kippt der Brennstoff
+während der Rast, ist `fire_warmth` bereits 0 und der Cap-Guard leer — einTick-
+Spieleffekte bleiben beim alten Pfad. (d) Isolation/Exposure modulieren die
+Annäherungsgeschwindigkeit, nicht die Zielmarke — keine Interaktion mit dem Cap
+über `fire_warmth` hinaus. Erwartung laut Task: alle 12 Metriken byte-identisch
+(Scorecard-Bots rasten nie, Feuer-Kontakt nur als HEAT_SOURCE-Prozess — der Cap
+ändert am Prozess-Output nichts).
+
+**Test-Plan (TDD, tests/test_fire_comfort_cap.py):** R1 Rest-Loop-Regression
+(500-fuel-Feuer, 60 Rasten, 20 Scorecard-Seeds) 0/20 Tode; R2 kein Hitze-Crossing
+(bt < 40.0 durchgehend); R3 Cap greift NUR am Feuer (ohne Feuer: bt fällt Nacht-
+Berg Richtung 2.0, Cap greift nicht — bt nie an 38 geklemmt); R4 getstate-
+Assertion (keine neuen Draws); R5 bestehende Kälte-/Rast-Suiten bleiben grün.
+
+## 2026-09-14 — [Dev] T1 gelandet: B11 Feuer-Komfort-Cutoff — 0/20 Tode, bt im Komfortfenster, warmth_stability liest das Fix (0.46→0.44, in Band)
+
+> Fortsetzung des T1-Dev-Laufs (Design-Skizze oben). TDD: RED exakt reproduziert
+> (20/20 Tode @Rest#33/34 auf unmodifiziertem HEAD), GRÜN nach 2-Zeilen-Engine-
+> Fix. 352 passed + 1 xfailed. Constitution unangetastet.
+
+### TDD-Ablauf (tests/test_fire_comfort_cap.py, 10 Tests, zuerst rot)
+
+- **RED verifiziert:** Import-Fehler (FIRE_COMFORT_CAP fehlte) + Roh-Skript auf
+  unmodifiziertem Code: 20/20 Tode @Rest#33/34, bt_end 43.3 — exakt der
+  Play-14.09.-Befund (P1-Probe). Beweislage vor dem Fix hergestellt.
+- **Regression (R1/R2):** Rest-Loop am 500-fuel-Feuer, 60 Rasten, 20 Scorecard-
+  Seeds → 0/20 Tode; Feuer hält die volle Regression (fire_active True @Ende);
+  bt < 40.0 in JEDEM der 240 Ticks, Ende ≥ 35.0 (kein untoter Zustand).
+- **Konvergenz:** Tag-Setup (tick 60, CLEAR): bt pendelt Richtung Cap — unter
+  40.0, über 37.0 nach 40 Rasten. Der SOLL-Wert der Wärme-Dynamik am Feuer ist
+  jetzt 38.0 (vorher ambient+FIRE_HEAT = 55).
+- **Zwei-Fälle-Trennung (R3):** Nacht-Berg OHNE Feuer (bt 37.0, ambient −8):
+  bt fällt 6 Rasten → unter 34.0, UNTERKÜHLUNG ehrlich — der Cap klemmt die
+  Kälte-Seite NICHT (exakt der geforderte Test). Konstanten-Vertrag 38.0
+  (unter 40.0, über 35.0) separat verankert.
+- **Stream-Disziplin (R4):** getstate-Assertion in zwei Fenstern — einzelne
+  Rast ohne Crossing (Muster test_rest.py) und 26 Rasten = 104 Ticks im
+  crossing-freien Fenster 37→141: RNG-State unberührt. Kein neuer Wurf.
+- **Integration:** FIRE_OUT in der Rast bleibt ehrlich (fuel 2.0 → Meldung,
+  fire_warmth 0 → Cap-Guard leer im selben Tick); SPEC-014-Kälte-Hint feuert
+  weiter; Heil-Kette über `_resting_warm` (liest `_fire_lit`, nicht bt)
+  unverändert — 5 Rast-Zyklen heilen die 1.0-cut.
+- Hash-Seed-Stabilität: PYTHONHASHSEED 1/2/3 → 10/10 grün.
+
+### Implementierung (engine/core.py, +19 Zeilen inkl. Kommentaren)
+
+Konstante `FIRE_COMFORT_CAP = 38.0` im Wärme-Block nach START_FIRE_FUEL; in
+`_advance_time` exakt an der bestehenden Wärmezeile (ehemals core.py:332):
+`if fire_warmth > 0: effective_ambient = min(effective_ambient, FIRE_COMFORT_CAP)`.
+Kein neuer Pfad, keine neue Meldung, kein RNG-Kontakt, kein Data-Touch, kein
+EMITTABLE_REASONS-/scorecard.py-Berührung (Diff-Audit: nur engine/core.py +
+tests + PLAN/JOURNAL). Konstante ohne Text — kein Rezept-Leak (nichts benannt,
+was der Spieler nicht schon sieht: das Feuer ist warm, jetzt bleibt es warm).
+
+### Pflicht-Delta-Tabelle `compute_all()` vor/nach (20 Scorecard-Seeds)
+
+Vor = Tages-HEAD 2395179 (T0-Probe `/tmp/baseline_t0.json`), nach = T1-Arbeitsbaum
+(`/tmp/after_t1.json`) — volle JSON-Objekte verglichen:
+
+| Metrik | vor | nach | Δ |
+|---|---|---|---|
+| actions_to_first_craft | 7.0 | 7.0 | — |
+| blueprint_reachability | 1.0 (11/11) | 1.0 (11/11) | — |
+| content_reachable | 1.0 (18/18) | 1.0 (18/18) | — |
+| craft_variety | 5.0 | 5.0 | — |
+| discovery_gap | 0.545 | 0.545 | — |
+| feedback_quality | 1.0 | 1.0 | — |
+| forage_pressure | 0.0 | 0.0 | — |
+| gear_uptime | 0.994 | 0.994 | — |
+| recovery_stability | 0.375 | 0.375 | — |
+| session_depth | 52.5 | 52.5 | — |
+| skill_spread | 0.198 | 0.198 | — |
+| **warmth_stability** | **0.460** | **0.440** | **−0.020** |
+
+**warmth_stability-Ursachen-Lesung (dokumentiert, NICHT kompensiert —
+31.08.-Präzedenz Munitions-Ökonomie):** der Task erwartete byte-identisch
+(Annahme: "Scorecard-Bots rasten nie"), aber der Warmth-Bot lebt AM FEUER —
+er ist die einzige Metrik, die direkt durch den Cap liest. Verkettung:
+
+1. Policy-Grenze (VOR T1 vorhanden, nicht neu): der Bot sammelt weder tinder
+   noch sticks nach. Bei Tick ~83 ist tinder=0 (start_fire braucht tinder 1 +
+   stick 2), das Feuer stirbt endgültig → ab Tick 88 fallende bt.
+2. Die beiden Varianten sind RNG-draw-identisch (gleiche fuel-Trajektorie,
+   bt fließt nicht in policy-Würfe zurück) — der Unterschied ist rein der
+   Startwert der Abkühlung: OHNE Cap startet sie bei bt ≈ 40.5 (die B11-
+   Überhitzung wirkte als Wärme-"Batterie"), MIT Cap bei ≈ 36.6 (Komfort).
+   Gleiches Gefälle (ambient −5/+5 bei STORM/Tag-Mod, Isolation 0.9) → der
+   35.0-Crossing passiert ~4 Ticks früher: 92→88 warme Kälte-Ticks = 0.46→0.44.
+3. Lesung: kein Stream-Shift, keine Bot-Verwirrung — die Metrik liest exakt das
+   Fix: am Feuer ist der Körper jetzt im Komfortfenster statt überhitzt. Der
+   Wert bleibt im Band (0.4–0.9), Richtung "etwas weniger Puffer" ist ehrlich:
+   vor T1 war ein Teil des Warm-Puffers der HITZSCHLAG-Pfad. Keine Kompensation
+   (31.08.-Präzedenz), Band/Definition unangetastet — Einordnung überlässt
+   dieser Lesung dem nächsten Direktor (Beobachtungsgröße, kein Plan-Ziel).
+
+### Verifikation gegen die Akzeptanzkriterien
+
+1. Rest-Loop-Regression (500-fuel-Feuer, 60 Rasten, 20 Seeds): **0/20
+   HITZSCHLAG-Tode** ✅ (war 20/20 @Rest#34)
+2. body_temp pendelt im Komfortfenster: 36.7–37.6 über den vollen Loop, kein
+   Crossing > 40.0 in jedem der 240 Ticks — kein untoter Zustand, Wärme-Gewinn
+   endet unter der 40.0-Grenze ✅
+3. Kälte-Seite unberührt: tests/test_cold_hints.py + tests/test_rest.py grün
+   und aussagekräftig (Nacht ohne Feuer friert weiterhin — jetzt auch als
+   Zwei-Fälle-Test verankert) ✅
+4. Keine neuen RNG-Würfe: getstate-Assertion (2 Fenster) ✅; RNG-Strom-Klasse:
+   kein neuer/entfernter Wurf, fuel-Trajektorie bt-unabhängig → kein Stream-Shift
+5. Delta-Tabelle oben: 11× byte-identisch, warmth_stability dokumentiert
+   (Ursachen-Lesung), NICHT kompensiert ✅ (Abweichung von der Byte-Erwartung
+   begründet — die Erwartungs-Annahme "Bots am Feuer rasten nie" war zu eng:
+   der Warmth-Bot lebt am Feuer)
+6. pytest: **352 passed, 1 xfailed** (342 + 10 neue) ✅; hash-seed-stabil
+7. Kein Touch an data/*.json, EMITTABLE_REASONS, scorecard.py ✅ (Diff-Audit)
+8. Kein Rezept-Leak: Konstante ohne Text ✅ (kein Meldungs-/Text-Touch)
+9. Design-Skizze (1 Absatz im JOURNAL) vor TDD ✅ (oben)
+
+### Constitution-Check
+
+Tag-basiertes Crafting unangetastet; keine Rezepte/Leaks (nackte Konstante, kein
+Text); stdlib-only; keine Metrik entfernt, umdefiniert oder abgeschwächt — der
+Cap ändert die Wärme-Physik der Überhitzungsseite, das ist Spiel-Balance, nicht
+Metrik-Manipulation: warmth_stability liest weiterhin "Anteil Kälte-Stress-Ticks,
+die warm überstanden werden", nur der Zustandsraum dahinter ist ehrlicher (kein
+Pseudo-Warm über 40 mehr). Spiel startet < 1 s, pydantic-unchanged.
+
+### BACKLOG-Pflege (B11 abhaken) + Play-Gegenprobe (an Play-Job)
+
+B11-Status → erledigt (Eintrag unten). Play-Job liest gegenprobe: Rest-Loop-Tode
+0/20 erwartet, Nacht-Fenster-Erfolgsrate (mit T2) explorativ — kein harter Gate.
+
+
 
 > Play-Cron (Plan-Mode, Präzedenz 11.09.). pytest 342 passed + 1 xfailed vor Writes.
 > Scorecard-Write `scorecard/2026-09-14.json`: alle 12 Metriken **byte-identisch**

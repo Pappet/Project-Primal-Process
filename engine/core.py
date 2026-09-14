@@ -42,6 +42,17 @@ TAG_LABELS = {
 FIRE_HEAT = 40.0          # Wärmebeitrag des aktiven Feuers zur Umgebungstemperatur
 START_FIRE_FUEL = 24.0    # Brennstoff-Ticks beim Entzünden (≈ 4 In-Game-Stunden)
 
+# T1 (B11, PLAN 13.09.): oberer Komfort-Cutoff der Feuer-Wärme. Am aktiven
+# Feuer (fire_warmth > 0) wird die effektive Umgebungstemperatur auf diesen
+# Wert gecappt — ohne ihn asymptotiert body_temp gegen ambient+FIRE_HEAT
+# (Tag 55 / Nacht 45) und läuft über die HITZSCHLAG-Grenze 40.0 hinweg
+# (Play 14.09.: 20/20 Tode @Rest#34 im puren Rest-Loop am 500-fuel-Feuer).
+# 38.0: unter der HITZSCHLAG-Grenze 40.0, über der Kälte-Schwelle 35.0 —
+# bt pendelt am Feuer im Komfortfenster statt > 40. OHNE Feuer kein Cap
+# (Kälte-Physik unangetastet — Zwei-Fälle-Trennung, tests/
+# test_fire_comfort_cap.py). Konstante ohne Text: kein Rezept-Leak.
+FIRE_COMFORT_CAP = 38.0
+
 # SPEC-011: Werkzeugverschleiß als lesbarer Zustand (Druck ohne Wahrnehmung).
 # Threshold: darunter gilt ein Werkzeug als stark abgenutzt (einmalige Warnung
 # pro fallendem Durchgang). Min-Factor: stumpfe Werkzeuge ernten gedämpft
@@ -330,6 +341,14 @@ class GameEngine:
         exposure = loc.exposure * self.weather_types[self.current_weather]["exposure_mod"]
         insulation = self.player.inventory.get_total_insulation()
         effective_ambient = ambient_temp + fire_warmth
+        # T1 (B11): Komfort-Cutoff — NUR am aktiven Feuer (fire_warmth > 0)
+        # wird die effektive Umgebungstemperatur auf den Cap geklemmt. Ein
+        # 500-fuel-Feuer liefert sonst ambient 45–55: body_temp asymptotiert
+        # darüber (HITZSCHLAG @−1 hp/Tick ohne Stop — 20/20 Tode im Rest-
+        # Loop, Play 14.09.). Mit Cap pendelt bt im Komfortfenster [35, 38].
+        # OHNE Feuer: keine Klemmung — die Kälte-Seite bleibt byte-ehrenwort.
+        if fire_warmth > 0:
+            effective_ambient = min(effective_ambient, FIRE_COMFORT_CAP)
 
         # Delta zwischen Körper und Umwelt, abgemildert durch Isolation und Schutz
         temp_loss = (self.player.body_temp - effective_ambient) * 0.01 * exposure * (1.0 - min(0.9, insulation))
