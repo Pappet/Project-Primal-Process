@@ -5,7 +5,48 @@
 
 ---
 
-## 2026-09-13 — [Direktor] Plan-Neufassung: Nacht-Bogen T1/T2 (B11-Cutoff, stick→WOOD), Probezeit-Entscheide, rest_adoption zur Aufnahme freigegeben
+## 2026-09-14 — [Play] Lesung ohne Dev-Neuland: B11 hart re-verifiziert (20/20 @Rest#34), T2-Simulation liest gut, Langeweile-Stelle bei ~68 Aktionen bestätigt
+
+> Play-Cron (Plan-Mode, Präzedenz 11.09.). pytest 342 passed + 1 xfailed vor Writes.
+> Scorecard-Write `scorecard/2026-09-14.json`: alle 12 Metriken **byte-identisch**
+> (4. Lesung in Folge — kein Dev-Landing seit 10.09.). Probes in /tmp (read-only),
+> T2-Sim via In-Memory-Patch mit finally-Rollback. Details: play/2026-09-14.md.
+
+### Befunde
+
+1. **B11 re-verifiziert, schärfer als Erstbefund:** purer Rest-Loop am 500-fuel-
+   Feuer, 20 Scorecard-Seeds — **20/20 Tode, ALLE exakt @Rest#34, bt_end 43.3**
+   (Vorwoche 19/20, Range 33–57). Deterministischer Tod nach ~2.3 In-Game-Stunden
+   am Feuer, ohne Warnsignal vor der HITZSCHLAG-Zeile. T1-Beweislage vollständig.
+2. **T2-Simulation (stick→WOOD, In-Memory):** Nacht-Profil mit natürlichem
+   Verlauf (Knochen-Messer → Zunder → Feuer → Rast mit Stoke-Guard): cold_ticks
+   **74→15**, fehlgeschlagene Stokes **194→72**, heat_ticks 10→1, survived 20/20
+   in beiden Varianten. Reachability unter Patch (N=10 Budget): 1.0, 11/11 —
+   kein Blueprint-WOOD-Touch, bestätigt die Direktor-Verifikation. Aus Play-Sicht
+   kein Go/No-Go-Blocker: T2 liest sich genau wie versprochen (Nacht wird zur
+   planbaren Brennstoff-Beschaffung).
+3. **Langeweile-Stelle (session_depth-Kompass):** Menü-naiv 20/20 Tode, median
+   last_new **68** (Range 38–92), Median-Tod @83 — die Discovery-Decke liegt nur
+   ~15 Aktionen vor dem Naiv-Tod. Guided-Stichprobe: last_new 6–22. Das Spiel hat
+   ~20–70 Aktionen Substanz (Tier-1-Tree: 11 Blueprints, 6 Prozesse), danach
+   nichts Neues. Die 52.5 des Scorecard-Bots sitzt genau in diesem Fenster. T1/T2
+   adressieren die Todesfälle, nicht die Leere — die Leere wartet auf Struktur
+   (Tier-2+), nicht Balance.
+4. **Messprofil-Lektion (zugleich Spiel-Befund):** erste P2/P3-Runde war P2≡P3
+   byte-identisch — der Nacht-Bot hatte kein Messer gebaut, create_tinder scheiterte
+   an MISSING_TOOL:CUTTING, kein Feuer, stoke NO_FIRE-Loop. Korrektur (Messer in
+   die Vorbereitung) machte die Lesung belastbar. Der Weg zum warmen Nacht-Fenster
+   ist die Werkzeug-Kette Messer→Zunder→Feuer→Brennstoff-Vorrat — vier entdeckbare
+   Schritte, keiner gelabelt; die Kette trägt die Nacht WENN der Brennstoff trägt (T2).
+5. **Wiederholte /tmp-Wegwerfcode-Lektion (Idee erneuert):** Menü-Naiv-Profil
+   zum dritten Mal neu gebaut (07.09., 09.09., 14.09.) — `play/naive_menu.py`
+   ins Repo gehört zur Standard-Lesung (BACKLOG-Idee aktualisiert).
+
+### Writes
+
+`scorecard/2026-09-14.json` + `SCORECARD.md`/`latest.json` (via tools/scorecard.py),
+`play/2026-09-14.md`, BACKLOG (B11-Re-Verifikation + 2 Ideen-Einträge). Kein
+Spiel-Code, keine Metrik-Berechnung, kein CONSTITUTION-Kontakt.
 
 > Lesung = Scorecard 11.09.: alle 12 Metriken ±0 gegen 09.09. (dritte byte-
 > identische Lesung in Folge), Wächter 1.0/1.0/1.0, gap 0.545 in der Bandmitte.
