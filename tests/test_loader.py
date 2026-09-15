@@ -46,7 +46,8 @@ class TestLoadItems:
         stick = items["stick"]
         assert stick.name == "Eichenast"
         assert stick.weight == 0.5
-        assert stick.tags == {"RIGID": True}
+        # T2 (B10, Direktor 13.09.): der Ast ist Holz — WOOD-Tag nachgetragen
+        assert stick.tags == {"RIGID": True, "WOOD": True}
         assert stick.attributes == {"durability": 0.8}
 
     def test_edible_tag_is_numeric(self):
@@ -214,7 +215,8 @@ class TestLoaderRoundtrip:
         # Check key items match the old hardcoded values
         assert items["stick"].name == "Eichenast"
         assert items["stick"].weight == 0.5
-        assert items["stick"].tags == {"RIGID": True}
+        # T2 (B10, Direktor 13.09.): der Ast ist Holz — WOOD-Tag nachgetragen
+        assert items["stick"].tags == {"RIGID": True, "WOOD": True}
         assert items["stick"].attributes == {"durability": 0.8}
 
         assert items["flint_shard"].tags == {"HARD": True, "SHARP": True, "FLINT": True}

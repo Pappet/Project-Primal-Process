@@ -99,7 +99,16 @@ in dieser Lesung entschieden; sharpen_tool bleibt 0/20 (5. Lesung in Folge).
       EMITTABLE_REASONS, scorecard.py; kein Rezept-Leak (Konstante ohne Text).
       Details: play/2026-09-11.md, BACKLOG B11.
 
-- [ ] **T2 — Direktor-Entscheid B10-Nacht-Ökonomie: `stick` → +WOOD (Data-Touch), verworfen: Tier-2-Anschluss-Andeutung**
+- [x] **T2 — Direktor-Entscheid B10-Nacht-Ökonomie: `stick` → +WOOD (Data-Touch), verworfen: Tier-2-Anschluss-Andeutung** ✅ 15.09.
+      (Dev-Lauf, Nachcommit des abgebrochenen Laufs): `stick` trägt
+      `WOOD` (data/items.json, ein Tag); 365 Tests grün (+13
+      test_stick_fuel.py: Data-Touch auf Template+Instanz-Ebene, stoke mit
+      stick (+8/quantity--), Präferenz-Reihenfolge WOOD vor KINDLING,
+      fire_pit nie, Zünd-Kette unangetastet, kein Blueprint-Slot matcht
+      WOOD); Wächter 1.0 (11/11 bzw. 18/18), feedback_quality 1.0;
+      compute_all-Delta exakt `warmth_stability` 0.44→0.72 (im Band 0.4–0.9,
+      Stream-Shift dokumentiert, nicht kompensiert — Delta-Tabelle JOURNAL
+      15.09.).
       **Priorität: 2 (Dependency: T1 gelandet).** Befund-Cluster (Play
       07.09./09.09./11.09.): die Nacht braucht ~64 Brennstoff-Ticks (14 Rests
       à 4 + ~8 Stokes à 1); ein `start_fire` liefert 24, jeder

@@ -63,7 +63,9 @@ Dinge die kaputt sind und gefixt werden müssen.
 
 ### 🔴 B10 — `stoke_fire` ist als Wartungs-Verb unsichtbar: Menü-Spieler erfriert im Loop neben Brennstoff
 
-> **Status: Engine-seitig gelandet (SPEC-014, 08.09.)** — Kälte-Warnung (bt < 36.0,
+> **Status: gelandet — Engine-seitig (SPEC-014, 08.09.) + Data-Touch (T2, 15.09.:
+> `stick` → +WOOD, Direktor-GO; WOOD-Pfad bleibt Engine, kein Blueprint-Touch,
+> warmth_stability 0.44→0.72 im Band).** Kälte-Warnung (bt < 36.0,
 > nur ohne aktives Feuer) + Feuer-schwach (fire_fuel < 8.0, Lead ~8 Ticks vor
 > FIRE_OUT) als Crossing-Meldungen in `_advance_time`; compute_all 12×byte-identisch,
 > 320 Tests grün (JOURNAL 08.09.).

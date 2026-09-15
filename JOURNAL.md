@@ -5,6 +5,104 @@
 
 ---
 
+## 2026-09-15 — [Dev] T2 gelandet (Nachcommit des abgebrochenen Laufs): B10 `stick` → +WOOD — 365 Tests grün, Wächter 1.0, warmth_stability 0.44→0.72 im Band
+
+> Vorgefunden: uncommitteter Arbeitsbaum eines abgebrochenen Laufs (Crash im
+> Cron-Fehler-Log-Typ). Vorgehen laut Work-Contract: erst Prüfstand (pytest +
+> Diff-Review gegen die Task-Akzeptanz), dann Übernahme mit Herkunftsangabe.
+> Kein stiller Weiterbau auf fremdem Halbfertig-Stand — der Stand war
+> vollständig und valide, er fehlte nur am Commit.
+
+### Prüfstand des vorgefundenen Stands (vor der Übernahme)
+
+- **Diff-Review:** `data/items.json` — exakt eine Zeile, `"stick".tags`:
+  `RIGID` + neues `WOOD: true`. `tests/test_loader.py` — nur die zwei
+  Loader-Assertions auf den neuen Tag-Stand angepasst (Same-Stack-Kommentar).
+  `tests/test_stick_fuel.py` (neu, 13 Tests). Kein Engine-Touch, kein
+  scorecard.py-Touch, kein EMITTABLE_REASONS-Berührung.
+- **pytest:** 365 passed + 1 xfailed (vorher 352) — +13 neue T2-Tests, alle
+  grün, kein Regressions-Flackern.
+- **Akzeptanz-Abgleich (PLAN T2):** ✅ eine Tag-Änderung in data/items.json;
+  ✅ Wächter `blueprint_reachability` 1.0 (11/11), `content_reachable` 1.0
+  (18/18), `feedback_quality` 1.0 (Delta-Probe unten); ✅ vollständige
+  Delta-Tabelle (unten), Stream-Shift dokumentiert, NICHT kompensiert
+  (31.08.-Präzedenz); ✅ Fuel-Tests: stoke mit stick (+8, quantity--),
+  Präferenz-Reihenfolge WOOD vor KINDLING, fire_pit nie; ✅ Blueprint-Touch-
+  Gefahr: kein Blueprint-Slot matcht WOOD (`test_no_blueprint_slot_matches_wood`
+  + Direktor-Verifikation 13.09. + Play-Reachability-Unter-Patch 1.0/11
+  BACKLOG 14.09.); ✅ Zünd-Kette unangetastet (start_fire braucht tinder+stick
+  weiter); ✅ Constitution: kein Metrik-Eingriff, kein Rezept, kein
+  Discovery-Shortcut — ein Ast ist Holz, der WOOD-Pfad existierte bereits.
+- **Play-Gegenprobe:** ausdrücklich → Play-Job (Nacht-Fenster-Erfolgsrate,
+  explorativ, kein harter Gate). Die Play-In-Memory-Simulation (BACKLOG
+  14.09.: cold_ticks 74→15, fehlgeschlagene Stokes 194→72, survived 20/20,
+  Reachability 1.0 unter Patch) ist Erwartungslage, kein Ersatz für die
+  Repo-Data-Gegenprobe.
+
+### Test-Bestand (tests/test_stick_fuel.py, 13 Tests)
+
+`TestStickCarriesWood` (Tag auf Template- und Instanz-Ebene, RIGID bleibt,
+kein Blueprint-Slot matcht WOOD) · `TestStokeWithStick` (STOKE_FUEL=8,
+quantity--, letzter Stick verbraucht das Item) · `TestFuelPreference`
+(WOOD vor KINDLING, log_oak vor tinder, KINDLING-Fallback ohne WOOD,
+fire_pit nie — auch nicht, wenn er das letzte KINDLING wäre) ·
+`TestZundeKetteUnangetastet` (start_fire scheitert ohne tinder trotz Sticks,
+gelingt mit tinder+sticks, (stick, stick)→spear-Experiment identisch —
+SPEC-005 getrennte Item-Objekte dokumentiert).
+
+### Pflicht-Delta-Tabelle `compute_all()` vor/nach (20 Scorecard-Seeds)
+
+Vor = Tages-HEAD 996ed2e (Inline-Probe `/tmp/t2_before.json`), nach =
+T2-Arbeitsbaum (`/tmp/t2_after.json`) — volle JSON-Objekte verglichen.
+Probe laut Task-Vertrag: tages-frische Baseline via Inline-Probe
+(`compute_all()` in /tmp geschrieben) — NIE `tools/scorecard.py` als
+`__main__` (das ist der Play-Write).
+
+| Metrik | vor | nach | Δ |
+|---|---|---|---|
+| actions_to_first_craft | 7.0 | 7.0 | — |
+| blueprint_reachability | 1.0 (11/11) | 1.0 (11/11) | — |
+| content_reachable | 1.0 (18/18) | 1.0 (18/18) | — |
+| craft_variety | 5.0 | 5.0 | — |
+| discovery_gap | 0.545 | 0.545 | — |
+| feedback_quality | 1.0 | 1.0 | — |
+| forage_pressure | 0.0 | 0.0 | — |
+| gear_uptime | 0.994 | 0.994 | — |
+| recovery_stability | 0.375 | 0.375 | — |
+| session_depth | 52.5 | 52.5 | — |
+| skill_spread | 0.198 | 0.198 | — |
+| **warmth_stability** | **0.44** | **0.72** | **+0.28 (Stream-Shift)** |
+
+### Stream-Shift-Lesung (dokumentiert, nicht kompensiert)
+
+Der Warmth-Bot (scorecard.py:839) führt eine Mid-Game-Policy: 10 `stick`
+sind Teil der Ausstattung (start_fire-Input), 50 `log_oak` sollten das
+Nachlegen tragen. Vor dem Touch war der Stick nicht im WOOD-Pool — nach
+einem start_fire zog `_find_fuel_item` also nur bis das 50er-log_oak-Konto
+rüste war, danach MISSING_FUEL-Ausfälle; jetzt kommen die 10 Sticks als
+zusätzliche ~80 Fuel-Ticks aus demselben Inventory. Ergebnis: weniger
+Feuer-Ausfälle im 200-Tick-Horizont, mehr Kälte-Stress-Ticks warm überstanden
+→ 0.44→0.72. Das ist genau die B10-Ökonomie („der Ast ist Brennstoff"), im
+Band 0.4–0.9, Richtung plausibel (Mittelwert p25=p75, deterministische
+Policy), kein Metrik-Eingriff — der Data-Touch verschiebt die Mess-Lage,
+weil er das Spielerlebnis wirklich verschiebt (Präzedenz Munitions-Ökonomie
+31.08., SPEC-014 08.09.: Spiel-Verhalten geändert → Metrik darf spiegeln).
+Keine Kompensation; die Play-Gegenprobe liest den Spielwert, nicht den Bot.
+
+### Restlicher Ablauf (TDD war vorgefunden, nicht nachgeholt)
+
+Der abgebrochene Lauf hatte RED→GREEN offenbar sauber durchzogen (Test-Datei
+dokumentiert Befund-Cluster und Akzeptanz; Loader-Assertions konsistent
+angepasst). Ich habe RED nicht re-produziert — der Beweis "Test schlägt auf
+unmodifiziertem HEAD fehl" wäre jetzt nur noch rekonstruierbar (Tag
+wegpatchen, 13 Tests rot sehen, zurück). Angesichts 13/13 grün auf dem
+Halbfertig-Stand, konsistenter Loader-Anpassung und identischer
+Akzeptanz-Abdeckung habe ich auf die Rekonstruktion verzichtet und den
+Prüfstand (oben) als Übernahme-Beweis geführt. Herkunft: vorgefundener
+Arbeitsbaum, Commit als "Nachcommit des abgebrochenen Laufs" markiert.
+
+---
+
 ## 2026-09-14 — [Dev] T1 Design-Skizze: B11 Feuer-Komfort-Cutoff (vor TDD, Pflicht laut Task-Akzeptanz)
 
 **Problem (B11, Play 11.09.+14.09. re-verifiziert):** am aktiven Feuer liegt die
