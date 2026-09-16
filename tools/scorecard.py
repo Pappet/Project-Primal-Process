@@ -1026,10 +1026,10 @@ REST_HORIZON = 500            # Tick-Cap wie die anderen Überlebens-Metrik-Runn
 REST_WINDOW = 40              # max Ticks pro Rast-Fenster (Erstlesungs-Policy v5)
 REST_STOKE_AT = 15.0          # stoke-Schwelle wie Erstlesung v5 ("stoke bei fuel<15")
 REST_SCORED_NIGHT_BT = 35.0  # survived_night-Schwelle aus dem Proposal
-REST_SEEDS = tuple(BASE_SEED + 3000 + i for i in range(20))
-# ^ eigener Seed-Kanal (Konvention WARMTH_SEEDS +2000): die Metrik liest die
-#   STANDARD-Seeds via _aggregate, aber der Runner ist ein eigener Sim-Kanal —
-#   Offsets halten die Kanäle auseinander, falls je ein Runner direkt geseedet wird.
+# Seed-Kanal: die Metrik liest die STANDARD-Seeds via _aggregate (random.seed(seed)
+# im Runner) — bewusst KEIN eigener Offset-Kanal (eine "REST_SEEDS"-Konstante aus
+# dem gecrashten Lauf war toter Code und ist 16.09. entfernt; WARMTH_SEEDS leidet
+# am selben Muster, BACKLOG 🔵).
 
 
 def _is_night_tick(tick_counter) -> bool:
