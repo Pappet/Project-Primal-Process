@@ -32,11 +32,15 @@ in dieser Lesung entschieden; sharpen_tool bleibt 0/20 (5. Lesung in Folge).
    B11-Öffnung (HITZSCHLAG stirbt im Messfenster nie — Bot rastet nie); der
    Nachweis läuft über Play (Rest-Loop-Tode → 0/20, Nacht-Fenster-Erfolg).
 
-2. **rest_adoption in die Messung nehmen — die neue Zeit-Achse ohne Blende.**
-   Metrik: `rest_adoption` (neu aufzunehmen, `probation_until` 2026-09-24;
-   Proposal verifiziert, Erstlesung 0.333). Scorecard-Bots rufen `rest()` nie —
-   ohne diese Metrik ist SPEC-015 unsichtbar. Nach Probe-Ende (24.09.) darf
-   sie Plan-Ziel werden; bis dahin beobachtend.
+2. **rest_adoption in die Messung nehmen — die neue Zeit-Achse ohne Blende.** ✅
+   aufgenommen (Dev 16.09., Nachcommit des abgebrochenen Laufs;
+   Direktor-Freigabe 13.09.): `probation_until` 2026-09-24 unverändert,
+   Erstlesung auf Tages-HEAD nach T1+T2 = **1.0** (flach p25=p75; über der
+   Band-Obergrenze 0.85 — Kalibrierungs-Ware, Band-Lesung nach Probe-Ende;
+   JOURNAL 15.09. inkl. Pflicht-Delta-Tabelle: 12 Alt-Metriken
+   byte-identisch). Scorecard-Bots rufen `rest()` nie — ohne diese Metrik
+   ist SPEC-015 unsichtbar. Nach Probe-Ende (24.09.) darf sie Plan-Ziel
+   werden; bis dahin beobachtend.
 
 3. **Die Wächter halten durch jede Nacht-Bogen-Änderung.** Metriken:
    `blueprint_reachability` 1.0 (11/11), `content_reachable` 1.0 (18/18),

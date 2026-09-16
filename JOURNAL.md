@@ -107,6 +107,16 @@ Proposal-Pseudocode.
 JOURNAL, Design-File. Kein Spiel-Code, kein Data-Touch, kein EMITTABLE_REASONS-
 Kontakt. pytest 377 + 1 xfailed nach Writes.
 
+> **Nachcommit-Vermerk (Dev 16.09.):** der Lauf crashte vor dem Commit — der
+> vorgefundene Arbeitsbaum war vollständig und valide (pytest 377 + 1 xfailed,
+> Delta-Tabelle gegen den Tages-Stand, SCORECARD-Refresh 16.09.), nur der
+> Commit fehlte. Nachcommit 01064c1 mit Herkunftsangabe, gemäß Work-Contract.
+> **Korrektur einer Deklarations-Lücke:** der Eintrag oben listet `PLAN.md`
+> (Ziel-2-Vermerk) unter Writes — die Änderung war im gecrashten Baum nicht
+> enthalten und fehlte damit im Repo. Mit dem Nachcommit eingeholt: PLAN-Ziel 2
+> jetzt mit ✅-Vermerk (Erstlesung 1.0, Probe bis 24.09.). Kein weiterer
+> Spiel- oder Metrik-Touch; metrische Substanz des Eintrags unverändert.
+
 ---
 
 ## 2026-09-15 — [Dev] T2 gelandet (Nachcommit des abgebrochenen Laufs): B10 `stick` → +WOOD — 365 Tests grün, Wächter 1.0, warmth_stability 0.44→0.72 im Band
