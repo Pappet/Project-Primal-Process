@@ -788,3 +788,119 @@ class TestSessionDepthV2:
             f"v2-Bot öffnete Tier-2 nicht (fand: {found})"
 
 
+# ----------------------------------------------------------------------------
+# Metrik 13 — rest_adoption (METRICS-Aufnahme 15.09., Direktor-Freigabe
+# 13.09., probation_until 2026-09-24; Proposal metrics/proposed/rest_adoption.md)
+# ----------------------------------------------------------------------------
+
+class TestRestAdoptionEntry:
+    def test_metrics_entry_exact(self):
+        entries = [m for m in sc.METRICS if m["key"] == "rest_adoption"]
+        assert len(entries) == 1
+        m = entries[0]
+        assert m["version"] == 1
+        assert m["band"] == (0.4, 0.85)
+        assert m["probation_until"] == "2026-09-24"
+        assert m["direction"] is None
+        assert m["fn"].__name__ == "metric_rest_adoption"
+
+    def test_entry_is_last_dict_order_precedence(self):
+        # Dict-Order = Präzedenz (wie snare am Ende des Blueprints-Arrays):
+        # die neue Metrik hängt am ENDE der METRICS-Liste an.
+        assert sc.METRICS[-1]["key"] == "rest_adoption"
+
+    def test_probation_label(self):
+        m = {x["key"]: x for x in sc.METRICS}["rest_adoption"]
+        assert "24.09." in sc._probation_label(m)
+
+    def test_compute_all_value_and_version(self):
+        data = sc.compute_all()
+        ra = data["rest_adoption"]
+        assert "error" not in ra, ra
+        assert ra["version"] == 1
+        assert ra["value"] is not None
+        assert ra["n_runs"] == 20
+
+    def test_value_in_unit_range(self):
+        m = sc.metric_rest_adoption()
+        assert 0.0 <= m["value"] <= 1.0
+
+
+class TestRestAdoptionAdditivity:
+    def test_legacy_twelve_unchanged_by_adoption(self):
+        """Der eigentliche Wächter: die Aufnahme ist ADDITIV — die 12 Alt-
+        Metriken dürfen sich gegen den dokumentierten Tages-Stand (T2-Stream-
+        Shift inklusive, JOURNAL 15.09.) nicht verschieben."""
+        expected = {
+            "actions_to_first_craft": 7.0,
+            "blueprint_reachability": 1.0,
+            "craft_variety": 5.0,
+            "skill_spread": 0.198,
+            "feedback_quality": 1.0,
+            "content_reachable": 1.0,
+            "session_depth": 52.5,
+            "discovery_gap": 0.545,
+            "forage_pressure": 0.0,
+            "warmth_stability": 0.72,  # T2-Stream-Shift (dokumentiert 15.09.)
+            "recovery_stability": 0.375,
+            "gear_uptime": 0.994,
+        }
+        data = sc.compute_all()
+        for k, v in expected.items():
+            assert data[k]["value"] == v, f"{k}: {data[k]['value']} != {v}"
+
+
+class TestRestAdoptionRunner:
+    def test_deterministic_same_seed(self):
+        v1 = sc.run_rest_adoption(sc.SEEDS[0])
+        v2 = sc.run_rest_adoption(sc.SEEDS[0])
+        assert v1 is not None and v1 == v2
+
+    def test_all_standard_seeds_produce_values(self):
+        vals = [sc.run_rest_adoption(s) for s in sc.SEEDS]
+        assert all(v is not None for v in vals)
+        assert all(0.0 <= v <= 1.0 for v in vals)
+
+    def test_hash_seed_stability(self):
+        import os
+        import subprocess
+        code = (
+            "import sys; sys.path.insert(0, '.'); sys.path.insert(0, 'tools'); "
+            "import scorecard as sc; "
+            "print(sc.run_rest_adoption(%d))" % sc.SEEDS[0]
+        )
+        outs = []
+        for hs in ("1", "2"):
+            env = {**os.environ, "PYTHONHASHSEED": hs}
+            r = subprocess.run([sys.executable, "-c", code],
+                               capture_output=True, text=True, env=env,
+                               timeout=300, cwd=str(ROOT))
+            assert r.returncode == 0, r.stderr
+            outs.append(r.stdout.strip())
+        assert outs[0] == outs[1] and outs[0] not in ("", "None")
+
+    def test_night_formula_matches_engine_clock(self):
+        for t in range(0, 288):
+            hour = (t % 144) / 6
+            assert sc._is_night_tick(t) == (hour < 6 or hour > 20)
+
+    def test_night_boundaries(self):
+        assert not sc._is_night_tick(36)   # 6.00 Uhr — Tag
+        assert sc._is_night_tick(35)       # 5.83 — Nacht
+        assert not sc._is_night_tick(120)  # 20.00 — Tag (Grenze exakt)
+        assert sc._is_night_tick(121)      # 20.17 — Nacht
+
+    def test_windows_booked_and_scored_over_seeds(self):
+        """Der Bot erreicht die Trigger im natürlichen Verlauf: Fenster > 0
+        auf jedem Seed und mindestens ein Outcome über die 20 Standard-Seeds
+        (Erstlesung 11.09. las den Heil-Trigger 10/10; T1+T2 tragen die
+        Nacht-Achse — Proposal: 'windows zählen nur bei hp > 0')."""
+        total_w = total_s = 0
+        for s in sc.SEEDS:
+            _val, w, sco = sc._run_rest_adoption(s)
+            assert w > 0, f"Seed {s}: 0 Rast-Fenster — Trigger unerreichbar"
+            total_w += w
+            total_s += sco
+        assert total_s > 0
+
+

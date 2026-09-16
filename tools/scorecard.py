@@ -1016,6 +1016,156 @@ def metric_gear_uptime():
 
 
 # ----------------------------------------------------------------------------
+# Metrik 13 — rest_adoption (METRICS-Aufnahme 15.09., Direktor-Freigabe 13.09.)
+# SPEC-015-Lesepfad: Scorecard-Bots rufen rest() nie — ohne diese Metrik wäre
+# die Zeit-Investment-Achse unsichtbar (Proposal metrics/proposed/rest_adoption.md,
+# Erstlesung 0.333 am 11.09., Probezeit bis 2026-09-24, danach Plan-Ziel-fähig).
+# ----------------------------------------------------------------------------
+
+REST_HORIZON = 500            # Tick-Cap wie die anderen Überlebens-Metrik-Runner
+REST_WINDOW = 40              # max Ticks pro Rast-Fenster (Erstlesungs-Policy v5)
+REST_STOKE_AT = 15.0          # stoke-Schwelle wie Erstlesung v5 ("stoke bei fuel<15")
+REST_SCORED_NIGHT_BT = 35.0  # survived_night-Schwelle aus dem Proposal
+REST_SEEDS = tuple(BASE_SEED + 3000 + i for i in range(20))
+# ^ eigener Seed-Kanal (Konvention WARMTH_SEEDS +2000): die Metrik liest die
+#   STANDARD-Seeds via _aggregate, aber der Runner ist ein eigener Sim-Kanal —
+#   Offsets halten die Kanäle auseinander, falls je ein Runner direkt geseedet wird.
+
+
+def _is_night_tick(tick_counter) -> bool:
+    """Nacht exakt nach der Engine-Uhr (core.py _get_ambient_temp):
+    hour = (tick % 144) / 6; Nacht = hour < 6 oder hour > 20."""
+    hour = (tick_counter % 144) / 6
+    return hour < 6 or hour > 20
+
+
+def _rest_warmup(game, rng):
+    """Guided-Grundierung (Erstlesungs-Policy v5, play 11.09.): Messer → Feuer →
+    Versorgung → Fell-Umhang, alles an warmem Ort. Danach läuft der Bot blind —
+    die Grundierung stellt nur sicher, dass die Trigger überhaupt erreichbar sind
+    (Behandlungs-Kette: bandage/poultice-Vorhalt; Nacht-Achse: Feuer + Brennstoff).
+
+    Items direkt ins Inventar (Konvention der Scorecard-Runner — 'Vorbereitung
+    möglich'), Messer via echtem Experiment (Discovery-Stream der Trigger-relevanten
+    Prozesse unangetastet)."""
+    inv = game.player.inventory
+
+    def give(tpl, qty=1):
+        inv.add(create_item(tpl, qty))
+
+    give("flint_shard"); give("stick")
+    mats = [i for i in inv.items
+            if i.template_id in ("flint_shard", "stick")]
+    game.execute_experiment(mats)                      # Messer (CUTTING)
+    if inv.find_item_by_tag("CUTTING") is None:
+        return False
+    give("fur_cloak")                                  # Isolation 0.6
+    give("plant_fiber", 4)                             # 2× make_bandage
+    give("mushroom", 2); give("clay_lump", 2)          # 2× make_poultice
+    give("stick", 10)                                  # start_fire-Input + Fuel (T2: WOOD)
+    give("tinder", 5)                                  # start_fire-Input
+    give("log_oak", 50)                                # Nachlege-Konto (WOOD)
+    game.travel("forest_edge")
+    game.execute_process("start_fire")                 # Feuer sofort (Erstlesung: _fire_at)
+    return game._fire_lit()
+
+
+def _rest_treat_injury(game):
+    """SPEC-009-Kette: cut → bandage, strain → poultice; Behandlung anlegen.
+    Der Bot baut Verband/Umschlag NUR bei Bedarf (Inputs im Vorhalt). True, wenn
+    am Ende mindestens eine Verletzung behandelt (und damit heilbar) ist."""
+    inj = game.player.injuries
+    if not inj:
+        return False
+    if "cut" in inj and not inj["cut"]["treated"]:
+        if game._count_template("plant_fiber") < 2:
+            return False
+        if game.execute_process("make_bandage").get("success"):
+            game.execute_process("treat_cut")
+    if "strain" in inj and not inj["strain"]["treated"]:
+        if game._count_template("mushroom") < 1 or game._count_template("clay_lump") < 1:
+            return False
+        if game.execute_process("make_poultice").get("success"):
+            game.execute_process("treat_strain")
+    return any(i["treated"] for i in game.player.injuries.values())
+
+
+def _run_rest_adoption(seed, horizon=REST_HORIZON):
+    """Anteil Rast-Fenster mit Outcome (ein Run).
+
+    Bot-Policy (Erstlesung v5, play/2026-09-11.md — guided-Grundierung, HORIZON
+    500, 20 Scorecard-Seeds): Rast-Fenster bei (a) behandelter Verletzung bis
+    Heilung (Cap REST_WINDOW Ticks), (b) Nacht-Beginn mit aktivem Feuer (stoke
+    bei REST_STOKE_AT, Rast durch die Nacht), nie ohne `_resting_warm()`. Tag:
+    sammeln. Outcome je Fenster (eines genügt): Heilung vollendet ODER Nacht
+    warm überstanden (body_temp >= 35.0 nach der ersten Nacht-Phase). Fenster
+    ohne potentielles Outcome entstehen im Bot-Design nicht (nur Trigger-Fenster
+    zählen). Kein RNG in der Messschleife — der Engine-Stream läuft wie bei den
+    Nachbar-Runnern über `random.seed(seed)`.
+    """
+    random.seed(seed)
+    game = GameEngine()
+    if not _rest_warmup(game, None):
+        return None
+    windows = scored = 0
+    while game.tick_counter < horizon and game.player.hp > 0:
+        if game.player.energy < 300:
+            _eat_best(game)
+        # --- Feuer-Pflege (Erstlesungs-Erbe _warm_here): das Feuer muss die
+        # Nacht-Kreuzung überhaupt erleben — ohne Tag-Upkeep stirbt es nach
+        # START_FIRE_FUEL=24 Ticks und kein Nacht-Fenster öffnet sich mehr.
+        loc = game.current_location
+        if loc.fire_active and loc.fire_fuel < REST_STOKE_AT:
+            game.stoke_fire()
+        elif not loc.fire_active:
+            if (game._count_template("tinder") >= 1
+                    and game._count_template("stick") >= 2):
+                game.execute_process("start_fire")
+        # --- Trigger 1: Verletzung behandeln → Heil-Rast-Fenster ---
+        if game.player.injuries and _rest_treat_injury(game):
+            pre = set(game.player.injuries)
+            t0 = game.tick_counter
+            while (game.tick_counter - t0 < REST_WINDOW
+                    and game.player.hp > 0 and game.player.injuries):
+                game.rest()
+            windows += 1
+            if set(game.player.injuries) != pre:
+                scored += 1
+            continue
+        # --- Trigger 2: Nacht-Beginn mit Feuer → Nacht-Rast-Fenster ---
+        if (_is_night_tick(game.tick_counter)
+                and not _is_night_tick(game.tick_counter - 1)
+                and game._resting_warm()):
+            t0 = game.tick_counter
+            while (game.tick_counter - t0 < REST_WINDOW
+                    and game.player.hp > 0):
+                if (game.current_location.fire_fuel < REST_STOKE_AT
+                        and game.current_location.fire_active):
+                    game.stoke_fire()
+                game.rest()
+            windows += 1
+            # survived_night (Proposal): bt NACH der Nacht-Phase >= 35.0 —
+            # gestorbenen/unterkühlten Nächten wird nichts zugeschrieben.
+            if game.player.body_temp >= REST_SCORED_NIGHT_BT:
+                scored += 1
+            continue
+        # --- Tag: sammeln (kältesicher am Waldrand mit Umhang + Feuer) ---
+        game.gather()
+    return (round(scored / windows, 3) if windows else None,
+            windows, scored)
+
+
+def run_rest_adoption(seed):
+    """Ein-Seed-Wert (Skalar) — der deterministische Vertrag für Tests/Probes."""
+    return _run_rest_adoption(seed)[0]
+
+
+def metric_rest_adoption():
+    """Anteil Rast-Fenster mit Outcome (Median über Standard-Seeds, Band-Metrik)."""
+    return _aggregate(lambda s: _run_rest_adoption(s)[0])
+
+
+# ----------------------------------------------------------------------------
 # Aggregation über Seeds (Median + p25/p75)
 # ----------------------------------------------------------------------------
 
@@ -1062,6 +1212,7 @@ METRICS = [
     {"key": "warmth_stability", "desc": "Anteil Kälte-Stress-Ticks, die warm überstanden werden (Feuer/Isolation)", "fn": metric_warmth_stability, "direction": None, "version": 1, "band": (0.4, 0.9), "probation_until": "2026-08-27"},
     {"key": "recovery_stability", "desc": "Anteil Verletzungs-Ticks, die Behandlung + Ruhe abwenden (Verband/Umschlag)", "fn": metric_recovery_stability, "direction": None, "version": 1, "band": (0.3, 0.7), "probation_until": "2026-09-03"},
     {"key": "gear_uptime", "desc": "Anteil werkzeugpflichtiger Stress-Ticks mit nutzbarem Werkzeug (>= Warnschwelle)", "fn": metric_gear_uptime, "direction": None, "version": 1, "band": (0.70, 0.95), "probation_until": "2026-09-11"},
+    {"key": "rest_adoption", "desc": "Anteil Rast-Fenster mit Outcome (Heilung vollendet oder Nacht warm überstanden)", "fn": metric_rest_adoption, "direction": None, "version": 1, "band": (0.4, 0.85), "probation_until": "2026-09-24"},
 ]
 
 METRIC_VERSIONS = {m["key"]: m["version"] for m in METRICS}

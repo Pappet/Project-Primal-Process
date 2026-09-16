@@ -5,6 +5,110 @@
 
 ---
 
+## 2026-09-15 — [Dev] rest_adoption in METRICS aufgenommen (Direktor-Freigabe 13.09., probation 24.09.) — 12 Alt-Metriken byte-identisch, Erstlesung 1.0 nach T1+T2
+
+> Auftrag: Direktor 13.09. (JOURNAL unten): "Aufnahme durch Dev im nächsten
+> Dev-Lauf — FREIGEGEBEN (Proposal verifiziert, Erstlesung 0.333, Policy
+> dokumentiert)". Constitution: Ergänzen erlaubt; Entfernen/Umdefinieren
+> unberührt. Design-Skizze vor TDD: `.hermes/plans/2026-09-15_rest_adoption_design.md`.
+
+### Was gelandet ist
+
+- `tools/scorecard.py`: METRICS-Eintrag am ENDE der Liste (Dict-Order =
+  Präzedenz, wie snare) — `rest_adoption`, v1, Band (0.4, 0.85), keine
+  Richtung, `probation_until: "2026-09-24"`. Runner `run_rest_adoption` /
+  `_run_rest_adoption` + Helper (`_is_night_tick` = exakte Engine-Uhr-Formel
+  core.py:287, `_rest_warmup` = guided-Grundierung der Erstlesung v5,
+  `_rest_treat_injury` = SPEC-009-Kette). Konventionen der Nachbar-Runner:
+  `random.seed(seed)`-Stream, `_eat_best` bei energy < 300, HORIZON 500,
+  Median via `_aggregate`, None bei 0 Fenstern.
+- Bot-Policy (Erstlesung v5, play/2026-09-11.md): Rast-Fenster bei (1)
+  behandelter Verletzung bis Heilung (Cap 40 Ticks), (2) Nacht-Beginn mit
+  Feuer (stoke bei fuel < 15, Rast bis zum Morgen-Crossing, nicht in der
+  Nacht aufbrechen), nie ohne `_resting_warm()`; Tag: sammeln (+ Feuer-
+  Upkeep, s. Abweichungen). Outcome je Fenster: Heilung vollendet ODER
+  body_temp >= 35.0 NACH der Nacht-Phase (Proposal: bt post-window — nichts
+  wird Toten zugeschrieben).
+- `tests/test_scorecard.py`: +12 Tests (Entry-Vertrag, Listen-Präzedenz,
+  Probation-Label, compute_all-Wert/Version, Wertebereich, Additivitäts-
+  Wächter gegen den dokumentierten Tages-Stand, Determinismus, Seed-Kanal,
+  HASH-Seed-Stabilität via Subprozess, Nacht-Formel-Gegenprobe gegen die
+  Engine-Uhr, Grenz-Ticks, Fenster-Buchungs-Invariante). 377 passed +
+  1 xfailed (vorher 365).
+
+### Pflicht-Delta-Tabelle `compute_all()` vor/nach (20 Scorecard-Seeds)
+
+Vor = T2-Stand von heute früh (`/tmp/t2_after.json`, METRICS=12), nach =
+METRICS-Aufnahme (`/tmp/t3_after.json`, METRICS=13) — volle JSON-Objekte
+verglichen:
+
+| Metrik | vor | nach | Δ |
+|---|---|---|---|
+| actions_to_first_craft | 7.0 | 7.0 | — |
+| blueprint_reachability | 1.0 (11/11) | 1.0 (11/11) | — |
+| content_reachable | 1.0 (18/18) | 1.0 (18/18) | — |
+| craft_variety | 5.0 | 5.0 | — |
+| discovery_gap | 0.545 | 0.545 | — |
+| feedback_quality | 1.0 | 1.0 | — |
+| forage_pressure | 0.0 | 0.0 | — |
+| gear_uptime | 0.994 | 0.994 | — |
+| recovery_stability | 0.375 | 0.375 | — |
+| session_depth | 52.5 | 52.5 | — |
+| skill_spread | 0.198 | 0.198 | — |
+| warmth_stability | 0.72 | 0.72 | — |
+| **rest_adoption** | *(nicht in METRICS)* | **1.0** | **NEU (v1, Probe bis 24.09.)** |
+
+12 Alt-Metriken byte-identisch — die Aufnahme ist additiv, wie im
+Proposal-Delta versprochen. `p25 = p75 = 1.0` (flach, deterministische
+Policy — gleiches Muster wie warmth/recovery bei Einführung).
+
+### Erstlesung 1.0: die Zahl ist ehrlich, die Geschichte ist die Erwartung
+
+Erstlesung 11.09.: 0.333 (p25 0.000, p75 0.500) — unter Band, weil die
+Nacht an der Brennstoff-Ökonomie scheiterte (B10) und die Rast am Feuer
+tödlich überhitzte (B11). Seitdem gelandet: T1 (FIRE_COMFORT_CAP 38.0,
+0/20 Rest-Loop-Tode) und T2 (stick → +WOOD, ~80 zusätzliche Fuel-Ticks aus
+demselben Inventar). Der Bot rastet jetzt durch die Nacht und übersteht sie
+warm; das Heil-Fenster war schon vorher 10/10. 1.0 ist also KEIN Metrik-Fehler,
+sondern die messbare Antwort auf die beiden Nacht-Bogen-Fixes: Rast kommt an.
+Probezeit-Regel greift: beobachtend bis 24.09., kein Plan-Ziel vorher — und
+das Band (0.4–0.85) liest der Direktor nach Probe-Ende neu (Obergrenze 0.85
+ist jetzt dauerhaft verletzt, das ist Kalibrierungs-Ware, kein Tuning-Anlass).
+
+Sensitivitäts-Gegenprobe (read-only, /tmp): Stockpile-Variante ohne die
+50 log_oak (Vorrats-Planung schließt der Proposal ausdrücklich aus) liest
+identisch median 1.0 (min 0.667) — der Wert hängt nicht am Vorrats-Artefakt.
+Mit dem Fix "Rast bis zum Morgen" statt Fenster-Cap 40 bleibt die Lesung
+stabil — die Umsetzung folgt der Erstlesungs-Policy, nicht dem
+Proposal-Pseudocode.
+
+### Abweichungen vom Proposal-Pseudocode (dokumentiert, nicht still)
+
+1. **Feuer-Upkeep im Tagespfad:** die reine Trigger-Schleife ließ das
+   Warmup-Feuer nach START_FIRE_FUEL=24 Ticks sterben → erste Nacht-Kreuzung
+   feuerlos → 0 Fenster → None. Der Erstlesungs-Bot hatte den Upkeep implizit
+   (Erbe aus `_warm_here`, guided_full). Nachgebaut: stoke bei fuel < 15,
+   Neuzündung, wenn tinder+stick reichen.
+2. **REST_STOKE_AT = 15.0** (Erstlesung v5: "stoke bei fuel<15") statt
+   FIRE_LOW_FUEL=8 — Policy-Konvention folgt der Erstlesung.
+3. **Nacht-Fenster rastet bis zum Morgen-Crossing** (Cap 80 als Hart-Guard),
+   nicht bis Fenster-Tick 40 — das Proposal-Kriterium "Nacht überstanden"
+   ist sonst unerfüllbar (54-Tick-Nacht).
+4. **Heil-Trigger bleibt rare-Path:** an forest_edge entstehen im Blind-
+   Verlauf keine Verletzungen (kein SHARP-Node, exposure 0.5 < 0.8) — die
+   Metrik liest jetzt überwiegend die Nacht-Achse. Genau die Befundlage der
+   Erstlesung (dort trug nur der Heil-Trigger > 0); der Direktor liest die
+   Gewichts-Verschiebung als das, was sie ist: T1+T2-Wirkung.
+
+### Writes
+
+`tools/scorecard.py` (Runner + METRICS-Eintrag), `tests/test_scorecard.py`
+(+12), `PLAN.md` (Ziel-2-Vermerk), `BACKLOG.md` (Probezeit-Notiz), dieses
+JOURNAL, Design-File. Kein Spiel-Code, kein Data-Touch, kein EMITTABLE_REASONS-
+Kontakt. pytest 377 + 1 xfailed nach Writes.
+
+---
+
 ## 2026-09-15 — [Dev] T2 gelandet (Nachcommit des abgebrochenen Laufs): B10 `stick` → +WOOD — 365 Tests grün, Wächter 1.0, warmth_stability 0.44→0.72 im Band
 
 > Vorgefunden: uncommitteter Arbeitsbaum eines abgebrochenen Laufs (Crash im

@@ -15,9 +15,10 @@
 | session_depth (v2) (Probe bis 08.09.) | 52.500 | ±0 | höher | Aktionen bis nichts Neues passiert (ziel-bewusster naiver Bot, v2) |
 | discovery_gap (v1) | 0.545 | ±0 | im Band | Abstand erreichbar vs. tatsächlich gefunden |
 | forage_pressure (v2) (Probe bis 11.09.) | 0.000 | ±0 | unter Band | Anteil Sammel-Versuche, die an Erschöpfung verweigert oder deutlich gemindert werden (gefühlte Knappheit) |
-| warmth_stability (v1) (Probe bis 27.08.) | 0.460 | ±0 | im Band | Anteil Kälte-Stress-Ticks, die warm überstanden werden (Feuer/Isolation) |
+| warmth_stability (v1) (Probe bis 27.08.) | 0.720 | +0.260 | im Band | Anteil Kälte-Stress-Ticks, die warm überstanden werden (Feuer/Isolation) |
 | recovery_stability (v1) (Probe bis 03.09.) | 0.375 | ±0 | im Band | Anteil Verletzungs-Ticks, die Behandlung + Ruhe abwenden (Verband/Umschlag) |
 | gear_uptime (v1) (Probe bis 11.09.) | 0.994 | ±0 | über Band | Anteil werkzeugpflichtiger Stress-Ticks mit nutzbarem Werkzeug (>= Warnschwelle) |
+| rest_adoption (v1) (Probe bis 24.09.) | 1.000 | — (Baseline) | über Band | Anteil Rast-Fenster mit Outcome (Heilung vollendet oder Nacht warm überstanden) |
 
 ## discovery_gap — Zielband
 
@@ -44,7 +45,12 @@
 **Band: 0.7 – 0.95.** Keine Richtung (kein "höher = besser"). Unter 0.7 nimmt das Spiel den Spieler an die Hand; über 0.95 ist es faktisch unentdeckbar. `blueprint_reachability` (None) misst, was ein Orakel erreichen kann; `naive_discovery_rate` (None) was ein Spieler wirklich findet. Der Abstand dazwischen ist das eigentliche Spiel.
 
 
-## Details (2026-09-14)
+## rest_adoption — Zielband
+
+**Band: 0.4 – 0.85.** Keine Richtung (kein "höher = besser"). Unter 0.4 nimmt das Spiel den Spieler an die Hand; über 0.85 ist es faktisch unentdeckbar. `blueprint_reachability` (None) misst, was ein Orakel erreichen kann; `naive_discovery_rate` (None) was ein Spieler wirklich findet. Der Abstand dazwischen ist das eigentliche Spiel.
+
+
+## Details (2026-09-16)
 
 ```json
 {
@@ -148,9 +154,9 @@
     "version": 2
   },
   "warmth_stability": {
-    "value": 0.46,
-    "p25": 0.46,
-    "p75": 0.46,
+    "value": 0.72,
+    "p25": 0.72,
+    "p75": 0.72,
     "n_runs": 20,
     "version": 1
   },
@@ -164,6 +170,13 @@
   "gear_uptime": {
     "value": 0.994,
     "p25": 0.994,
+    "p75": 1.0,
+    "n_runs": 20,
+    "version": 1
+  },
+  "rest_adoption": {
+    "value": 1.0,
+    "p25": 1.0,
     "p75": 1.0,
     "n_runs": 20,
     "version": 1

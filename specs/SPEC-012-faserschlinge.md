@@ -1,5 +1,11 @@
 # SPEC-012 — Faserschlinge: die toten 2-Slot-Selektionsräume besetzen
 
+> **STATUS: erledigt (Dev 07.09.) — snare in data/blueprints.json (11/11),
+> tests/test_snare.py, discovery_gap 0.600 → 0.545 (Bandmitte, hält);
+> Delta-Tabelle + Go/No-Go-Probe JOURNAL 07.09., Play-Bestätigung 09.09.
+> (snare 19/20 im Spiel).** (STATUS-Header 15.09. nachgetragen — war bei der
+> Landung vergessen, Inhalt war längst referenziert.)
+
 **Problem** (Metrik: `discovery_gap`, Band 0.2–0.6; Play-Report 26.08. + Scorecard 29.08. +
 Dev-Delta 31.08.): Drei Lesungen über Band (0.6 → 0.65 → 0.70) trugen den Gap auf die Bandkante —
 naive_discovery_rate 0.4 → 0.35 → 0.3, naive_p25 0.3. Die 31.08.-Landungen (Munitions-Ökonomie,
