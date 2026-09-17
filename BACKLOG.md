@@ -133,6 +133,20 @@ Mechaniken, Features, Verbesserungen — nicht akut, aber wertvoll.
 > **Triage 2026-08-23 (Direktor):** Kein neuer 🔴 Bug. `session_depth`-Blindheit (18./19.08.), `feedback_quality`-NEAR_MISS (19.08.), `skill_spread` (13.08.) bleiben offen — in PLAN.md als Entscheid-Tasks an Peter überführt. `forage_pressure` (20.08.): Probe beendet, Wert über Band, aber definitions-abhängig → Peters Entscheid Definition/Band (PLAN-Task), kein Spiel-Tuning dahinter. `warmth_stability`/`recovery_stability` bleiben beobachtend bis Probe-Ende (27.08./03.09.). Neu als Research-Kandidat: Near-Miss für 2-Slot-Blueprints (Deckungslücke, `discovery_gap`-Hebel; PLAN-Task).
 
 <!-- Session-Einträge hier drunter -->
+- [2026-09-17] (Research/Explore) **SPEC-016 „Glut: der Feuerort erinnert sich" eingereicht** —
+  Ortsbindung als kleinster Welt-Gedächtnis-Baustein: FIRE_OUT hinterlässt Glut
+  (`LocationDef.embers`, Default-Feld = kein Data-Touch), Re-Zündung am Glut-Ort braucht
+  nur WOOD statt tinder+stick, Verfall 0.1/Tick (~60-Ticks-Fenster). Kernbefunde im Spec:
+  (a) 28.08.-Versorgungsspirale — Reparatur nach Kollaps strikt schlechter, weil der
+  Kollapsort selbst als Neuland bewertet wird; (b) `fire_pit` ist KINDLING-Item, das
+  `_find_fuel_item` bewusst nie verbrennt — stille Design-Absicht „Feuerstelle als Ort";
+  (c) die Konstante kehrt den 28.08.-Befund nicht um, sondern gibt der Reparatur-am-
+  gleichen-Ort eine relative Billigkeit, ohne Balance-Korrektur. Metrik-Proposal
+  `fire_home_loyalty` (Band 0.3–0.8): Bot mit unvollkommener Feuer-Policy erlebt
+  FIRE_OUTs im natürlichen Verlauf, misst Rückkehr-Erfolg über Nacht-Fenster — erste
+  Metrik, die eine Welt-Eigenschaft statt einer Bot-Policy liest. Erwartung: alle 13
+  bestehenden Metriken byte-identisch (Bots berühren den Glut-Pfad nie). —
+  specs/SPEC-016-glut-ortbindung.md, metrics/proposed/fire_home_loyalty.md.
 - [2026-09-14] (Play) **Menü-Naiv-Profil zum dritten Mal als /tmp-Wegwerfcode neu gebaut — das Repo-Profil fehlt noch immer, und die Zahlen sind jetzt Standard-lesbar.** Menü-naives Profil (55% gather, 20% Experimente, 15% Rast, 10% Prozesse, 300 Aktionen): 20/20 Tode, median last_new 68 (Range 38–92), Median-Tod @83 Aktionen. Parallel guided-Stichprobe: last_new 6–22. Zusammen: das Spiel hat ~20–70 Aktionen Substanz, danach nichts Neues — die Langeweile-Stelle ist profil-übergreifend real. Wenn diese Lesung Standard werden soll (sie sollte — sie ist der Kompass für session_depth und die Naiv-Todesfälle), gehört das Profil als `play/naive_menu.py` ins Repo (Play-Messwerkzeug, kein Scorecard-Touch). — session_depth/alle Metriken (Lesung).
 - [2026-09-14] (Play) **T2-Simulation (stick→WOOD, In-Memory-Patch, read-only): Nacht-Exposition bricht ein.** Nacht-Profil 20 Seeds, natürlicher Verlauf (Messer→Zunder→Feuer→Stoke-Guard-Rast): cold_ticks 74→15, fehlgeschlagene Stokes 194→72, heat_ticks 10→1, survived 20/20 in beiden. Reachability unter Patch (N=10): 1.0, 11/11 — kein Blueprint-WOOD-Touch (bestätigt Direktor-Verifikation 13.09.). Freigabe-Sicht aus Play: kein Go/No-Go-Blocker; echte Gegenprobe nach Dev-Landing (Repo-Data, nicht In-Memory). — warmth_stability/rest_adoption (beobachtend).
 - [2026-09-09] (Play) **Re-Confirm 07.09.-Idee:** Menü-/Kälte-Probes erneut nur in /tmp (crash-adoptierter Lauf neu implementiert — Vorwochen-Skripte waren weg). snare-Lesung, deaf/reader/retreat-Politiken, first-cold-Check: alles wieder Wegwerf-Code. Das 07.09er-Anliegen (drittes Standard-Profil als `play/naive_menu.py` ins Repo) gilt unverändert weiter — der Unterhalt dieser Probes frisst pro Session Verifikationszeit. — alle Metriken (Lesung), kein Metrik-Eingriff.

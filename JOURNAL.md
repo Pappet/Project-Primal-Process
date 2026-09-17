@@ -5,7 +5,80 @@
 
 ---
 
-## 2026-09-15 — [Dev] rest_adoption in METRICS aufgenommen (Direktor-Freigabe 13.09., probation 24.09.) — 12 Alt-Metriken byte-identisch, Erstlesung 1.0 nach T1+T2
+## 2026-09-17 — [Research/Explore] SPEC-016 „Glut: der Feuerort erinnert sich" + Metrik-Proposal fire_home_loyalty
+
+> Explore-Cron, freie Suche (nicht metrik-gebunden). Constitution-Felder
+> „Terrain und Ortsbindung" / „Basisbau" / „Feuer und Wärme" — ausdrücklich
+> gegrüßte Richtung. Reads: CONSTITUTION, SCORECARD/latest (16.09., 13 Metriken),
+> PLAN, BACKLOG, play/2026-09-14, JOURNAL 10.–16.09., engine/core.py (voll),
+> data/*.json, Spec-Korpus (001–015 + archived SPEC-013).
+
+### Themenwahl (warum Glut, warum jetzt)
+
+Kriterien: (1) System-Vertiefung, nicht Content; (2) idealerweise eine Achse,
+die keine bestehende Metrik bewegt — aber eine, die im natürlichen Verlauf
+*erlebbar* ist (sharpen_tool-Präzedenz: nie eine Andeutung an einen toten
+Grundpfad hängen); (3) kleiner Blast-Radius für die Wächter.
+
+- **FIRE_OUT löscht die Arbeit des Spielers byte-identisch.** Nach
+  `fire_active = False; fire_fuel = 0` (core.py:338-340) ist der Feuerort
+  ökonomisch Jungfrau-Terrain. Der 28.08.-Befund (BACKLOG 🔵: Reparatur nach
+  Kollaps 19/20 Tode vs. 12/20 Baseline — „jede Intervention verschlechtert")
+  ist genau dieses Loch: der Kollapsort selbst, der eine Ort mit beisammen-
+  gewesener Infrastruktur, bewertet als Neuland.
+- **`fire_pit` ist der stille Beleg.** start_fire gibt ihn ins Inventar
+  (KINDLING), `_find_fuel_item` verbrennt ihn bewusst nie — die Design-Absicht
+  „Feuerstelle als Ort" existierte und landete als Inventar-Quittung.
+- **Ortsbindung existiert strukturell nicht.** Locations sind
+  nodes/base_temp/exposure-Differenzen; der einzige Grund zurückzukehren ist
+  Node-Regen. Die Constitution-Felder „Terrain und Ortsbindung" und
+  „Basisbau" sind unbesetzt — Glut ist der kleinste Baustein dafür, und er
+  hängt an einem lebenden Pfad (Feuer-Ökonomie, T1/T2/SPEC-015 frisch
+  gelandet), nicht an einem toten.
+
+Verworfen (ebenfalls im Feld geprüft): Jahreszeiten/Wetterfronten (SPEC-013-
+Präzedenz — Stream-Shift-Klasse, Neuanlauf nur mit Peters Freigabe), Tier-2-
+Anschluss-Andeutung (verworfen 13.09., bleibt verworfen), Energie-Regen/
+Condition-Web (große Achse, aber nach SPEC-015-Neuland zu früh — Rast-Ökonomie
+sitzt noch in Probezeit bis 24.09.). Glut gewinnt: live Grundpfad + winziger
+Kern + ehrliche „13× byte-identisch"-Erwartung.
+
+### Writes
+
+`specs/SPEC-016-glut-ortbindung.md` (neu), `metrics/proposed/fire_home_loyalty.md`
+(neu), `PLAN.md` (Task SPEC-016, offen, „Priorität: ab T3"), `BACKLOG.md`
+(Research-Eintrag), dieses JOURNAL. Kein Spiel-Code, kein Data-Touch, kein
+scorecard.py-Kontakt, kein CONSTITUTION-Kontakt. Kein pytest-Run nötig
+(reine Docs-Änderungen — kein Python-Touch; tests stehen im Repo-Check unten).
+
+### Kern des Specs (Kurzfassung)
+
+FIRE_OUT hinterlässt Glut (`LocationDef.embers = EMBER_RESIDUE = 6.0`); Verfall
+0.1/Tick (~60-Ticks-Fenster); Re-Zündung am Glut-Ort (`stoke_fire`-Verzweigung)
+braucht 1× WOOD, setzt `fire_fuel = EMBER_RESIDUE`, tinder/stick ausdrücklich
+NICHT nötig; unter `EMBER_REVIVE_MIN = 1.0` ist der Ort wieder Neuland.
+`start_fire`-Kette unangetastet — Glut ist die gelernte Verkürzung, nicht der
+Default. Kein Data-Touch (Default-Feld, kein JSON-Eintrag), keine neuen
+RNG-Würfe (getstate-Assertion gefordert), keine neue Reason-Klasse.
+
+### Metrik-Proposal: `fire_home_loyalty`
+
+Band [0.3, 0.8], keine Richtung. Bot mit bewusst unvollkommener Feuer-Policy
+(stoke nur bei FIRE_DYING-Hinweis, keine Vorrats-Planung) erlebt FIRE_OUTs im
+natürlichen Verlauf; Quote = Nacht-Fenster mit warmem Outcome, die über eine
+Glut-Re-Zündung am selben Ort erreicht wurden. Detail-Zähler (fire_outs/
+revive_same/relight_full) als Diagnose-Block. Erste Metrik, die eine
+*Welt*-Eigenschaft statt einer Bot-Policy liest. Probezeit-Konvention wie
+rest_adoption (+14 Tage nach Annahme).
+
+### Übergabe an Direktor (So 20.09.)
+
+- Spec + Proposal zur Triage vorgelegt; PLAN-Task offen, bewusst hinter den
+  Probezeit-Entscheiden (rest_adoption 24.09., gear_uptime/forage_pressure-
+  Lesung) priorisiert.
+- Offene Design-Fragen im Spec/Metrik-File (kein Blocker): Revive als
+  stoke_fire-Verzweigung vs. eigenes Verb; Band-Kalibrierung in Probezeit.
+
 
 > Auftrag: Direktor 13.09. (JOURNAL unten): "Aufnahme durch Dev im nächsten
 > Dev-Lauf — FREIGEGEBEN (Proposal verifiziert, Erstlesung 0.333, Policy

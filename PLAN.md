@@ -54,6 +54,35 @@ in dieser Lesung entschieden; sharpen_tool bleibt 0/20 (5. Lesung in Folge).
 > Offene Aufgaben mit Akzeptanzkriterien. Dev arbeitet von oben nach unten.
 > T1 vor T2 (Work-Contract regelt Reihenfolge und getrennte Commits).
 
+- [ ] **SPEC-016 — Glut: der Feuerort erinnert sich (Ortsbindung als Welt-Gedächtnis)** —
+      offen (Research-Explore 17.09., wartet auf Direktor-Triage).
+      **Problem:** FIRE_OUT löscht den Feuerort byte-identisch mit Neuland — die Welt hat
+      kein Gedächtnis für die Arbeit des Spielers; Ortsbindung existiert strukturell nicht
+      (Constitution-Felder „Terrain und Ortsbindung"/„Basisbau" unbesetzt). Der 28.08.-
+      Befund (Reparatur nach Kollaps strikt schlechter, 19/20 vs. 12/20) zeigt das Loch:
+      der *eine* Ort, an dem der Spieler schon alles beisammen hatte, bewertet als
+      Jungfrau-Terrain. `fire_pit` (KINDLING, wird nie verbrannt) ist der stille Beleg
+      der Design-Absicht „Feuerstelle als Ort".
+      **Mechanik:** URW-Lagerfeuer-Glut + Don't-Starve-Remains + TLD-Fire-Spots — FIRE_OUT
+      hinterlässt Glut (`LocationDef.embers`), Re-Zündung am Glut-Ort braucht nur WOOD
+      (nicht tinder+stick), Glut verfällt (0.1/Tick, ~60-Ticks-Fenster), unter
+      EMBER_REVIVE_MIN ist der Ort wieder Neuland. Mechanik-Kern: ein Zähler, zwei
+      Verzweigungen (FIRE_OUT-Setzung in `_advance_time`, Verzweigung in `stoke_fire`),
+      drei Konstanten. Kein Data-Touch, keine neuen RNG-Würfe, start_fire-Kette unangetastet.
+      **Akzeptanz:** Glut nur aus FIRE_OUT; Revive braucht WOOD + Glut ≥ MIN (tinder
+      ausdrücklich nicht nötig — Gegenprobe); Glut-Fenster endlich (~60 Ticks); keine
+      neuen Draws (getstate-Assertion); Wächter 1.0/1.0/1.0 + vollständige Delta-Tabelle
+      im JOURNAL (Erwartung 13× byte-identisch, Tages-Probe gilt, SPEC-013-Präzedenz);
+      pytest grün (+tests/test_embers.py); keine neue Reason-Klasse; Constitution-Check
+      in der Spec-Datei. Details: specs/SPEC-016-glut-ortbindung.md.
+      Metrik-Proposal: metrics/proposed/fire_home_loyalty.md (Band 0.3–0.8, Bot liest
+      die Rückkehr-Achse mit unvollkommener Feuer-Policy — erste Metrik, die eine
+      Welt-Eigenschaft statt einer Bot-Policy liest).
+      **Erwartete Metrik-Wirkung:** alle 13 bestehenden byte-identisch (Bots berühren
+      den Glut-Pfad nie); Nachweis über das Proposal nach Direktor-Freigabe.
+      **Priorität: ab T3** (hinter den offenen Probezeit-Entscheiden; Design-Skizze
+      vor TDD wie T1-Präzedenz).
+
 - [x] **T1 — B11: Feuer-Komfort-Cutoff (HITZSCHLAG-Falle)** ✅ 14.09. (Dev-Lauf):
       `FIRE_COMFORT_CAP = 38.0` gewired an `fire_warmth > 0` in `_advance_time`
       (engine/core.py). Rest-Loop-Regression: **0/20 Tode** (war 20/20 @Rest#34,
