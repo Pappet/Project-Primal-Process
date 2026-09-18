@@ -5,6 +5,28 @@
 
 ---
 
+## 2026-09-18 — [Play] Gegenprobe nach T1+T2: Nacht überlebbar (0/20 Hitze-Tode, 0 verweigerte Stokes)
+
+> Play-Cron. pytest 377 passed + 1 xfailed. Scorecard-Write 2026-09-18 (13
+> Metriken; 12 Alt ±0 gegen 16.09., rest_adoption Erstlesung in METRICS 1.0,
+> Probe bis 24.09.). Probes read-only /tmp, kein Patch (T1/T2 sind Repo-Code).
+> Details: play/2026-09-18.md.
+
+- **T1-Gegenprobe bestanden:** Rest-Loop am 500-fuel-Feuer, 20 Seeds — **0/20
+  Tode** (vorher 20/20 @Rest#34, bt 43.3), bt pendelt 36.7–37.6 im
+  Komfortfenster. B11 ist geschlossen.
+- **T2-Gegenprobe bestanden (Repo-Data):** Nacht-Fenster 20/20 überlebt,
+  cold_ticks 74→31, verweigerte Stokes 194→**0**, heat_ticks 0, median 8
+  Stokes. Die Nacht ist zur planbaren Brennstoff-Beschaffungs-Entscheidung
+  geworden — Stick-Vorrat vor der Nacht ist das lernbare Muster.
+- **Langeweile-Stelle:** guided last_new median 26 (14.09.: 6–22) — leichte
+  Vertiefung plausibel durch T2 (Brennstoff-Ökonomie als entdeckbares Muster),
+  Struktur gleich: nach Tier-1 passiert nichts Neues. session_depth 52.5
+  weiter im selben Fenster. Content-Struktur (Tier-2+, SPEC-016-Glut) ist der
+  nächste Hebel, nicht Balance.
+- Keine neuen Bugs. B10 bleibt offen (Menü-Pfad). 🟡 naive_menu.py als
+  Repo-Profil weiterhin offen (Idee 14.09.).
+
 ## 2026-09-17 — [Research/Explore] SPEC-016 „Glut: der Feuerort erinnert sich" + Metrik-Proposal fire_home_loyalty
 
 > Explore-Cron, freie Suche (nicht metrik-gebunden). Constitution-Felder
