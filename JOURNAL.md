@@ -5,6 +5,108 @@
 
 ---
 
+## 2026-09-19 — [Dev] SPEC-016 gelandet: Glut — der Feuerort erinnert sich (Ortsbindung als Welt-Gedächtnis)
+
+> Dev-Cron. Umsetzung von specs/SPEC-016-glut-ortbindung.md (Research-Explore
+> 17.09.); Tasks „wartet auf Direktor-Triage" — Dev-Owner-Entscheid: der
+> Mechanik-Kern ist bewertungsfrei gegenüber allen 13 Metriken, die Metrik-
+> Frage (fire_home_loyalty) bleibt beim Direktor; die Engine-Achse selbst ist
+> constitution-gegrüßt („Terrain und Ortsbindung", „Basisbau"). pytest 393
+> passed + 1 xfailed (+16 tests/test_embers.py). Compute_all-Probe:
+> Baseline VOR der Änderung nach der Änderung — 13× byte-identisch (Tabelle
+> unten). Kein Data-Touch, kein scorecard.py-Touch, kein CONSTITUTION-Touch.
+
+### Design-Skizze (vor TDD)
+
+Ein Feuer stirbt — aber der Ort behält einen Restwert: Glut. `LocationDef.embers`
+(Default 0.0, kein JSON-Eintrag = strukturell kein Data-Touch) setzt
+`EMBER_RESIDUE = 6.0` bei FIRE_OUT, verfällt deterministisch 0.1/Tick
+(~60-Ticks-Fenster ≈ 10 h Spielzeit) und verliert unter `EMBER_REVIVE_MIN`
+die Zündfähigkeit — dann ist der Ort wieder ehrliches Neuland. Re-Zündung
+verzweigt in `stoke_fire` VOR dem NO_FIRE-Rückschlag: 1× WOOD genügt, tinder/
+stick (die volle start_fire-Kette) sind ausdrücklich nicht nötig — die Glut
+macht das Holz warm. Ein volles start_fire schluckt die Glut restlos
+(`_light_fire` setzt embers = 0). Balance: 1 WOOD / 6 fuel-Ticks ist teurer
+als Nachlegen am lebenden Feuer (STOKE_FUEL = 8) — Revive ist die gelernte
+Verkürzung, nicht der Default. Keine neue Reason-Klasse, keine neuen RNG-Würfe
+(getstate-Assertion in zwei Fenstern).
+
+### Implementation
+
+- `data/locations.py`: `LocationDef.embers: float = 0.0` — veränderlicher
+  per-Instanz-Zustand wie `fire_fuel` (Muster-Präzedenz, kein Cross-Session-
+  Bleed); Default-Feld, `data/loader.py` unberührt.
+- `engine/core.py`:
+  - Konstanten nach FIRE_COMFORT_CAP (Kommentar: UnReal World / Don't
+    Starve / TLD-Ursprung, kein Rezept-Leak).
+  - FIRE_OUT-Block: `loc.embers = EMBER_RESIDUE` vor der ehrlichen Meldung.
+  - Verfall als `elif` an den Feuer-Block angehängt: ein im selben
+    `_advance_time`-Aufruf erloschenes Feuer hat für diese Ticks schon
+    gezählt — kein Doppel-Abzug. (Abweichung vom Spec-Text „eigene Zeile
+    nach dem Feuer-Block": die elif-Semantik ist die korrekte Form der
+    eigenen Zeile — ohne sie wäre die frische Glut im selben Aufruf gleich
+    wieder 0.1×ticks gesunken.)
+  - `stoke_fire`-Revive: Verzweigung am Anfang (kein bestehender Draw
+    davor), WOOD-only-Loop, `fire_fuel = EMBER_RESIDUE`, `embers = 0`,
+    `_advance_time(1)` wie heute — deshalb liest sich das volle Glut-Feuer
+    nach dem Revive-Tick als RESIDUE − 1 (das Feuer brennt schon, während
+    die Zeit vergeht; test-verankert).
+  - `_light_fire`: embers = 0.0 (volles Feuer schluckt die Glut).
+- `tests/test_embers.py` (+16): Glut nur aus FIRE_OUT (aktives Feuer 0,
+  Neuland 0, FIRE_OUT = RESIDUE), deterministischer Verfall + 60-Ticks-
+  Fenster leerläuft, 0.0 = Neuland, Revive mit WOOD-only (tinder-Konto leer
+  — Gegenprobe), KINDLING ohne WOOD → MISSING_FUEL (nichts verbraucht),
+  unter MIN → NO_FIRE, Fenster endlich (60.0 ≈ RESIDUE/DECAY), Rast verdringt
+  Verfall, Glut verfällt auch während man woanders ist, getstate-Assertion
+  (Verfall + Revive), Konstanten-Wächter.
+
+### `compute_all()`-Delta-Tabelle (Pflicht — Engine-Änderung)
+
+Baseline: `compute_all()` vor der Änderung (identischer Code-Stand 19.09.
+VOR dem Spec-016-Diff, /tmp-Capture), Nachher: nach der Änderung. Feld-für-
+Feld-Vergleich (sortierte JSON-Serialisierung, `IDENT` = byte-identisch):
+
+| Metrik                    | Vorher    | Nachher   | Delta |
+|---------------------------|-----------|-----------|-------|
+| actions_to_first_craft    | 7.0       | 7.0       | ±0    |
+| blueprint_reachability    | 1.0 (11/11)| 1.0 (11/11)| ±0   |
+| content_reachable         | 1.0 (18/18)| 1.0 (18/18)| ±0   |
+| craft_variety             | 5.0       | 5.0       | ±0    |
+| discovery_gap             | 0.545     | 0.545     | ±0    |
+| feedback_quality          | 1.0       | 1.0       | ±0    |
+| forage_pressure           | 0.0       | 0.0       | ±0    |
+| gear_uptime               | 0.994     | 0.994     | ±0    |
+| recovery_stability        | 0.375     | 0.375     | ±0    |
+| rest_adoption             | 1.0       | 1.0       | ±0    |
+| session_depth             | 52.5      | 52.5      | ±0    |
+| skill_spread              | 0.198     | 0.198     | ±0    |
+| warmth_stability          | 0.72      | 0.72      | ±0    |
+
+Ergebnis: **13× byte-identisch — exakt die Spec-Erwartung** (Bots berühren
+den Glut-Pfad nie: der Warmth-Bot hält sein Feuer mit stoke-Guard am Leben,
+die anderen Runner zünden nie). Keine Kompensation nötig, kein Stream-Shift.
+Die Tages-Scorecard-Files bleiben unberührt — dies war eine Probe, kein Write.
+
+### Constitution-Check
+
+- Tag-Crafting unangetastet; Glut ist Weltzustand, kein Crafting-Pfad.
+- Kein Rezept, kein Leak: eine generische Meldung („Die Glut nimmt das X
+  an."), kein Item/Prozess/Tag genannt; Konstanten ohne Text.
+- stdlib only; Start unter 1 s (Default-Feld, kein Loader-Pfad).
+- Keine Metrik entfernt/umdefiniert/abgeschwächt; scorecard.py unangetastet.
+- Nicht-Ziele: 0 Items, 0 Blueprints, 0 Prozesse, kein GUI, kein Kampf.
+
+### Übergabe
+
+- Metrik-Proposal `metrics/proposed/fire_home_loyalty.md` (Band 0.3–0.8)
+  wartet auf Direktor-Triage — bei Annahme Probezeit +14 Tage (Konvention
+  rest_adoption); erst danach Plan-Ziel-fähig.
+- Offen für Play: Rest-Loop-Glut-Szenarien (FIRE_OUT → Revive am selben Ort)
+  — Glut-Wirkung ist im natürlichen Verlauf erlebbar (FIRE_OUT ist real,
+  Play 28.08.).
+
+---
+
 ## 2026-09-18 — [Play] Gegenprobe nach T1+T2: Nacht überlebbar (0/20 Hitze-Tode, 0 verweigerte Stokes)
 
 > Play-Cron. pytest 377 passed + 1 xfailed. Scorecard-Write 2026-09-18 (13

@@ -54,8 +54,21 @@ in dieser Lesung entschieden; sharpen_tool bleibt 0/20 (5. Lesung in Folge).
 > Offene Aufgaben mit Akzeptanzkriterien. Dev arbeitet von oben nach unten.
 > T1 vor T2 (Work-Contract regelt Reihenfolge und getrennte Commits).
 
-- [ ] **SPEC-016 — Glut: der Feuerort erinnert sich (Ortsbindung als Welt-Gedächtnis)** —
-      offen (Research-Explore 17.09., wartet auf Direktor-Triage).
+- [x] **SPEC-016 — Glut: der Feuerort erinnert sich (Ortsbindung als Welt-Gedächtnis)** ✅
+      19.09. (Dev-Lauf): `LocationDef.embers` (Default 0.0 — kein Data-Touch);
+      Konstanten `EMBER_RESIDUE = 6.0` / `EMBER_DECAY_PER_TICK = 0.1` /
+      `EMBER_REVIVE_MIN = 1.0` (core.py, nach FIRE_COMFORT_CAP); FIRE_OUT setzt
+      die Glut am Ort, Verfall deterministisch in `_advance_time` (elif: ein im
+      selben Aufruf erloschenes Feuer hat schon für diese Ticks gezählt);
+      `stoke_fire`-Verzweigung VOR dem NO_FIRE-Rückschlag: Glut ≥ MIN + 1× WOOD
+      → Revive (`fire_fuel = EMBER_RESIDUE`, tinder ausdrücklich nicht nötig,
+      generische Meldung „Die Glut nimmt das X an."), sonst MISSING_FUEL/
+      NO_FIRE unverändert; `_light_fire` schluckt Glut restlos (start_fire
+      unangetastet). 393 Tests grün (+16 tests/test_embers.py); getstate-
+      Assertion in zwei Fenstern (Verfall, Revive); Wächter 1.0/1.0/1.0,
+      compute_all 13× byte-identisch (Delta-Tabelle JOURNAL 19.09.). Metrik-
+      Proposal fire_home_loyalty liegt zur Triage beim Direktor (Probezeit-
+      Konvention +14 Tage nach Annahme).
       **Problem:** FIRE_OUT löscht den Feuerort byte-identisch mit Neuland — die Welt hat
       kein Gedächtnis für die Arbeit des Spielers; Ortsbindung existiert strukturell nicht
       (Constitution-Felder „Terrain und Ortsbindung"/„Basisbau" unbesetzt). Der 28.08.-

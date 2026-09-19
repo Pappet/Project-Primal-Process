@@ -133,6 +133,12 @@ Mechaniken, Features, Verbesserungen — nicht akut, aber wertvoll.
 > **Triage 2026-08-23 (Direktor):** Kein neuer 🔴 Bug. `session_depth`-Blindheit (18./19.08.), `feedback_quality`-NEAR_MISS (19.08.), `skill_spread` (13.08.) bleiben offen — in PLAN.md als Entscheid-Tasks an Peter überführt. `forage_pressure` (20.08.): Probe beendet, Wert über Band, aber definitions-abhängig → Peters Entscheid Definition/Band (PLAN-Task), kein Spiel-Tuning dahinter. `warmth_stability`/`recovery_stability` bleiben beobachtend bis Probe-Ende (27.08./03.09.). Neu als Research-Kandidat: Near-Miss für 2-Slot-Blueprints (Deckungslücke, `discovery_gap`-Hebel; PLAN-Task).
 
 <!-- Session-Einträge hier drunter -->
+- [2026-09-19] (Dev) **SPEC-016 gelandet — Mechanik-Kern fertig, Metrik-Frage offen.** Glut
+  implementiert (`LocationDef.embers`, EMBER_RESIDUE/DECAY/MIN in core.py, stoke_fire-Revive
+  WOOD-only, kein Data-Touch, keine neuen RNG-Würfe, 393 Tests grün, 13× compute_all
+  byte-identisch — Details JOURNAL 19.09.). Offen beim Direktor (So 20.09.): Triage des
+  Metrik-Proposals `fire_home_loyalty` (Band 0.3–0.8; bei Annahme Probezeit +14 Tage) und
+  ggf. Play-Auftrag Rest-Loop-Glut-Szenarien (FIRE_OUT → Revive am selben Ort). — fire_home_loyalty (Proposal, wartet).
 - [2026-09-17] (Research/Explore) **SPEC-016 „Glut: der Feuerort erinnert sich" eingereicht** —
   Ortsbindung als kleinster Welt-Gedächtnis-Baustein: FIRE_OUT hinterlässt Glut
   (`LocationDef.embers`, Default-Feld = kein Data-Touch), Re-Zündung am Glut-Ort braucht

@@ -48,6 +48,10 @@ class LocationDef:
     # fire_fuel:  Brennstoff in Ticks, sinkt pro _advance_time; bei 0 erlischt das Feuer.
     fire_active: bool = False
     fire_fuel: float = 0.0
+    # SPEC-016: Glut — der Ort erinnert sich an das Feuer. FIRE_OUT setzt den
+    # Restwert, Zeit drückt ihn Richtung 0; bei 0 ist der Ort wieder Neuland.
+    # Default 0.0: JSON braucht keinen Eintrag (strukturell kein Data-Touch).
+    embers: float = 0.0
 
 
 def _node_from_data(n: ResourceNodeData) -> ResourceNode:

@@ -53,6 +53,15 @@ START_FIRE_FUEL = 24.0    # Brennstoff-Ticks beim Entzünden (≈ 4 In-Game-Stun
 # test_fire_comfort_cap.py). Konstante ohne Text: kein Rezept-Leak.
 FIRE_COMFORT_CAP = 38.0
 
+# SPEC-016: Glut — der Feuerort erinnert sich. FIRE_OUT hinterlässt Glut
+# (Ember-Restwert), die mit WOOD (nicht der vollen tinder+stick Zünd-Kette)
+# reaktiviert werden kann, solange sie über der Schwelle liegt. Zeit drückt
+# Glut (0.1/Tick — ~60-Ticks-Fenster bei RESIDUE 6.0). Konstanten ohne Text:
+# kein Rezept-Leak. UnReal-World-Glut / Don't-Starve-Remains / TLD-Fire-Spots.
+EMBER_RESIDUE = 6.0         # Glut nach FIRE_OUT (in fuel-Ticks Äquivalent)
+EMBER_DECAY_PER_TICK = 0.1  # Glut verlischt über Zeit
+EMBER_REVIVE_MIN = 1.0      # unterhalb dieser Glut ist Re-Zündung unmöglich
+
 # SPEC-011: Werkzeugverschleiß als lesbarer Zustand (Druck ohne Wahrnehmung).
 # Threshold: darunter gilt ein Werkzeug als stark abgenutzt (einmalige Warnung
 # pro fallendem Durchgang). Min-Factor: stumpfe Werkzeuge ernten gedämpft
@@ -337,7 +346,15 @@ class GameEngine:
                 logs.append(FIRE_DYING_HINT_TEXT)
             if loc.fire_fuel <= 0:
                 loc.fire_active = False
+                # SPEC-016: der Ort behält die Glut — das Feuer stirbt, die
+                # Arbeit des Spielers nicht. Re-Zündung braucht nur WOOD.
+                loc.embers = EMBER_RESIDUE
                 logs.append("!!! FIRE_OUT: " + _feedback_message("FIRE_OUT") + " !!!")
+        # SPEC-016: Glut-Verfall — nur am toten Feuer (elif: ein in DIESEM
+        # Aufruf gerade erloschenes Feuer hat schon für diese Ticks gezählt);
+        # deterministische Arithmetik, kein RNG-Wurf. Bei 0 wieder Neuland.
+        elif not loc.fire_active and loc.embers > 0:
+            loc.embers = max(0.0, loc.embers - EMBER_DECAY_PER_TICK * ticks)
         exposure = loc.exposure * self.weather_types[self.current_weather]["exposure_mod"]
         insulation = self.player.inventory.get_total_insulation()
         effective_ambient = ambient_temp + fire_warmth
@@ -816,6 +833,7 @@ class GameEngine:
         loc = self.current_location
         loc.fire_active = True
         loc.fire_fuel = START_FIRE_FUEL
+        loc.embers = 0.0  # SPEC-016: volles Feuer schluckt die Glut restlos
 
     def _fire_lit(self) -> bool:
         """Ein aktives Feuer mit Brennstoff brennt an der aktuellen Location."""
@@ -876,9 +894,38 @@ class GameEngine:
 
         Nur bei aktivem Feuer möglich — ohne Feuer keine Wärme, man muss Holz
         sammeln und es nachlegen, um warm zu bleiben.
+
+        SPEC-016: bei Glut am Ort (FIRE_OUT-Restwert über EMBER_REVIVE_MIN)
+        verzweigt der Aufruf zur Re-Zündung: 1× WOOD genügt — tinder/stick
+        (die volle start_fire-Kette) sind ausdrücklich NICHT nötig. Die Glut
+        macht das Holz warm. Ohne Glut bleibt der NO_FIRE-Pfad.
         """
         loc = self.current_location
         if not loc.fire_active:
+            # SPEC-016: Glut-Revive vor dem NO_FIRE-Rückschlag.
+            if loc.embers >= EMBER_REVIVE_MIN:
+                wood = None
+                for it in self.player.inventory.items:
+                    if "WOOD" in it.tags and it.condition > 0:
+                        wood = it
+                        break
+                if wood is None:
+                    return {"success": False,
+                            "message": _feedback_message("MISSING_FUEL"),
+                            "reason": "MISSING_FUEL"}
+                name = wood.name
+                if wood.quantity > 1:
+                    wood.quantity -= 1
+                else:
+                    self.player.inventory.items.remove(wood)
+                loc.fire_active = True
+                loc.fire_fuel = EMBER_RESIDUE  # die Glut macht das Holz warm
+                loc.embers = 0.0               # in das Feuer übergegangen
+                time_msg = self._advance_time(1, effort_multiplier=1.0)
+                msg = f"Die Glut nimmt das {name} an. "
+                msg += (time_msg if time_msg else "")
+                return {"success": True, "message": msg.strip(),
+                        "reason": "SUCCESS"}
             return {"success": False, "message": _feedback_message("NO_FIRE"),
                     "reason": "NO_FIRE"}
         fuel = self._find_fuel_item()
