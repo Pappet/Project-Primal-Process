@@ -5,6 +5,66 @@
 
 ---
 
+## 2026-09-20 — [Direktor] Plan-Neufassung + fire_home_loyalty angenommen (Probe bis 04.10.)
+
+> Reads: CONSTITUTION, SCORECARD.md + scorecard/2026-09-18.json, play/2026-09-18.md,
+> JOURNAL 15.09.–19.09., BACKLOG (Triage-Historie), PLAN (13.09.-Fassung,
+> voll gelesen vor Rewrite). Kein Code-Touch, kein Metrik-Touch, kein
+> CONSTITUTION-Touch. Cron-Jobs: keine Änderung — Takt und Rollen tragen
+> (Präzedenz 13.09.: „Keine Cron-Job-Änderungen diese Woche").
+
+### Scorecard-Bewertung (Verlauf)
+
+- **Vorwärts:** der Nacht-Bogen ist gelöst — T1/T2 Play-verifiziert (Rest-Loop
+  0/20 Tode, Nächte 20/20 überlebt, verweigerte Stokes 194→0, Kälte-Ticks
+  74→31). `rest_adoption` Erstlesung in METRICS 1.0 (Probe bis 24.09.); die
+  1.0 ist die messbare Antwort auf T1+T2, kein Metrik-Fehler. SPEC-016 (Glut)
+  19.09. gelandet, `compute_all` 13× byte-identisch, 393 Tests grün.
+- **Stagniert (byte-stabil, korrekt):** alle 12 Alt-Metriken ±0 seit 09.09.
+  (abgesehen von den dokumentierten T2-Stream-Shifts warmth 0.44→0.72,
+  atfc/skill). `session_depth` 52.5 — die Leere nach Tier-1 (guided
+  last_new median 26) ist die offene Stelle, Balance-Hebel haben sie nicht
+  adressiert und sollen es auch nicht.
+- **Fällt:** nichts. Wächter 1.0/1.0/1.0, `discovery_gap` 0.545 Bandmitte —
+  vierte stabile Lesung.
+
+### Triage-Entscheide
+
+1. **fire_home_loyalty ANGENOMMEN** (Proposal verifiziert: Band 0.3–0.8,
+   Bot liest die Rückkehr-Achse mit unvollkommener Feuer-Policy, Detail-Zähler
+   als Diagnose-Block; erste Metrik, die eine Welt-Eigenschaft statt Bot-Policy
+   liest). Aufnahme durch Dev im nächsten Dev-Lauf, `probation_until`
+   2026-10-04 (+14-Tage-Konvention) — Plan-Ziel erst nach Probe-Ende. An dem
+   Entschuld, warum ich die METRICS-Datei nicht selbst anfasse: laut
+   Aufgaben-Mandat ist alles zur Messung unantastbar, also übernehme ich die
+   rest_adoption-Präzedenz — Direktor freigeben, Dev ausführen.
+2. **Menü-Pfad-Lesung → PLAN-Task T3:** Play 18.09. ruft `stoke_fire()`
+   direkt — der Menü-Spieler ist post T1/T2/SPEC-014/016 ungelesen. B10 bleibt
+   offen, bis dieser Pfad eine Lesung hat.
+3. **naive_menu.py → PLAN-Task T4:** vierter /tmp-Rebuild in drei Wochen —
+   Endzustand als Repo-Datei (Play-Messwerkzeug, Play-Job-Prompt unangetastet).
+4. **Verworfen (bleibt verworfen):** Tier-2-Anschluss-Andeutung (Präzedenz
+   sharpen_tool); Jahreszeiten-Neuanlauf ohne Peters Mess-Systems-Freigabe;
+   WARMTH_SEEDS-Löschung ohne Peters Freigabe (Metrik-Tooling, außerhalb
+   meines Mandats).
+
+### PLAN.md (Neufassung, 3 Sektionen)
+
+Aktueller Zustand (~4 Sätze aus der Lesung) · Ziele: (1) Discovery-Tiefe
+über Tier-1 heben (`session_depth`), (2) Glut in die Messung nehmen
+(`fire_home_loyalty`, Probezeit), (3) Wächter halten · Tasks T1–T4 mit
+Akzeptanzkriterien; keine Phasen, keine Milestones, keine Termine.
+Probezeit-Regel befolgt: `rest_adoption` (bis 24.09.) und `fire_home_loyalty`
+(noch nicht in METRICS) stehen als Ziele gesperrt, nur als Tasks.
+
+### Writes
+
+PLAN.md (Neufassung), BACKLOG.md (Triage 20.09.), dieses JOURNAL. Kein
+Spiel-Code, kein Data-Touch, kein tools/scorecard.py-Kontakt, kein
+CONSTITUTION-Kontakt.
+
+---
+
 ## 2026-09-19 — [Dev] SPEC-016 gelandet: Glut — der Feuerort erinnert sich (Ortsbindung als Welt-Gedächtnis)
 
 > Dev-Cron. Umsetzung von specs/SPEC-016-glut-ortbindung.md (Research-Explore
