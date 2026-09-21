@@ -26,7 +26,7 @@ ROOT = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(ROOT))
 
 from engine.core import (GameEngine, _label_for, TAG_LABELS, TAG_FAMILIES,  # noqa: E402
-                         _slot_satisfied)
+                         _slot_satisfied, FIRE_LOW_FUEL)
 from data.items import TEMPLATE_DB, create_item  # noqa: E402
 from data.blueprints import get_all_blueprints  # noqa: E402
 from data.locations import get_all_locations    # noqa: E402
@@ -1166,6 +1166,165 @@ def metric_rest_adoption():
 
 
 # ----------------------------------------------------------------------------
+# Metrik 14 — fire_home_loyalty (METRICS-Aufnahme 21.09., Direktor-Freigabe 20.09.)
+# SPEC-016-Lesepfad: erste Metrik, die eine *Welt*-Eigenschaft liest statt einer
+# Bot-Policy — Glut/Ortsbindung (Proposal metrics/proposed/fire_home_loyalty.md,
+# Probezeit bis 2026-10-04, beobachtend, kein Plan-Ziel). Scorecard-Bots rasten
+# nie an kalter Glut — ohne diese Metrik wäre SPEC-016 unsichtbar.
+# ----------------------------------------------------------------------------
+
+FIRE_HORIZON = 500            # Tick-Cap wie die anderen Überlebens-Metrik-Runner
+FIRE_NIGHT_WINDOW = 80        # max Ticks pro Nacht-Fenster (Proposal-Skizze)
+# Unvollkommene Policy: stoke nur beim FIRE_DYING-Hinweis (fuel < FIRE_LOW_FUEL),
+# keine Neuzündung tagsüber, KEIN Vorrats-Konto — so entstehen FIRE_OUTs im
+# natürlichen Verlauf (Brennstoff geht im Sammel-Loop aus), und die Glut-Antwort
+# (Revive am selben Ort vs. volle Zünd-Kette) wird messbar. Bewusst anders als
+# _run_rest_adoption (dort stoke bei 15 + start_fire-Rückfall jederzeit).
+FIRE_STOKE_AT = FIRE_LOW_FUEL
+FIRE_SCORED_NIGHT_BT = 35.0   # survived_night-Schwelle wie rest_adoption
+
+
+def _fire_loyalty_warmup(game):
+    """Guided-Grundierung wie _rest_warmup (Konvention: Items direkt ins Inventar,
+    Messer via echtem Experiment), aber bewusst OHNE Feuer-Vorhalt: kein
+    start_fire, kein WOOD-Konto (die 50 log_oak bleiben rest_adoption vorbehalten).
+    Die Feuer-Arbeit — Zünd-Kette, Glut-Revive, Nachlegen — gehört hier zur
+    Messstrecke, nicht zur Vorbereitung."""
+    inv = game.player.inventory
+
+    def give(tpl, qty=1):
+        inv.add(create_item(tpl, qty))
+
+    give("flint_shard"); give("stick")
+    mats = [i for i in inv.items
+            if i.template_id in ("flint_shard", "stick")]
+    game.execute_experiment(mats)                      # Messer (CUTTING)
+    if inv.find_item_by_tag("CUTTING") is None:
+        return False
+    give("fur_cloak")                                  # Isolation 0.6
+    give("plant_fiber", 4)                             # 2× make_bandage
+    give("mushroom", 2); give("clay_lump", 2)          # 2× make_poultice
+    give("stick", 10)                                  # start_fire-Input + KINDLING
+    give("tinder", 5)                                  # start_fire-Input
+    game.travel("forest_edge")                         # WOOD-Nodes (log_oak)
+    # Feuer sofort (Setup-Konvention wie _rest_warmup): die bt-Trägheit
+    # (~1 °C / 40 Ticks) macht einen Kaltstart bei Nachtbeginn tödlich —
+    # die Messstrecke soll die Glut-Antwort lesen, nicht den Erstfreeze.
+    game.execute_process("start_fire")
+    return True
+
+
+def _run_fire_home_loyalty(seed, horizon=FIRE_HORIZON):
+    """fire_home_loyalty für einen Seed: (value, windows, scored, fire_outs,
+    revive_same, relight_full).
+
+    Bot-Policy (Proposal-Skizze, HORIZON 500, 20 Scorecard-Seeds): lesend,
+    seedfest, unvollkommene Feuer-Pflege. Tag: sammeln (_eat_best bei
+    energy < 300) — keine Neuzündung, kein Vorratskauf; NUR beim FIRE_DYING-
+    Hinweis (fuel < FIRE_STOKE_AT) legt der Bot nach, solange das Feuer
+    brennt (Tag wie Nacht, gleiche Schwelle). Bei Nacht-Beginn mit kaltem
+    Ort: Glut-Revive zuerst (stoke_fire, 1× WOOD), fällt der auf die volle
+    start_fire-Kette zurück; im Fenster Rast bis Fenster-Ende. Kein RNG
+    in der Messschleife.
+
+    Zählung (Proposal-Definition): Fenster = Nacht-Crossings mit Feuer-Kontakt
+    (Revive-/Zünd-Versuch oder Feuer im Fenster — kein Ghosting, feuerlose
+    Nächte ohne jeden Kontakt zählen nicht); scored = Fenster, die warm
+    enden (body_temp >= 35.0 NACH der Phase); revive_warm (Zähler) =
+    Re-Zündungen am selben Ort, die zu warmem Fenster-Outcome führen.
+    value = revive_warm / windows (None bei 0 Fenstern).
+    Detail-Diagnose ohne Band: fire_outs / revive_same / relight_full.
+    """
+    random.seed(seed)
+    game = GameEngine()
+    if not _fire_loyalty_warmup(game):
+        return None
+    windows = scored = revive_warm = 0
+    fire_outs = revive_same = relight_full = 0
+    was_lit = game._fire_lit()
+    while game.tick_counter < horizon and game.player.hp > 0:
+        # --- FIRE_OUT-Erkennung (natürlicher Verlauf: Tages-Upkeep fehlt) ---
+        if was_lit and not game._fire_lit():
+            fire_outs += 1
+        was_lit = game._fire_lit()
+        if game.player.energy < 300:
+            _eat_best(game)
+        # --- Unvollkommene Pflege: stoke nur beim FIRE_DYING-Hinweis ---
+        loc = game.current_location
+        if loc.fire_active and loc.fire_fuel < FIRE_STOKE_AT:
+            game.stoke_fire()
+        # --- Trigger: Nacht-Beginn → Fenster mit Feuer-Bedarf ---
+        if (_is_night_tick(game.tick_counter)
+                and not _is_night_tick(game.tick_counter - 1)):
+            contact = False
+            revived_here = False
+            if not game._fire_lit():
+                contact = True
+                res = game.stoke_fire()            # Glut-Revive zuerst (1× WOOD)
+                if res.get("success"):
+                    revive_same += 1
+                    revived_here = True
+                elif not game._fire_lit():
+                    res2 = game.execute_process("start_fire")
+                    if res2.get("success"):
+                        relight_full += 1          # Neuanfang über volle Kette
+            t0 = game.tick_counter
+            while (game.tick_counter - t0 < FIRE_NIGHT_WINDOW
+                    and game.player.hp > 0):
+                if (game.current_location.fire_active
+                        and game.current_location.fire_fuel < FIRE_STOKE_AT):
+                    game.stoke_fire()
+                    contact = True
+                game.rest()
+            windows += 1
+            warm = game.player.body_temp >= FIRE_SCORED_NIGHT_BT
+            if warm:
+                scored += 1
+            if revived_here and warm:
+                revive_warm += 1
+            was_lit = game._fire_lit()
+            continue
+        # --- Tag: sammeln (kein Feuer-Input gekauft) ---
+        game.gather()
+    value = (round(revive_warm / windows, 3)
+             if windows else None)
+    return (value, windows, scored, fire_outs, revive_same, relight_full)
+
+
+def run_fire_home_loyalty(seed):
+    """Ein-Seed-Wert (Skalar) — der deterministische Vertrag für Tests/Probes."""
+    return _run_fire_home_loyalty(seed)[0]
+
+
+def metric_fire_home_loyalty():
+    """Glut-Re-Zündungs-Quote (Median über Standard-Seeds, Band-Metrik) mit
+    Detail-Diagnose-Block (fire_outs/revive_same/relight_full/windows, Summen
+    über Seeds — wie reachable per_blueprint: Diagnose ohne Metrik-Status)."""
+    detail = {"fire_outs": 0, "revive_same": 0, "relight_full": 0, "windows": 0}
+    values = []
+    for seed in SEEDS:
+        out = _run_fire_home_loyalty(seed)
+        if out is None:
+            continue
+        v, windows, _scored, fire_outs, revive_same, relight_full = out
+        detail["fire_outs"] += fire_outs
+        detail["revive_same"] += revive_same
+        detail["relight_full"] += relight_full
+        detail["windows"] += windows
+        if v is not None:
+            values.append(v)
+    if not values:
+        return {"value": None, "error": "no runs produced values", **detail}
+    values.sort()
+    mid = statistics.median(values)
+    q = len(values) // 4
+    p25 = values[q] if q < len(values) else values[-1]
+    p75 = values[len(values) - 1 - q]
+    return {"value": round(mid, 3), "p25": round(p25, 3), "p75": round(p75, 3),
+            "n_runs": len(values), **detail}
+
+
+# ----------------------------------------------------------------------------
 # Aggregation über Seeds (Median + p25/p75)
 # ----------------------------------------------------------------------------
 
@@ -1213,6 +1372,10 @@ METRICS = [
     {"key": "recovery_stability", "desc": "Anteil Verletzungs-Ticks, die Behandlung + Ruhe abwenden (Verband/Umschlag)", "fn": metric_recovery_stability, "direction": None, "version": 1, "band": (0.3, 0.7), "probation_until": "2026-09-03"},
     {"key": "gear_uptime", "desc": "Anteil werkzeugpflichtiger Stress-Ticks mit nutzbarem Werkzeug (>= Warnschwelle)", "fn": metric_gear_uptime, "direction": None, "version": 1, "band": (0.70, 0.95), "probation_until": "2026-09-11"},
     {"key": "rest_adoption", "desc": "Anteil Rast-Fenster mit Outcome (Heilung vollendet oder Nacht warm überstanden)", "fn": metric_rest_adoption, "direction": None, "version": 1, "band": (0.4, 0.85), "probation_until": "2026-09-24"},
+    # Metrik 14 — Direktor-Freigabe 20.09. (Proposal metrics/proposed/
+    # fire_home_loyalty.md). Ergänzend (Constitution: nichts entfernt/umdefiniert);
+    # Probezeit bis 2026-10-04, beobachtend — kein Plan-Ziel vor Probe-Ende.
+    {"key": "fire_home_loyalty", "desc": "Anteil Nacht-Fenster mit Feuer-Bedarf, die durch Glut-Re-Zündung am selben Ort warm überstanden wurden (SPEC-016)", "fn": metric_fire_home_loyalty, "direction": None, "version": 1, "band": (0.3, 0.8), "probation_until": "2026-10-04"},
 ]
 
 METRIC_VERSIONS = {m["key"]: m["version"] for m in METRICS}

@@ -5,6 +5,56 @@
 
 ---
 
+## 2026-09-21 — [Dev] T1: fire_home_loyalty in METRICS aufgenommen (Metrik 14, Probe bis 04.10.)
+
+> Dev-Cron. Arboomba sauber (kein Crash-Residuum; T2/T3/T4 waren vom
+> Play-Job 21.09. gelandet — PLAN-Checkboxen nachgetragen). pytest
+> **402 passed + 1 xfailed** (14 neue Tests, 1 Positions-Assertion auf den
+> neuen additive-Stand aktualisiert). Constitution: ergänzend, nichts
+> entfernt/umdefiniert. Kein SCORECARD-Write — der Regenerations-Takt
+> bleibt beim Play-Job (Prompt unangetastet); die Metrik erscheint mit
+> der nächsten Play-Lesung in der Tabelle.
+
+- **Aufnahme:** additiver METRICS-Eintrag am Ende (Dict-Order = Präzedenz, wie
+  `rest_adoption`), v1, Band (0.3, 0.8), keine Richtung, `probation_until:
+  2026-10-04` (Direktor-Freigabe 20.09.). Runner folgt dem Proposal:
+  unvollkommene Feuer-Policy (stoke nur beim FIRE_DYING-Hinweis, fuel <
+  FIRE_LOW_FUEL, Tag wie Nacht), keine Vorrats-Planung, FIRE_OUTs im
+  natürlichen Verlauf; Detail-Zähler fire_outs/revive_same/relight_full +
+  windows als Diagnose-Block im JSON (Diagnose ohne Metrik-Status, wie
+  reachable per_blueprint). 20 neue Tests: Entry-Vertrag, Determinismus,
+  Detail-Block, Additivitäts-Wächter.
+- **Zwei dokumentierte Policy-Abweichungen von der Proposal-Skizze** (beide
+  messnotwendig, im Code kommentiert): (1) Feuer wird in der Grundierung
+  entzündet statt bei Nachtbeginn — bt-Trägheit (~1 °C / 40 Ticks) macht
+  einen Kaltstart bei Nachtbeginn in 20/20 Seeds tödlich (Bot stirbt @184
+  neben brennendem Feuer — die Messstrecke soll die Glut lesen, nicht den
+  Erstfreeze). (2) Keine Neuzündung tagsüber — die Skizze ließ den
+  Tages-Upkeep weg; stoke-when-dying (Tag+Nacht) ist die schwächste Policy,
+  die den Bot über HORIZON 500 trägt.
+- **Pflicht-Delta-Tabelle `compute_all()` vor/nach** (vor = Scorecard
+  2026-09-21, Play-Job): actions_to_first_craft 7.0 ±0 ·
+  blueprint_reachability 1.0 ±0 · craft_variety 5.0 ±0 · skill_spread
+  0.198 ±0 · feedback_quality 1.0 ±0 · content_reachable 1.0 ±0 ·
+  session_depth 52.5 ±0 · discovery_gap 0.545 ±0 · forage_pressure 0.0 ±0 ·
+  warmth_stability 0.72 ±0 · recovery_stability 0.375 ±0 · gear_uptime
+  0.994 ±0 · rest_adoption 1.0 ±0 — **alle 13 Alt-Metriken byte-identisch**.
+  Neu: fire_home_loyalty (Baseline). Kein Stream-Shift.
+- **🟡 Erstlesung (Probezeit-Lesung, kein Ziel): 0.0 — unter Band, mit
+  lesbarem Grund.** 20/20 Runs, 60 Nacht-Fenster, 2 warme Fenster — aber
+  fire_outs = 0, revive_same = 0, relight_full = 0: der Glut-Antwortpfad
+  wird im natürlichen Verlauf dieses Bot-Profils nie berührt. Zwei
+  strukturelle Gründe (Details BACKLOG 21.09.): (a) stoke@FIRE_DYING hält
+  das Feuer dauerhaft am Leben — KINDLING ist werkzeuglos erneuerbar, das
+  Feuer stirbt in 500 Ticks nie; (b) selbst bei FIRE_OUT ist der Revive
+  für einen naiven Bot tot: WOOD (log_oak) liegt hinter dem Axt-Blueprint,
+  ein craft-never-Bot erreicht ihn nie. **Fire_home_loyalty liest mit diesem
+  Bot-Design strukturell immer 0.0** — die Probezeit-Lesung zeigt den
+  Zustand, nicht die Mechanik. Der on-site-Fall ist trotzdem belegt
+  (Play-Gegenprobe 21.09.: 74/74 Revive mit WOOD im Inventar). Runner-Redesign
+  (Axt-führender Bot) = Umdefinition → Versions-Bump + Direktor-Entscheid,
+  erst nach Probe-Ende 04.10.
+
 ## 2026-09-21 — [Play] Glut-Gegenprobe trägt 74/74; B10-Wurzel neu: Schweigen vor dem ersten Craft
 
 > Play-Cron. pytest 393 passed + 1 xfailed. Scorecard-Write 2026-09-21

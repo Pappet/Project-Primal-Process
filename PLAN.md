@@ -20,15 +20,15 @@ Die Nacht ist überlebbar: T1 (Komfort-Cutoff) und T2 (stick→WOOD) sind Play-v
 
 > Offene Aufgaben mit Akzeptanzkriterien. Dev arbeitet von oben nach unten.
 
-- [ ] **T1 — fire_home_loyalty in METRICS aufnehmen** (angenommen, Direktor 20.09.).
+- [x] **T1 — fire_home_loyalty in METRICS aufnehmen** (angenommen, Direktor 20.09.). ✅ 21.09. Dev
       **Akzeptanz:** additiver METRICS-Eintrag am Ende der Liste (Dict-Order = Präzedenz, wie `rest_adoption`), v1, Band [0.3, 0.8], keine Richtung, `probation_until: 2026-10-04`; Runner-Policy folgt dem Proposal (Bot mit unvollkommener Feuer-Policy — stoke nur beim FIRE_DYING-Hinweis, keine Vorrats-Planung; FIRE_OUTs im natürlichen Verlauf; Detail-Zähler fire_outs/revive_same/relight_full als Diagnose-Block). Pflicht-Delta-Tabelle `compute_all()` vor/nach: alle 13 Alt-Metriken byte-identisch. pytest grün (+Runner-Tests). Constitution: Ergänzen erlaubt, nichts entfernt/umdefiniert. Details: `metrics/proposed/fire_home_loyalty.md`.
       **Priorität: 1** — der Probezeit-Zähler sollte früh laufen.
 
-- [ ] **T2 — Play-Gegenprobe Glut: FIRE_OUT → Revive am selben Ort im natürlichen Verlauf.** FIRE_OUT ist real (Play-Spirale 28.08., Feuer-Ausfälle 09.09.). **Akzeptanz:** Lesung in `play/` — Quote der FIRE_OUTs, wie oft Glut-Rest beim nächsten Feuer-Besuch noch ≥ `EMBER_REVIVE_MIN`, Revive-Kosten (1× WOOD) vs. voller start_fire-Kette; 20-Sweep; read-only Probes, kein Patch. Erwartung: Wächter unberührt (Bots rasten/glut nie — sonst Delta-Tabelle + Ursachen-Lesung).
+- [x] **T2 — Play-Gegenprobe Glut: FIRE_OUT → Revive am selben Ort im natürlichen Verlauf.** ✅ 21.09. Play (74/74 Revive) FIRE_OUT ist real (Play-Spirale 28.08., Feuer-Ausfälle 09.09.). **Akzeptanz:** Lesung in `play/` — Quote der FIRE_OUTs, wie oft Glut-Rest beim nächsten Feuer-Besuch noch ≥ `EMBER_REVIVE_MIN`, Revive-Kosten (1× WOOD) vs. voller start_fire-Kette; 20-Sweep; read-only Probes, kein Patch. Erwartung: Wächter unberührt (Bots rasten/glut nie — sonst Delta-Tabelle + Ursachen-Lesung).
 
-- [ ] **T3 — Menü-Pfad-Lesung post T1/T2/SPEC-014/SPEC-016 (B10-Menürest).** Play 18.09. ruft `stoke_fire()` direkt — der Menü-Spieler (`[w]ärmen`-Label, kein Prozess, keine Hinweis-Kategorie) ist von allen Fixes unberührt ungelesen. **Akzeptanz:** Profil C (Menü-naiv, 200 Aktionen, 20 Seeds) re-lesen; Ziel explorativ: Kälte-Tode deutlich unter 20/20 (Vor-Befund 14.09.: 20/20); `last_new` + Erschöpfung im Menü-Profil lesen. Falls 20/20 Tode halten: B10-Wurzel neu lesen — dann ist die Menü-Sichtbarkeit von stoke das eigene Problem, nicht die Ökonomie.
+- [x] **T3 — Menü-Pfad-Lesung post T1/T2/SPEC-014/SPEC-016 (B10-Menürest).** ✅ 21.09. Play (20/20 Tode, B10-Wurzel neu gelesen) Play 18.09. ruft `stoke_fire()` direkt — der Menü-Spieler (`[w]ärmen`-Label, kein Prozess, keine Hinweis-Kategorie) ist von allen Fixes unberührt ungelesen. **Akzeptanz:** Profil C (Menü-naiv, 200 Aktionen, 20 Seeds) re-lesen; Ziel explorativ: Kälte-Tode deutlich unter 20/20 (Vor-Befund 14.09.: 20/20); `last_new` + Erschöpfung im Menü-Profil lesen. Falls 20/20 Tode halten: B10-Wurzel neu lesen — dann ist die Menü-Sichtbarkeit von stoke das eigene Problem, nicht die Ökonomie.
 
-- [ ] **T4 — `play/naive_menu.py` als Repo-Datei** (Play-Messwerkzeug, kein Scorecard-Eingriff). Zum vierten Mal war das Profil /tmp-Wegwerfcode (07.09., 09.09., 14.09., 18.09.). **Akzeptanz:** Datei committet, deterministisch, reproduziert die letzte Menü-Lesung (20 Seeds), von T3 genutzt; Play-Job-Prompt unangetastet.
+- [x] **T4 — `play/naive_menu.py` als Repo-Datei** (Play-Messwerkzeug, kein Scorecard-Eingriff). ✅ 21.09. Play Zum vierten Mal war das Profil /tmp-Wegwerfcode (07.09., 09.09., 14.09., 18.09.). **Akzeptanz:** Datei committet, deterministisch, reproduziert die letzte Menü-Lesung (20 Seeds), von T3 genutzt; Play-Job-Prompt unangetastet.
 
 ## Verworfen / beobachtend (bewusst keine Tasks)
 

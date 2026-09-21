@@ -806,8 +806,11 @@ class TestRestAdoptionEntry:
 
     def test_entry_is_last_dict_order_precedence(self):
         # Dict-Order = Präzedenz (wie snare am Ende des Blueprints-Arrays):
-        # die neue Metrik hängt am ENDE der METRICS-Liste an.
-        assert sc.METRICS[-1]["key"] == "rest_adoption"
+        # die neue Metrik hängt am ENDE der METRICS-Liste an. Seither
+        # überholt durch die additive Aufnahme von fire_home_loyalty (21.09.)
+        # — rest_adoption bleibt direkt davor.
+        assert sc.METRICS[-1]["key"] == "fire_home_loyalty"
+        assert sc.METRICS[-2]["key"] == "rest_adoption"
 
     def test_probation_label(self):
         m = {x["key"]: x for x in sc.METRICS}["rest_adoption"]
@@ -902,5 +905,79 @@ class TestRestAdoptionRunner:
             total_w += w
             total_s += sco
         assert total_s > 0
+
+
+# ----------------------------------------------------------------------------
+# Metrik 14 — fire_home_loyalty (METRICS-Aufnahme 21.09., Direktor-Freigabe
+# 20.09., probation_until 2026-10-04; Proposal metrics/proposed/fire_home_loyalty.md)
+# ----------------------------------------------------------------------------
+
+class TestFireHomeLoyaltyEntry:
+    def test_metrics_entry_exact(self):
+        entries = [m for m in sc.METRICS if m["key"] == "fire_home_loyalty"]
+        assert len(entries) == 1
+        m = entries[0]
+        assert m["version"] == 1
+        assert m["band"] == (0.3, 0.8)
+        assert m["probation_until"] == "2026-10-04"
+        assert m["direction"] is None
+        assert m["fn"].__name__ == "metric_fire_home_loyalty"
+
+    def test_entry_is_last_dict_order_precedence(self):
+        # Dict-Order = Präzedenz (wie rest_adoption am 15.09.):
+        # die neue Metrik hängt am ENDE der METRICS-Liste an.
+        assert sc.METRICS[-1]["key"] == "fire_home_loyalty"
+
+    def test_probation_label(self):
+        m = {x["key"]: x for x in sc.METRICS}["fire_home_loyalty"]
+        assert "04.10." in sc._probation_label(m)
+
+    def test_compute_all_value_and_version_and_detail(self):
+        data = sc.compute_all()
+        fhl = data["fire_home_loyalty"]
+        assert "error" not in fhl, fhl
+        assert fhl["version"] == 1
+        assert fhl["value"] is not None
+        assert fhl["n_runs"] == 20
+        # Detail-Diagnose-Block (Proposal: Diagnose ohne Metrik-Status)
+        for k in ("fire_outs", "revive_same", "relight_full", "windows"):
+            assert k in fhl and isinstance(fhl[k], int), fhl
+
+    def test_value_in_unit_range(self):
+        m = sc.metric_fire_home_loyalty()
+        assert 0.0 <= m["value"] <= 1.0
+
+
+class TestFireHomeLoyaltyRunner:
+    def test_deterministic_same_seed(self):
+        v1 = sc.run_fire_home_loyalty(sc.SEEDS[0])
+        v2 = sc.run_fire_home_loyalty(sc.SEEDS[0])
+        assert v1 is not None and v1 == v2
+
+    def test_all_standard_seeds_produce_values(self):
+        vals = [sc.run_fire_home_loyalty(s) for s in sc.SEEDS]
+        assert all(v is not None for v in vals)
+        assert all(0.0 <= v <= 1.0 for v in vals)
+
+    def test_night_windows_reached_over_seeds(self):
+        """Der Bot überlebt die Messstrecke und erreicht die Trigger: Fenster
+        > 0 über die 20 Standard-Seeds (kein Ghosting — feuerlose Nächte ohne
+        jeden Feuer-Kontakt zählen nicht, Proposal 'Nicht vermischt')."""
+        total_w = 0
+        for s in sc.SEEDS:
+            out = sc._run_fire_home_loyalty(s)
+            assert out is not None
+            _val, w, _s, _fo, _rs, _rf = out
+            assert w > 0, f"Seed {s}: 0 Nacht-Fenster — Trigger unerreichbar"
+            total_w += w
+        assert total_w > 0
+
+    def test_first_reading_documented_zero_no_fires_out(self):
+        """Erstlesung 21.09. (Probezeit-Lesung, kein Ziel): 0.0 — der Glut-
+        Antwortpfad wird im natürlichen Verlauf nie berührt. Diese Lesung
+        dokumentiert den Zustand; Änderungen am Spiel verändern sie."""
+        m = sc.metric_fire_home_loyalty()
+        assert m["value"] == 0.0
+        assert m["revive_same"] == 0
 
 

@@ -150,6 +150,18 @@ Mechaniken, Features, Verbesserungen — nicht akut, aber wertvoll.
 > **Triage 2026-08-23 (Direktor):** Kein neuer 🔴 Bug. `session_depth`-Blindheit (18./19.08.), `feedback_quality`-NEAR_MISS (19.08.), `skill_spread` (13.08.) bleiben offen — in PLAN.md als Entscheid-Tasks an Peter überführt. `forage_pressure` (20.08.): Probe beendet, Wert über Band, aber definitions-abhängig → Peters Entscheid Definition/Band (PLAN-Task), kein Spiel-Tuning dahinter. `warmth_stability`/`recovery_stability` bleiben beobachtend bis Probe-Ende (27.08./03.09.). Neu als Research-Kandidat: Near-Miss für 2-Slot-Blueprints (Deckungslücke, `discovery_gap`-Hebel; PLAN-Task).
 
 <!-- Session-Einträge hier drunter -->
+- [2026-09-21] (Dev) **🟡 fire_home_loyalty liest mit naive-Bot-Design strukturell
+  immer 0.0 — der Glut-Antwortpfad liegt hinter zwei Schwellen.** Erstlesung (Probe
+  bis 04.10.): 0.0, fire_outs 0, revive_same 0, relight_full 0, 60 Fenster/20 Seeds.
+  (a) Ein Bot, der beim FIRE_DYING-Hinweis nachlegt, verliert sein Feuer nie —
+  KINDLING ist werkzeuglos erneuerbar, FIRE_OUT braucht einen Brennstoff-Abgrund,
+  den keine Antwort-Policy natürlich erzeugt. (b) Selbst bei FIRE_OUT: Revive
+  braucht WOOD (log_oak), das liegt hinter dem Axt-Blueprint — ein craft-never-Bot
+  erreicht es nie (T3-Befund 21.09. ist derselbe Wall, vor dem ersten Craft schweigt
+  das Spiel). Der on-site-Fall trägt trotzdem (Play 21.09.: 74/74 Revive mit WOOD
+  im Inventar). Optionen nach Probe-Ende (Direktor): Runner-Redesign auf
+  Axt-führenden Bot (Umdefinition → Versions-Bump, Band-Kalibrierung) oder Metrik
+  als Welt-Messung neu denken. — fire_home_loyalty (Probezeit-Lesung).
 - [2026-09-19] (Dev) **SPEC-016 gelandet — Mechanik-Kern fertig, Metrik-Frage offen.** Glut
   implementiert (`LocationDef.embers`, EMBER_RESIDUE/DECAY/MIN in core.py, stoke_fire-Revive
   WOOD-only, kein Data-Touch, keine neuen RNG-Würfe, 393 Tests grün, 13× compute_all
