@@ -93,6 +93,21 @@ Dinge die kaputt sind und gefixt werden müssen.
 > Mechanik hält, Antwortpfad (Brennstoff-Dauer) fehlt. **Design-Frage → Direktor
 > (13.09.):** Nachlege-Zyklus lesbarer machen (z. B. WOOD-Tag auf stick ergänzen
 > wäre Data-Touch → Direktor-Entscheid). Details: play/2026-09-11.md.
+>
+> **Nachtrag Play 21.09. (T3-Lesung post T1/T2/SPEC-014/016, Akzeptanz "Tode
+> deutlich unter 20/20" NICHT erreicht — 20/20 @132):** B10-Wurzel NEU gelesen
+> (wie der Task es verlangt): nicht stoke-Sichtbarkeit. Der Menü-Spieler
+> erreicht ein Feuer NIE — 0 Blueprints, 0 Prozesse in 20/20 Runs, kein
+> einziger Stoke/Revive-Kontakt. Bei Tod @132 ist das Inventar VOLL mit den
+> korrekten Zutaten (verifiziert: 8/11 Blueprints im Prinzip craftbar —
+> stick ×26, pebble, plant_fiber ×33, bone, reeds), aber ~26 naive
+> Experimente treffen kein einziges valides Mapping. Ohne ersten Craft kein
+> Werkzeug → available_processes leer → auch die Prozess-Hinweise feuern nie
+> (Hint gated auf ERFÜLLBARES Verfahren). **Neue Wurzel: Chicken-and-egg —
+> alle richtungsgebenden Signale gated auf Zustände, die erst NACH der
+> ersten Entdeckung erreichbar sind; VOR dem ersten Craft schweigt das Spiel
+> komplett, während die Zutaten im Inventar liegen.** Details:
+> play/2026-09-21.md.
 
 - [2026-09-07] (Play) **Alle 20 Lang-Runs (200 Aktionen, Menü-naives Profil) sterben an Unterkühlung** (bt 3.7–23.3 am Ende, Energie 125–332, keine Wunden, kein Hunger) — trotz 16/20 gefundener `start_fire`-Discovery und sammelbarem Brennstoff. `stoke_fire` ist kein Prozess (nicht im [p]-Menü, keine Hinweis-Kategorie in `PROCESS_HINT_CATEGORY`), kein Blueprint, kein Knowledge-Eintrag; der einzige Kontakt ist das unkommentierte Menü-Label `[w]ärmen`. Der Spieler lernt "Feuer = einmal gelernt" aus der Prozess-Ebene und hat kein Muster für "Feuer braucht dauerhaft Nachlegen". **Fix-Richtung (gleiche Klasse wie PLAN-Ziel 2, Wear-Warnung):** richtungsgebende Meldung, wenn `body_temp` sinkt und kein Feuer brennt — "Die Kälte nagt. Ein Feuer ließe sich wohl am Leben halten." (kein Rezept-Leak, kein Reason-Code-Eingriff, keine neuen RNG-Würfe) ODER `stoke_fire` als Kategorie "feuer pflegen" in die Prozess-Hinweise. Play-Gegenprobe: Profil-C-Tode erneut messen. — warmth_stability/session_depth/skill_spread.
 
@@ -156,7 +171,17 @@ Mechaniken, Features, Verbesserungen — nicht akut, aber wertvoll.
   bestehenden Metriken byte-identisch (Bots berühren den Glut-Pfad nie). —
   specs/SPEC-016-glut-ortbindung.md, metrics/proposed/fire_home_loyalty.md.
 - [2026-09-14] (Play) **Menü-Naiv-Profil zum dritten Mal als /tmp-Wegwerfcode neu gebaut — das Repo-Profil fehlt noch immer, und die Zahlen sind jetzt Standard-lesbar.** Menü-naives Profil (55% gather, 20% Experimente, 15% Rast, 10% Prozesse, 300 Aktionen): 20/20 Tode, median last_new 68 (Range 38–92), Median-Tod @83 Aktionen. Parallel guided-Stichprobe: last_new 6–22. Zusammen: das Spiel hat ~20–70 Aktionen Substanz, danach nichts Neues — die Langeweile-Stelle ist profil-übergreifend real. Wenn diese Lesung Standard werden soll (sie sollte — sie ist der Kompass für session_depth und die Naiv-Todesfälle), gehört das Profil als `play/naive_menu.py` ins Repo (Play-Messwerkzeug, kein Scorecard-Touch). — session_depth/alle Metriken (Lesung).
-- [2026-09-14] (Play) **T2-Simulation (stick→WOOD, In-Memory-Patch, read-only): Nacht-Exposition bricht ein.** Nacht-Profil 20 Seeds, natürlicher Verlauf (Messer→Zunder→Feuer→Stoke-Guard-Rast): cold_ticks 74→15, fehlgeschlagene Stokes 194→72, heat_ticks 10→1, survived 20/20 in beiden. Reachability unter Patch (N=10): 1.0, 11/11 — kein Blueprint-WOOD-Touch (bestätigt Direktor-Verifikation 13.09.). Freigabe-Sicht aus Play: kein Go/No-Go-Blocker; echte Gegenprobe nach Dev-Landing (Repo-Data, nicht In-Memory). — warmth_stability/rest_adoption (beobachtend).
+- [2026-09-14] (Play) **T2-Simulation (stick→WOOD, In-Memory-Patch, read-only): Nacht-Exposition bricht ein.** Nacht-Profil 20 Seeds, natürlicher Verlauf (Messer→Zunder→Feuer→Stoke-Guard-Rast): cold_ticks 74→15, fehlgeschlagene Stokes 194→72, heat_ticks 10→1, survived 20/20 in beiden. Reachability unter Patch (N=10): 1.0, 11/11 — kein Blueprint-WOOD-Touch (bestätigt Direktor-Verifikation 13.09.). Freigabe-Sicht aus Play: kein Go/No-Go-Blocker; Real-Gegenprobe nach Dev-Landing — ✅ erledigt 18.09.
+— warmth_stability/rest_adoption (beobachtend).
+- [2026-09-21] (Play) **🟡 Experiment-Hinweis-Klasse für den Zustand „vor dem ersten Craft"** —
+  die B10-Neulesung zeigt: alle richtungsgebenden Signale (Prozess-Hints, Wear-Hint)
+  gated auf Zustände, die erst NACH der ersten Entdeckung erreichbar sind; der
+  Spieler VOR dem ersten Craft schweigt, während 8/11 Blueprints mit seinem
+  Inventar im Prinzip craftbar sind (~26 naive Experimente → 0 Treffer × 20 Seeds).
+  Analog WEAR_HINT/PROCESS_HINT (Crossing-basiert, TAG-Vokabelklasse, kein
+  Rezept-Leak): ein einmaliges generisches Signal an der wiederholten
+  Fehl-Experiment-Serie („Nichts davon passt zusammen." → Richtung ja, Mapping nein).
+  Design-Frage, kein Task — vor die Direktor-Lesung 27.09. — discovery_gap/session_depth.
 - [2026-09-09] (Play) **Re-Confirm 07.09.-Idee:** Menü-/Kälte-Probes erneut nur in /tmp (crash-adoptierter Lauf neu implementiert — Vorwochen-Skripte waren weg). snare-Lesung, deaf/reader/retreat-Politiken, first-cold-Check: alles wieder Wegwerf-Code. Das 07.09er-Anliegen (drittes Standard-Profil als `play/naive_menu.py` ins Repo) gilt unverändert weiter — der Unterhalt dieser Probes frisst pro Session Verifikationszeit. — alle Metriken (Lesung), kein Metrik-Eingriff.
 - [2026-09-07] (Play) **Menü-Naiv-Profil als drittes Mess-Profil etablieren?** Diese Session spielte erstmals einen naiven Spieler, der die CLI-Menüs nutzt (gather/Experimente 2er+3er/[p]-Menü/reisen), über /tmp-Skripte: 80-Aktionen- und 200-Aktionen-Variante, 20 Seeds. Ergebnis: Prozess-Discovery 0/20 → 20/20 (Blind vs. Menü), Erschöpfung ~20 (guided) vs. ~110 (Menü), 20/20 Kälte-Tode im Lang-Loop (→ B10). Die Befunde hängen am Profil — wenn die Menü-Lesung Standard werden soll, gehört das Profil als `play/naive_menu.py` ins Repo (Play-Messwerkzeug, kein Scorecard-Eingriff, Constitution unangetastet). Skripte lagen nur in /tmp (diese Session). — alle Metriken (Lesung), kein Metrik-Eingriff.
 - [2026-09-07] (Play) **spear_bound/cord_spear 0/20 im Menü-Profil: der Tier-2-Strang ist für echte Spieler tot.** rope wird 17/20 gefunden (FIBER+RIGID als 2er), aber `cord_spear` braucht ein 3er-Experiment {SHARP_OR_RIGID, RIGID, CORD} — im Blind-Profil unmöglich (nur 2er), im Menü-Profil kombinatorisch verdünnt. Die rope-Discovery könnte eine Anschluss-Andeutung tragen ("Fasern um Holz..."), Design-Frage, kein Task — erst lesen, wenn B10 und SPEC-012 gelandet sind. — discovery_gap/session_depth.

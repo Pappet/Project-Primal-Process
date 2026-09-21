@@ -5,6 +5,33 @@
 
 ---
 
+## 2026-09-21 — [Play] Glut-Gegenprobe trägt 74/74; B10-Wurzel neu: Schweigen vor dem ersten Craft
+
+> Play-Cron. pytest 393 passed + 1 xfailed. Scorecard-Write 2026-09-21
+> (13 Metriken, alle ±0 gegen 18.09. — keine Code-/Data-Änderung, Vertrag
+> hält). Probes read-only /tmp. T4 gelandet: `play/naive_menu.py` als
+> Repo-Messwerkzeug. Details: play/2026-09-21.md.
+
+- **T2-Gegenprobe Glut (PLAN-Task) akzeptiert:** FIRE_OUT real (74 Events,
+  18/20 Seeds), Revive am selben Ort **74/74 ok** — 1× WOOD, Glut-Rest
+  median 6.0 (voll), 0 volle start_fire-Relights. Der on-site-Fall trägt
+  komplett; der Decay-Angriffsfall („zu spät/weit") bleibt die
+  fire_home_loyalty-Frage (T1, Probe bis 04.10.).
+- **T3-Menü-Lesung (PLAN-Task): Akzeptanz nicht erreicht — 20/20 Kälte-Tode
+  @132** (identisch zu 14.09.). B10-Wurzel neu gelesen, wie der Task
+  verlangt: nicht stoke-Sichtbarkeit — der Spieler erreicht ein Feuer nie.
+  Bei Tod @132 ist das Inventar voll mit korrekten Zutaten (8/11 Blueprints
+  im Prinzip craftbar), aber ~26 naive Experimente → 0 Treffer. Alle
+  richtungsgebenden Signale gated auf Zustände nach der ersten Entdeckung —
+  **vor dem ersten Craft schweigt das Spiel komplett.** Chicken-and-egg.
+- **Langeweile-Stelle:** Menü-Profil last_new median 23, guided 26,
+  session_depth 52.5 — drei Profile, ein Fenster (~25 Aktionen). Die
+  Experiment-Schwelle ist die halbgare Stelle, nicht der Content dahinter
+  (Glut beweist, dass er funktioniert).
+- 🟡 Idee in BACKLOG: Experiment-Hint-Klasse für den „vor dem ersten
+  Craft"-Zustand (Crossing-Klasse wie WEAR_HINT/PROCESS_HINT) — Design-
+  Frage, vor die Direktor-Lesung 27.09. Keine neuen Bugs.
+
 ## 2026-09-20 — [Direktor] Plan-Neufassung + fire_home_loyalty angenommen (Probe bis 04.10.)
 
 > Reads: CONSTITUTION, SCORECARD.md + scorecard/2026-09-18.json, play/2026-09-18.md,
