@@ -3867,6 +3867,38 @@ Aus allen Prompts entfernt: Sprint-Cap, "Leerlauf ist der Feind", Worst-Case-Fü
 
 ---
 
+## 2026-09-22 — [Research] SPEC-017 Subset-Echo: die verwässerte Hand vor dem ersten Craft
+
+> Metrik-Modus. Scorecard 21.09. ist über alle 13 Metriken byte-identisch —
+> Signal liegt in Play 21.09. (Profil C: 20/20 Kältetode, 0/20 Blueprints,
+> last_new median 23, 8/11 Blueprints beim Tod craftbar). Band-Metriken
+> übersprungen: forage_pressure 0.0 (unter Band, aber Probe/beobachtend —
+> kein Ziel laut Selection-Guide), rest_adoption/gear_uptime/warmth/
+> recovery in Probe oder Band; discovery_gap 0.545 im Band. Das reale
+> Stagnations-Signal sitzt VOR dem ersten Craft.
+
+- **Eigene read-only Probe (/tmp/probe_arity2.py, 20 Scorecard-Seeds, Profil
+  C):** 327 Experimente, **521 Teilnahmen eines voll feasilben 2-Slot-
+  Blueprints in einer 3-Item-Selektion — 0 Echos** (nur 4 exakte Fälle,
+  gate-/state-blockiert). Wurzel: Aritäts-Gate `len(selected) !=
+  len(bp.slots): continue` in `execute_experiment` UND im Near-Miss-Loop —
+  der Menü-Spieler hält 3 Items, damit sind alle 6 2-Slot-Blueprints von
+  jedem Signal abgeschnitten. Die NEAR_MISS-Hilfe (SPEC-003) kommt nie zur
+  Prüfung.
+- **Spec:** `specs/SPEC-017-subset-echo.md` — Mechanik aus BotW-Kochen +
+  Doodle God: die Welt antwortet auf die wirksame Teilmenge in der Hand,
+  nicht auf die Verpackung. Adaptiert als One-Shot-Hint (Block 2c,
+  `SUBSET_HINT`), Craft bleibt exakt-arity (kein Auto-Craft, Entdeckungs-
+  leistung bleibt beim Spieler), kein Rezept-Leak.
+- **Metrik-Wirkung:** Primär vor-first-craft-Entdeckbarkeit (play/-Lesung);
+  `discovery_gap` kann Richtung Bandmitte sinken (Wirkung, nicht Opfer),
+  `session_depth`/`craft_variety` mögliche Nebenwirkung in Zielrichtung.
+  Kein Scorecard-/METRICS-Touch.
+- PLAN.md: T5 ergänzt. Constitution-Check: additive Hint-Klasse, nichts
+  entfernt/umdefiniert.
+
+---
+
 ## 2026-07-30 — [Dev] Sprint leer
 
 **Status:** Sprint Tasks (KW 31) vollständig abgearbeitet. TASK-M03 ist `[x]`, keine weiteren offenen Tasks.

@@ -30,6 +30,8 @@ Die Nacht ist überlebbar: T1 (Komfort-Cutoff) und T2 (stick→WOOD) sind Play-v
 
 - [x] **T4 — `play/naive_menu.py` als Repo-Datei** (Play-Messwerkzeug, kein Scorecard-Eingriff). ✅ 21.09. Play Zum vierten Mal war das Profil /tmp-Wegwerfcode (07.09., 09.09., 14.09., 18.09.). **Akzeptanz:** Datei committet, deterministisch, reproduziert die letzte Menü-Lesung (20 Seeds), von T3 genutzt; Play-Job-Prompt unangetastet.
 
+- [ ] **T5 — SPEC-017 Subset-Echo implementieren** (`specs/SPEC-017-subset-echo.md`, Research 22.09.). Befund: die Aritäts-Gate-Zeile in `execute_experiment`/`_no_match_reason` macht alle 6 2-Slot-Blueprints stumm, wenn der Spieler 3 Items hält — Probe 22.09.: 521 voll feasible 2-Slot-Teilnahmen in 3-Item-Selektionen über 20 Seeds, 0 Echos. **Akzeptanz:** Teilmengen-bewusster One-Shot-Hint `SUBSET_HINT` (Block 2c), Craft bleibt exakt-arity (kein Auto-Craft), `Player.subset_hints_seen` + 4 Tests; read-only Profil-C-Probe nach Landing: Echo-Zähler > 0, Blueprints entdeckt > 0/20, Kältetode < 20/20; pytest grün, compute_all-Delta-Tabelle geführt, kein scorecard-Touch.
+
 ## Verworfen / beobachtend (bewusst keine Tasks)
 
 - **rest_adoption als Plan-Ziel:** gesperrt bis Probe-Ende 24.09. — Band-Lesung (1.0 über Obergrenze 0.85, Kalibrierungs-Ware) beim nächsten Direktor nach 24.09.
